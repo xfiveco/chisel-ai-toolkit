@@ -41,7 +41,7 @@ Where to add things in the Chisel theme.
 
 ## Twig templates
 
-**All Twig templates live in `views/`.** `custom/views/` exists but is unused (legacy) — edit `views/` directly.
+**All Twig templates live in `views/`.** `custom/views/` exists but is unused (legacy) — edit `views/` directly. Rule owned by [twig-templating.md](.claude/chisel/reference/twig-templating.md).
 
 | Purpose                                | Path                                                    |
 | -------------------------------------- | ------------------------------------------------------- |
@@ -61,6 +61,6 @@ Block-specific field groups: `src/blocks-acf/{block-name}/acf-json/group_{hash}.
 
 ## Naming
 
-- PHP namespace: `Chisel\` (core), `Chisel\WP\Custom\` (custom). **The autoloader strips the `Custom` segment** — `Chisel\WP\Custom\Assets` → `custom/app/WP/Assets.php`, NOT `custom/app/WP/Custom/Assets.php`. See [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom).
-- CSS class prefixes: `c-` components, `o-` objects, `u-` utilities, `b-` blocks, `p-` patterns, `is-`/`has-` state
-- JS hook prefix: `js-` (separate from CSS)
+- PHP namespace: `Chisel\` (core), `Chisel\WP\Custom\` (custom) — **the autoloader strips the `Custom` segment** when resolving paths. Mapping cases: [coding-conventions.md "Namespace ↔ path mapping"](.claude/chisel/reference/coding-conventions.md#namespace--path-mapping).
+- CSS class prefixes: `c-` components, `o-` objects, `u-` utilities, `b-` blocks, `p-` patterns, `is-`/`has-` state — ITCSS layer order and BEM rules: [coding-conventions.md "SCSS / CSS"](.claude/chisel/reference/coding-conventions.md#scss--css).
+- JS hook prefix: `js-` (separate from CSS).

@@ -133,12 +133,10 @@ Any repeated dimension (width, max-width, padding step, color, shadow, radius, t
 
 ## Twig / Timber
 
-- Base layout: `views/base.twig` with `{% block body %}`, `{% block header %}`, `{% block main %}`, `{% block footer %}`
-- Components: `views/components/` — include via `{% include 'components/name.twig' %}`
-- ACF block templates: `src/blocks-acf/{name}/{name}.twig`
-- Context: `{{ fields }}`, `{{ block }}`, `{{ wrapper_attributes }}`, `{{ is_preview }}`
+Template hierarchy, base layout, components, global context, Timber built-ins, custom Twig functions, and the **`views/`-only** rule (`custom/views/` is legacy — never edit it) are all owned by [twig-templating.md](.claude/chisel/reference/twig-templating.md). Conventions not covered there:
+
+- ACF block template context: `{{ fields }}`, `{{ block }}`, `{{ wrapper_attributes }}`, `{{ is_preview }}` — template lives at `src/blocks-acf/{name}/{name}.twig`
 - Use `Timber::context()` for global context
-- **All Twig templates in `views/`**. `custom/views/` is legacy/unused — edit `views/` directly.
 
 ### Twig rules
 

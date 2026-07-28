@@ -92,9 +92,9 @@ For the per-mode procedure (Figma variable defs vs static asset / prompt parsing
 
 ## Spacing between blocks
 
-Default to a `core/spacer` between every two sibling inner blocks (even when Figma uses a uniform `gap`) — gives editors draggable handles. `blockGap` and CSS `gap` don't, and `blockGap` is inconsistent across layouts.
+**Where spacers go** — default a `core/spacer` between every two sibling inner blocks, never `blockGap`/CSS `gap` for vertical sibling spacing, horizontal gutters are the exception, section band padding is not a spacer: [blocks.md "Spacing between sibling blocks"](.claude/chisel/reference/blocks.md#spacing-between-sibling-blocks) owns that rule in full, plus [blocks.md "Root wrapper rule"](.claude/chisel/reference/blocks.md#root-wrapper-rule) for band padding.
 
-This is for spacing _between_ siblings only, on the **vertical** axis. A section's own outer top/bottom band padding is NOT a spacer — set it as `style.spacing.padding` on the section's outer block (see [blocks.md "Root wrapper rule"](.claude/chisel/reference/blocks.md#root-wrapper-rule)). Horizontal column/grid gutters aren't spacers either — use `core/columns` `blockGap` with a preset value (see [blocks.md "Spacing between sibling blocks"](.claude/chisel/reference/blocks.md#spacing-between-sibling-blocks)).
+This section owns the other half — **what size each spacer is**, and the margin math that has to stay in sync with it.
 
 ### Picking the spacer style
 
@@ -129,7 +129,7 @@ In pattern markup, set `"disableBottomMargin": true` + `"className": "u-no-margi
 - Every block immediately followed by a spacer
 - Every last child of any container
 
-In practice: nearly every non-spacer block inside patterns.
+In practice: nearly every non-spacer block inside patterns. Why both are required (the attr alone renders nothing — the class does the work) → [blocks.md "Existing block mods"](.claude/chisel/reference/blocks.md#existing-block-mods).
 
 ### Layout trap
 
