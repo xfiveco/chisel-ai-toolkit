@@ -76,7 +76,7 @@ Before declaring `line-height`, `font-size`, `color`, `font-family`, margin, etc
 
 - **Already set globally** → omit the declaration. Restating a global value is dead CSS that drifts out of sync when the global changes.
 - **Should be global but isn't yet** → add it to theme.json (or the base mixin / element SCSS), don't repeat it per-selector.
-- **Genuinely a per-selector divergence** → declare only the property that differs, never the whole block of base props (diff-only — see [assets-and-scripts.md "Overriding shared component styles"](assets-and-scripts.md#overriding-shared-component-styles-slider-base-styles)).
+- **Genuinely a per-selector divergence** → declare only the property that differs, never the whole block of base props (diff-only — see [assets-and-scripts.md "Overriding shared component styles"](.claude/chisel/reference/assets-and-scripts.md#overriding-shared-component-styles-slider-base-styles)).
 
 This applies theme-wide, not just to patterns.
 

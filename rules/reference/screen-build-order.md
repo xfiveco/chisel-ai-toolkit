@@ -15,7 +15,7 @@ Each phase depends on previous. Execute in order:
    - **Build sections in spec reading order — top to bottom.** The page assembles visually as you go, making review easier and matching the user's mental model. Do NOT order by complexity (simple-first), even though it feels safer — the cost of getting stuck on a hard section early is lower than the cost of an empty-looking page during review.
    - **Upload images for each section as part of the section build** (not deferred). Capture attachment IDs.
    - **Wire images into block markup** in the same step — no placeholder `src=""` left behind.
-7. **Assemble section into page via MCP** — see [mcp-workflow.md](mcp-workflow.md). Each section fully reviewable before moving on.
+7. **Assemble section into page via MCP** — see [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md). Each section fully reviewable before moving on.
 8. **Review & adjust SCSS** — run build, open page, fix spacing/color drift against the spec (Figma screenshot, mockup, or written description).
 
 ## Phase 5 — Verification checklist
@@ -31,7 +31,7 @@ Before declaring a screen done:
 - [ ] Every `has-*-font-size` refers to an existing fontSize slug
 - [ ] **Slug sync (mechanical check)** — for every `patterns/{slug}.php`: the `Slug:` header is `chisel/{slug}`, the root wrapper class equals `p-{slug}`, and the SCSS scope is `.p-{slug}`; grep each file's root `className` against its filename. No two pattern files share a `p-*` class base
 - [ ] Pattern SCSS file `src/styles/patterns/_{slug}.scss` exists and is scoped under `.p-{slug}` (the build auto-regenerates `_index.scss` to forward it)
-- [ ] **ACF naming (mechanical)** — every new field-group JSON: key matches `group_[0-9a-f]{13}`, filename = key, every field/sub-field `name` carries the context prefix — run [acf-naming.md "Mechanical check"](acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
+- [ ] **ACF naming (mechanical)** — every new field-group JSON: key matches `group_[0-9a-f]{13}`, filename = key, every field/sub-field `name` carries the context prefix — run [acf-naming.md "Mechanical check"](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
 - [ ] Custom blocks compile and appear in "Chisel Blocks" inserter category
 - [ ] CPTs show up in admin menu with correct icon
 - [ ] Rendered page matches the spec at primary viewport

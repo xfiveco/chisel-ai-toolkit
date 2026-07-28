@@ -1,6 +1,6 @@
 # Blocks Reference
 
-Descriptive lookup for block types, file structures, and existing styles/mods. For the decision ladder (which type to pick), see [section-mapping-decisions.md](section-mapping-decisions.md). For step-by-step scaffolding, see the matching skill linked from each section below.
+Descriptive lookup for block types, file structures, and existing styles/mods. For the decision ladder (which type to pick), see [section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md). For step-by-step scaffolding, see the matching skill linked from each section below.
 
 ## File structures
 
@@ -65,7 +65,7 @@ acf-json/*.json         # ACF field group
 
 See [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) for the full procedure and required block.json keys — always load it before scaffolding a new ACF block. For custom WP blocks see [create-block](.claude/skills/chisel-create-block/SKILL.md).
 
-**ACF field group naming (HARD RULE).** Keys must be hex hashes, filename = group key, field `name`s must be namespace-prefixed (block initials → `bp_heading`), `label`s stay human. Full spec, prefix-derivation cases, per-context prefix sources, and example: **[acf-naming.md](acf-naming.md)** — the canonical, all-context rule. Read it before authoring any field group JSON.
+**ACF field group naming (HARD RULE).** Keys must be hex hashes, filename = group key, field `name`s must be namespace-prefixed (block initials → `bp_heading`), `label`s stay human. Full spec, prefix-derivation cases, per-context prefix sources, and example: **[acf-naming.md](.claude/chisel/reference/acf-naming.md)** — the canonical, all-context rule. Read it before authoring any field group JSON.
 
 **ACF field data shape (load-bearing — applies any time you seed an ACF block).** Markup is `wp:chisel/{name}`, NOT `wp:acf/{name}` — Chisel uses `register_block_type()`. Every `data` field needs a `_{name}: "field_key"` partner. ACF resolves values via these key-pointers; without them `get_fields()` returns empty. Repeaters need `items: N`, `_items: "field_B"` plus every sub-field per row with its key (field names below use the prefix rule above):
 
@@ -121,7 +121,7 @@ Then a pattern can use `Categories: chisel-patterns/process`.
 
 ## Pattern slug naming (HARD RULE)
 
-Name patterns by **function, not page** — the slug is the section type, not where it first appears: `hero` not `home-hero`, `pill-list` not `industry-pills`. Variant-qualify (`hero-split`, `cta-banner`), never page-qualify. Patterns are reusable across pages/CPTs; a page-named slug couples one to a single context. Reuse an existing pattern (or add a variant) before minting a new slug — see [section-mapping-decisions.md "Shared components rule"](section-mapping-decisions.md#shared-components-rule). Page-prefix only a pattern that is genuinely one-off and page-bound.
+Name patterns by **function, not page** — the slug is the section type, not where it first appears: `hero` not `home-hero`, `pill-list` not `industry-pills`. Variant-qualify (`hero-split`, `cta-banner`), never page-qualify. Patterns are reusable across pages/CPTs; a page-named slug couples one to a single context. Reuse an existing pattern (or add a variant) before minting a new slug — see [section-mapping-decisions.md "Shared components rule"](.claude/chisel/reference/section-mapping-decisions.md#shared-components-rule). Page-prefix only a pattern that is genuinely one-off and page-bound.
 
 ## Root wrapper rule
 
@@ -154,11 +154,11 @@ In `src/scripts/editor/mods/` (registered via `blocks-mods.js`). Several add cus
 - **core.js**: adds a `disableBottomMargin` attr (toggle) to every `core/*` + `chisel/*` block. **The attr alone renders nothing** — the bottom-margin removal is done by the `u-no-margin-bottom` utility class. When seeding, set BOTH `"disableBottomMargin":true` AND `"className":"… u-no-margin-bottom"` (and include `u-no-margin-bottom` in the rendered class list). Needed on any block immediately followed by a spacer or the last child of a container (else base margin + spacer = double gap).
 - **core-button.js**: adds `buttonSize`, `buttonIcon`, `buttonIconPosition` attrs to `core/button`, kept in sync with classes `is-size-{size}`, `has-icon has-icon-{name}`, `has-icon-left`. **When seeding a button icon/size, set the attr AND the class:** e.g. `{"buttonIcon":"arrow-right","className":"… has-icon has-icon-arrow-right"}`. Class-only works visually but the editor control shows empty and a later edit can wipe it. Icon `{name}` must be in `$static-icons`.
 - **blocks-alignment.js**: on select, force-sets a default `align` per block from the PHP-provided `chiselEditorScripts.blocksDefaultAlignment` map. A seeded `align` on those blocks may be overwritten when the user selects the block — check the map (or just rely on it) rather than fighting it.
-- **core-spacer.js**: forces every `core/spacer` to `height:"auto"` in the editor — spacer size comes ONLY from the `is-style-{size}` padding, never the `height` attr. Always seed `{"height":"auto","className":"is-style-{size}"}` — the style class is mandatory on every spacer, even for the default size (no bare spacers). See [design-tokens.md "Picking the spacer style"](design-tokens.md#picking-the-spacer-style).
+- **core-spacer.js**: forces every `core/spacer` to `height:"auto"` in the editor — spacer size comes ONLY from the `is-style-{size}` padding, never the `height` attr. Always seed `{"height":"auto","className":"is-style-{size}"}` — the style class is mandatory on every spacer, even for the default size (no bare spacers). See [design-tokens.md "Picking the spacer style"](.claude/chisel/reference/design-tokens.md#picking-the-spacer-style).
 
 ## Spacing between sibling blocks
 
-Composition rule (the spacer _sizing_ math — px→style mapping, margin-sync, flex double-gap trap — lives in [design-tokens.md "Spacing between blocks"](design-tokens.md#spacing-between-blocks)):
+Composition rule (the spacer _sizing_ math — px→style mapping, margin-sync, flex double-gap trap — lives in [design-tokens.md "Spacing between blocks"](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)):
 
 - **Default a `core/spacer` between every two sibling inner blocks** — even when Figma uses a uniform `gap`. Editors need draggable handles; `blockGap` and CSS `gap` give none and are invisible to the editor. NEVER use `blockGap` or CSS `gap` in pattern SCSS for **vertical** sibling spacing. One-off margins or section padding in pattern SCSS are fine.
 - **Horizontal gutters are the exception**: gaps between columns in `core/columns` (or a grid) can't be spacers — set them ON the block via `blockGap` with a preset value (`"style":{"spacing":{"blockGap":{"left":"var:preset|spacing|{N}"}}}`). That's the correct, token-backed tool for the horizontal axis.

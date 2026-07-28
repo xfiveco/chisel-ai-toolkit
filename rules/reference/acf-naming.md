@@ -18,12 +18,12 @@ Every field `name` carries a namespace prefix so names are globally unique acros
 
 **The prefix SOURCE depends on what the group attaches to:**
 
-| Attaches to (`location` param) | Values stored in | Name prefix source | Example |
-| --- | --- | --- | --- |
-| `block` (`chisel/{block}`) | `post_content` (delimiter JSON) | block initials — multi-word → word initials, single-word → first 2 letters; collision → later block extends its prefix | `blueprint-process` → `bp_heading`; `slider` → `sl_…`; `blog-posts` after `blueprint-process` → `blp_…` |
-| `options_page` | `wp_options` (`options_{name}`) | options page / section slug | `header_cta_text`, `footer_logo`, `social_links` |
-| `post_type == product` (WooCommerce — the ONLY sanctioned non-block meta box; Chisel is Gutenberg-first elsewhere) | `wp_postmeta` (`{name}` + `_{name}`) | `product_` or the feature name | `product_spec_sheet`, `product_warranty_years` |
-| `taxonomy` (term meta) | `wp_termmeta` | taxonomy slug | `genre_color`, `brand_logo` |
+| Attaches to (`location` param)                                                                                     | Values stored in                     | Name prefix source                                                                                                     | Example                                                                                                 |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `block` (`chisel/{block}`)                                                                                         | `post_content` (delimiter JSON)      | block initials — multi-word → word initials, single-word → first 2 letters; collision → later block extends its prefix | `blueprint-process` → `bp_heading`; `slider` → `sl_…`; `blog-posts` after `blueprint-process` → `blp_…` |
+| `options_page`                                                                                                     | `wp_options` (`options_{name}`)      | options page / section slug                                                                                            | `header_cta_text`, `footer_logo`, `social_links`                                                        |
+| `post_type == product` (WooCommerce — the ONLY sanctioned non-block meta box; Chisel is Gutenberg-first elsewhere) | `wp_postmeta` (`{name}` + `_{name}`) | `product_` or the feature name                                                                                         | `product_spec_sheet`, `product_warranty_years`                                                          |
+| `taxonomy` (term meta)                                                                                             | `wp_termmeta`                        | taxonomy slug                                                                                                          | `genre_color`, `brand_logo`                                                                             |
 
 **Sub-fields** (repeater / group) use the **full parent name** as their base, in every context: repeater `bp_steps` → `bp_steps_label`, `bp_steps_title`. Options repeater `social_links` → `social_links_url`, `social_links_label`.
 
@@ -65,5 +65,5 @@ Block `blueprint-process` → prefix `bp`:
 
 - Block field group → [create-acf-block skill](.claude/skills/chisel-create-acf-block/SKILL.md)
 - Options page field group → [create-acf-options skill](.claude/skills/chisel-create-acf-options/SKILL.md)
-- Block file structure + ACF seed-data shape (`_{name}: "field_key"` pointers) → [blocks.md](blocks.md)
-- Per-field WPML translation preferences (`wpml_cf_preferences`, Expert mode) → [acf-wpml-translation.md](acf-wpml-translation.md)
+- Block file structure + ACF seed-data shape (`_{name}: "field_key"` pointers) → [blocks.md](.claude/chisel/reference/blocks.md)
+- Per-field WPML translation preferences (`wpml_cf_preferences`, Expert mode) → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)

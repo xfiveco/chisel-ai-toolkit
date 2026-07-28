@@ -116,7 +116,7 @@ When the pagination container is a flex row, bullets need `flex-shrink: 0` or th
 
 When restyling a selector that a global partial already styles (`src/styles/components/_slider.scss`, `_buttons.scss`, etc.):
 
-- **Diff-only.** Read the global source first — the component partial **and** the theme.json globals that cascade in (`styles.typography`, `styles.elements.hN`, `styles.elements.link`, `settings.custom.*`). Only write rules that DIFFER from the default; never re-declare a value a partial or theme.json already sets. See [coding-conventions.md "Don't duplicate global styles"](coding-conventions.md#dont-duplicate-global-styles-hard-rule).
+- **Diff-only.** Read the global source first — the component partial **and** the theme.json globals that cascade in (`styles.typography`, `styles.elements.hN`, `styles.elements.link`, `settings.custom.*`). Only write rules that DIFFER from the default; never re-declare a value a partial or theme.json already sets. See [coding-conventions.md "Don't duplicate global styles"](.claude/chisel/reference/coding-conventions.md#dont-duplicate-global-styles-hard-rule).
 - **Match the global selector chain to win specificity.** A global like `.swiper-navigation-wrapper .swiper-button` (0,2,0) ties with `.b-foo .swiper-button` (0,2,0) → source order wins, so the global beats your override. Mirror the chain and prepend your block scope. If you still can't outrank it, use `!important` with a one-line `// beats _slider.scss:NN` comment.
 - **`!important` is OK** against vendor inline/runtime styles (Swiper, Gravity Forms) when specificity can't outrank them — but prefer specificity first.
 

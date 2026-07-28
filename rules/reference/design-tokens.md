@@ -67,7 +67,7 @@ Slugs: `none`, `tight`, `loose`, `looser`. Read `theme.json` `settings.custom.le
 
 - Content width: `settings.layout.contentSize` (read `theme.json`) — narrowest, used by `core/group` default and most text-heavy patterns. SCSS: `get-layout-size('content')`.
 - Wide width: `settings.layout.wideSize` (read `theme.json`) — used by `alignwide` and broader patterns. SCSS: `get-layout-size('wide')`.
-- Other named widths (frame, container, narrow…): add `settings.custom.layout.{name}` in `theme.json` **and, in the same change, a matching accessor in `src/design/tools/_theme.scss`**. Example: `settings.custom.layout.frame-width: "67rem"` + a new accessor **you define** following the `get-{category}` convention — `get-layout($name)` returning `var(--wp--custom--layout--#{$name})` — then `max-width: get-layout('frame-width')`. **Never call a `get-*` helper that isn't defined in `src/design/tools/`** — undefined functions fail the build. Procedure: [coding-conventions.md "Tokenize repeated values"](coding-conventions.md#tokenize-repeated-values).
+- Other named widths (frame, container, narrow…): add `settings.custom.layout.{name}` in `theme.json` **and, in the same change, a matching accessor in `src/design/tools/_theme.scss`**. Example: `settings.custom.layout.frame-width: "67rem"` + a new accessor **you define** following the `get-{category}` convention — `get-layout($name)` returning `var(--wp--custom--layout--#{$name})` — then `max-width: get-layout('frame-width')`. **Never call a `get-*` helper that isn't defined in `src/design/tools/`** — undefined functions fail the build. Procedure: [coding-conventions.md "Tokenize repeated values"](.claude/chisel/reference/coding-conventions.md#tokenize-repeated-values).
 
 ### Width-token decision ladder
 
@@ -94,7 +94,7 @@ For the per-mode procedure (Figma variable defs vs static asset / prompt parsing
 
 Default to a `core/spacer` between every two sibling inner blocks (even when Figma uses a uniform `gap`) — gives editors draggable handles. `blockGap` and CSS `gap` don't, and `blockGap` is inconsistent across layouts.
 
-This is for spacing _between_ siblings only, on the **vertical** axis. A section's own outer top/bottom band padding is NOT a spacer — set it as `style.spacing.padding` on the section's outer block (see [blocks.md "Root wrapper rule"](blocks.md#root-wrapper-rule)). Horizontal column/grid gutters aren't spacers either — use `core/columns` `blockGap` with a preset value (see [blocks.md "Spacing between sibling blocks"](blocks.md#spacing-between-sibling-blocks)).
+This is for spacing _between_ siblings only, on the **vertical** axis. A section's own outer top/bottom band padding is NOT a spacer — set it as `style.spacing.padding` on the section's outer block (see [blocks.md "Root wrapper rule"](.claude/chisel/reference/blocks.md#root-wrapper-rule)). Horizontal column/grid gutters aren't spacers either — use `core/columns` `blockGap` with a preset value (see [blocks.md "Spacing between sibling blocks"](.claude/chisel/reference/blocks.md#spacing-between-sibling-blocks)).
 
 ### Picking the spacer style
 

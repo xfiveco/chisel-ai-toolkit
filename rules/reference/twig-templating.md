@@ -45,7 +45,7 @@ All templates extend `views/base.twig` (html, head, header, main, footer).
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `get_nav_menu(name)`                    | Get menu by location (strips `chisel_` prefix)                                                                                                              |
 | `get_responsive_image(id, size, attrs)` | Responsive `<img>` with srcset                                                                                                                              |
-| `get_icon(args)`                        | Render icon — see [assets-and-scripts.md](assets-and-scripts.md)                                                                                            |
+| `get_icon(args)`                        | Render icon — see [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md)                                                                   |
 | `should_use_icons_module()`             | Check `CHISEL_USE_ICONS_MODULE`                                                                                                                             |
 | `bem(name, ...modifiers)`               | Generate BEM class string                                                                                                                                   |
 | `post_classes(classes, prefix)`         | Transform post classes to BEM                                                                                                                               |

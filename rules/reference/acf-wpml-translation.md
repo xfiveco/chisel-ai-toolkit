@@ -1,6 +1,6 @@
 # ACF + WPML Field Translation (canonical — all ACF field groups)
 
-How to set the per-field WPML translation preference in ACF field-group JSON. Applies to **every** ACF field group, regardless of attachment point (block, options page, product meta box, term meta). Pairs with [acf-naming.md](acf-naming.md) — naming makes fields WPML-safe; this doc decides what WPML *does* with each field.
+How to set the per-field WPML translation preference in ACF field-group JSON. Applies to **every** ACF field group, regardless of attachment point (block, options page, product meta box, term meta). Pairs with [acf-naming.md](.claude/chisel/reference/acf-naming.md) — naming makes fields WPML-safe; this doc decides what WPML *does* with each field.
 
 The site runs WPML + ACFML (ACF Multilingual). ACFML reads two things from the field-group JSON:
 
@@ -19,11 +19,11 @@ In ACFML's default ("standard") mode the per-field values are dormant and ACFML 
 
 ## Rule 2 — the `wpml_cf_preferences` enum (from WPML source)
 
-| Value | WPML constant | Meaning | UI label |
-| --- | --- | --- | --- |
-| `1` | `WPML_COPY_CUSTOM_FIELD` | value copied identically to every language, stays in sync | **Copy** |
-| `2` | `WPML_TRANSLATE_CUSTOM_FIELD` | field is editable per language / shows in the Translation Editor | **Translate** |
-| `3` | `WPML_COPY_ONCE_CUSTOM_FIELD` | copied to the translation on creation, then independently editable | **Copy Once** |
+| Value | WPML constant                 | Meaning                                                            | UI label      |
+| ----- | ----------------------------- | ------------------------------------------------------------------ | ------------- |
+| `1`   | `WPML_COPY_CUSTOM_FIELD`      | value copied identically to every language, stays in sync          | **Copy**      |
+| `2`   | `WPML_TRANSLATE_CUSTOM_FIELD` | field is editable per language / shows in the Translation Editor   | **Translate** |
+| `3`   | `WPML_COPY_ONCE_CUSTOM_FIELD` | copied to the translation on creation, then independently editable | **Copy Once** |
 
 These are the literal integers WPML defines (`sitepress-multilingual-cms`) — use the value from the table above (`1` Copy, `2` Translate, `3` Copy Once); the integer does not rank "how much translation." A missing key falls back to ACFML's type default, so always set it explicitly in Expert mode.
 
@@ -38,68 +38,68 @@ For Text / Text Area / Wysiwyg / Message the answer is **Translate (`2`)** in bo
 
 ### Basic Fields
 
-| Type | Same across langs | Different across langs |
-| --- | --- | --- |
-| `text` | Translate `2` | Translate `2` |
-| `textarea` | Translate `2` | Translate `2` |
-| `number` | Copy `1` | Copy Once `3` |
-| `range` | Copy `1` | Copy Once `3` |
-| `email` | Copy `1` | Copy Once `3` |
-| `url` | Copy `1` | Copy Once `3` |
-| `password` | Copy `1` | Copy Once `3` |
+| Type       | Same across langs | Different across langs |
+| ---------- | ----------------- | ---------------------- |
+| `text`     | Translate `2`     | Translate `2`          |
+| `textarea` | Translate `2`     | Translate `2`          |
+| `number`   | Copy `1`          | Copy Once `3`          |
+| `range`    | Copy `1`          | Copy Once `3`          |
+| `email`    | Copy `1`          | Copy Once `3`          |
+| `url`      | Copy `1`          | Copy Once `3`          |
+| `password` | Copy `1`          | Copy Once `3`          |
 
 ### Content Fields
 
-| Type | Same across langs | Different across langs |
-| --- | --- | --- |
-| `image` | Copy `1` | Copy Once `3` |
-| `file` | Copy `1` | Copy Once `3` |
-| `wysiwyg` | Translate `2` | Translate `2` |
-| `oembed` | Copy `1` | Copy Once `3` |
-| `gallery` | Copy `1` | Copy Once `3` |
+| Type      | Same across langs | Different across langs |
+| --------- | ----------------- | ---------------------- |
+| `image`   | Copy `1`          | Copy Once `3`          |
+| `file`    | Copy `1`          | Copy Once `3`          |
+| `wysiwyg` | Translate `2`     | Translate `2`          |
+| `oembed`  | Copy `1`          | Copy Once `3`          |
+| `gallery` | Copy `1`          | Copy Once `3`          |
 
 ### Choice Fields
 
-| Type | Same across langs | Different across langs |
-| --- | --- | --- |
-| `select` | Copy `1` | Copy Once `3` |
-| `checkbox` | Copy `1` | Copy Once `3` |
-| `radio` | Copy `1` | Copy Once `3` |
-| `button_group` | Copy `1` | Copy Once `3` |
-| `true_false` | Copy `1` | Copy Once `3` |
+| Type           | Same across langs | Different across langs |
+| -------------- | ----------------- | ---------------------- |
+| `select`       | Copy `1`          | Copy Once `3`          |
+| `checkbox`     | Copy `1`          | Copy Once `3`          |
+| `radio`        | Copy `1`          | Copy Once `3`          |
+| `button_group` | Copy `1`          | Copy Once `3`          |
+| `true_false`   | Copy `1`          | Copy Once `3`          |
 
 ### jQuery Fields
 
-| Type | Same across langs | Different across langs |
-| --- | --- | --- |
-| `google_map` | Copy `1` | Copy Once `3` |
-| `date_picker` | Copy `1` | Copy Once `3` |
-| `date_time_picker` | Copy `1` | Copy Once `3` |
-| `time_picker` | Copy `1` | Copy Once `3` |
-| `color_picker` | Copy `1` | Copy Once `3` |
+| Type               | Same across langs | Different across langs |
+| ------------------ | ----------------- | ---------------------- |
+| `google_map`       | Copy `1`          | Copy Once `3`          |
+| `date_picker`      | Copy `1`          | Copy Once `3`          |
+| `date_time_picker` | Copy `1`          | Copy Once `3`          |
+| `time_picker`      | Copy `1`          | Copy Once `3`          |
+| `color_picker`     | Copy `1`          | Copy Once `3`          |
 
 ### Layout Fields
 
-| Type | Same across langs | Different across langs |
-| --- | --- | --- |
-| `message` | Translate `2` | Translate `2` |
-| `accordion` | Copy `1` | Copy Once `3` |
-| `tab` | Copy `1` | Copy Once `3` |
-| `group` | Copy `1` | Copy Once `3` |
-| `repeater` | Copy `1` | Copy Once `3` |
-| `flexible_content` | Copy `1` | Copy Once `3` |
-| `clone` | Copy `1` | Copy Once `3` |
+| Type               | Same across langs | Different across langs |
+| ------------------ | ----------------- | ---------------------- |
+| `message`          | Translate `2`     | Translate `2`          |
+| `accordion`        | Copy `1`          | Copy Once `3`          |
+| `tab`              | Copy `1`          | Copy Once `3`          |
+| `group`            | Copy `1`          | Copy Once `3`          |
+| `repeater`         | Copy `1`          | Copy Once `3`          |
+| `flexible_content` | Copy `1`          | Copy Once `3`          |
+| `clone`            | Copy `1`          | Copy Once `3`          |
 
 ### Relational Fields
 
-| Type | Same across langs | Different across langs |
-| --- | --- | --- |
-| `link` | Copy `1` | Copy Once `3` |
-| `post_object` | Copy `1` | Copy Once `3` |
-| `page_link` | Copy `1` | Copy Once `3` |
-| `relationship` | Copy `1` | Copy Once `3` |
-| `taxonomy` | Copy `1` | Copy Once `3` |
-| `user` | Copy `1` | Copy Once `3` |
+| Type           | Same across langs | Different across langs |
+| -------------- | ----------------- | ---------------------- |
+| `link`         | Copy `1`          | Copy Once `3`          |
+| `post_object`  | Copy `1`          | Copy Once `3`          |
+| `page_link`    | Copy `1`          | Copy Once `3`          |
+| `relationship` | Copy `1`          | Copy Once `3`          |
+| `taxonomy`     | Copy `1`          | Copy Once `3`          |
+| `user`         | Copy `1`          | Copy Once `3`          |
 
 ## Rule 4 — containers and their children
 
@@ -111,7 +111,7 @@ Structural fields with no stored value (`tab`, `accordion`, `clone` display) sti
 
 When a group is synced in **Custom Fields → Field Groups**, ACFML rewrites the JSON file: it reorders keys, adds `acfml_field_group_mode`, `display_title`, and `allow_in_bindings`, and bumps `modified`. This is expected. Author the minimum (`acfml_field_group_mode` + `wpml_cf_preferences`), sync once, and let ACFML normalize the rest. Do not fight the re-serialized key order.
 
-> **Bump `modified` after editing preferences, then sync** — the JSON edit is inert until synced, and sync only fires when `modified` is newer than the DB copy. This is the same rule that governs every ACF JSON edit: [acf-naming.md "Rule 4 — bump `modified` on EVERY edit"](acf-naming.md).
+> **Bump `modified` after editing preferences, then sync** — the JSON edit is inert until synced, and sync only fires when `modified` is newer than the DB copy. This is the same rule that governs every ACF JSON edit: [acf-naming.md "Rule 4 — bump `modified` on EVERY edit"](.claude/chisel/reference/acf-naming.md).
 
 ## Default baseline — which column to apply
 
@@ -127,6 +127,6 @@ Switch a specific field to the **"Different across languages"** column (Copy Onc
 
 ## Related
 
-- Field naming (WPML string uniqueness via `name` prefix) → [acf-naming.md](acf-naming.md)
-- Block field-group structure + seed-data shape → [blocks.md](blocks.md)
-- Where plugin integration code (WPML hooks) lives → [file-locations.md](file-locations.md)
+- Field naming (WPML string uniqueness via `name` prefix) → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
+- Block field-group structure + seed-data shape → [blocks.md](.claude/chisel/reference/blocks.md)
+- Where plugin integration code (WPML hooks) lives → [file-locations.md](.claude/chisel/reference/file-locations.md)

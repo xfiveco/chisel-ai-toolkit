@@ -1,6 +1,6 @@
 # Section Mapping Decisions
 
-For each distinct section/component in the spec (Figma node, mockup region, or described feature), apply this decision ladder. Stop at the first match — default to the simplest option that works. For file structures, existing styles/mods, and the build-pipeline rule, see [blocks.md](blocks.md).
+For each distinct section/component in the spec (Figma node, mockup region, or described feature), apply this decision ladder. Stop at the first match — default to the simplest option that works. For file structures, existing styles/mods, and the build-pipeline rule, see [blocks.md](.claude/chisel/reference/blocks.md).
 
 ## Platform questions (answer first)
 
@@ -26,9 +26,9 @@ When implementing a feature end-to-end, follow this order — it prevents costly
 
 ## Quick pick
 
-| Need                                | Approach               | Skill                                                               | Example                         |
-| ----------------------------------- | ---------------------- | ------------------------------------------------------------------- | ------------------------------- |
-| Simple text/image section           | Core blocks directly   | —                                                                   | No custom code                  |
+| Need                                | Approach               | Skill                                                                 | Example                         |
+| ----------------------------------- | ---------------------- | --------------------------------------------------------------------- | ------------------------------- |
+| Simple text/image section           | Core blocks directly   | —                                                                     | No custom code                  |
 | Visual variant of a core block      | Block style            | [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) | Button colors, spacer sizes     |
 | Extra toggle/setting on a block     | Block mod              | [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) | Disable bottom margin           |
 | Layout section with standard blocks | Pattern                | [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md)       | Hero, CTA, features grid        |

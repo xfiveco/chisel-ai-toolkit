@@ -49,7 +49,7 @@ Where to add things in the Chisel theme.
 | Components (header, footer, nav, etc.) | `views/components/`                                     |
 | Objects (atomic — icons, badges)       | `views/objects/`                                        |
 | Partials (fragments)                   | `views/partials/`                                       |
-| Single post/page templates             | `views/{single\|page\|archive}.twig`                    |
+| Single post/page templates             | `views/{single\|page\|archive}.twig`                      |
 | CPT templates                          | `views/single-{slug}.twig`, `views/archive-{slug}.twig` |
 | Block templates (ACF)                  | `src/blocks-acf/{name}/{name}.twig`                     |
 | Block templates (custom)               | `src/blocks/{name}/{name}.twig` (if used)               |
