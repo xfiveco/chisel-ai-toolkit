@@ -1,0 +1,38 @@
+{
+  "name": "@xfive/chisel-ai-toolkit",
+  "version": "0.1.0",
+  "description": "Chisel AI toolkit — skills, rules and reference docs for AI coding agents working on Chisel WordPress themes",
+  "license": "MIT",
+  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xfiveco/chisel-ai-toolkit.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "skills/",
+    "rules/",
+    "hooks/",
+    "lib/",
+    "install.js",
+    "uninstall.js",
+    "verify.js",
+    "README.md"
+  ],
+  "scripts": {
+    "postinstall": "node install.js",
+    "install-toolkit": "node install.js",
+    "validate": "node scripts/validate-skills.js",
+    "verify": "node verify.js",
+    "prepublishOnly": "node scripts/validate-skills.js"
+  },
+  "bin": {
+    "chisel-ai-toolkit": "./install.js",
+    "chisel-verify": "./verify.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
