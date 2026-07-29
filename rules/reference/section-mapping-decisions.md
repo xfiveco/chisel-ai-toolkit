@@ -60,7 +60,7 @@ When implementing a feature end-to-end, follow this order — it prevents costly
 
 ## Shared components rule
 
-Before creating anything new, check existing patterns/blocks for reuse. **Figma mode**: check the "Shared / cross-phase" section of the effort's `ai-progress/changes/{NN}-{task-name}/ROADMAP.md`. **Other modes**: skim `patterns/` and `src/blocks*/` for matching slugs. If the current section matches an existing pattern/block, reuse it — don't create `hero-2` when `hero` exists.
+Before creating anything new, check existing patterns/blocks for reuse. **Figma mode**: check the "Shared / cross-phase" section of the change's `context/changes/{NN}-{slug}/PLAN.md`. **Other modes**: skim `patterns/` and `src/blocks*/` for matching slugs. If the current section matches an existing pattern/block, reuse it — don't create `hero-2` when `hero` exists.
 
 If the existing component needs a variation, prefer:
 

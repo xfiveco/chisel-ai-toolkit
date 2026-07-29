@@ -56,8 +56,8 @@ const INSTALLED_PREFIXES = [
 ];
 
 /**
- * Fenced blocks hold worked examples — the roadmap/phase templates in
- * chisel-plan link to files that only exist once an agent generates them.
+ * Fenced blocks hold worked examples — the PLAN/phase templates in
+ * chisel-new link to files that only exist once an agent generates them.
  * Those are illustrations, not references, so they don't get checked.
  */
 function stripFences(text) {

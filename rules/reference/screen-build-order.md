@@ -45,5 +45,5 @@ Before declaring a screen done:
 - Token inventory, spacer sizing, margin sync → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
 - Seeding sections into a page → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
 - Field-group naming check → [acf-naming.md](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
-- Progress files for multi-screen work → [progress-template.md](.claude/chisel/reference/progress-template.md)
+- Phase files for multi-screen work → [chisel-new](.claude/skills/chisel-new/SKILL.md)
 - Skills: [figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md) (orchestrator) · [verify](.claude/skills/chisel-verify/SKILL.md) (what each automated check means)

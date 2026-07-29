@@ -25,7 +25,7 @@ This skill calls other skills — don't reinvent their work.
 
 ## Load-bearing rules for Figma mode
 
-- **The `ai-progress/` files are the source of truth across sessions.** This import lives in its own folder, `ai-progress/changes/{NN}-{task-name}/`. Update its roadmap + the active phase file after every section (patterns, blocks, CPTs, phase checkboxes) and append a session log line with an absolute date to that folder's `LOG.md`. Incidental bugs/oddities → one line in `ai-progress/FINDINGS.md`. They survive `/compact` and new sessions; your in-context memory does not. Layout + procedure owned by the [chisel-plan skill](.claude/skills/chisel-plan/SKILL.md).
+- **The `context/` files are the source of truth across sessions.** This import lives in its own folder, `context/changes/{NN}-{slug}/`. Update its `PLAN.md` + the active phase file after every section (patterns, blocks, CPTs, phase steps) and append a `## Log` line with an absolute date. Incidental bugs/oddities → one line in `context/FINDINGS.md`. They survive `/compact` and new sessions; your in-context memory does not. Files and templates owned by [chisel-new](.claude/skills/chisel-new/SKILL.md); the phase loop by [chisel-implement](.claude/skills/chisel-implement/SKILL.md).
 - **Sections are processed top-to-bottom, one at a time, end-to-end.** End-to-end means: CPT (if needed) + block/pattern + SCSS + images + page wiring + progress file update — all for one section before moving to the next. No cross-section batching.
 - **Stop for user review after each section.** Don't chain sections silently.
 - **Don't batch `get_design_context`.** One section at a time — batching overflows context.
@@ -52,9 +52,12 @@ This skill calls other skills — don't reinvent their work.
 
 If `theme.json` still has example palette (`#dd2424` primary, `#22dbdb` secondary), run `setup-theme-json` first.
 
-### Phase 0.5 — ai-progress/ roadmap
+### Phase 0.5 — context/ plan
 
-Read `ai-progress/INDEX.md`, then this import's `changes/{NN}-{task-name}/ROADMAP.md`. If missing, create them using the [chisel-plan skill](.claude/skills/chisel-plan/SKILL.md) (Figma mode → a per-import `changes/{NN}-{task-name}/` folder holding `ROADMAP.md` + `LOG.md` + phase files, plus an INDEX row under `## Active`).
+Read `context/INDEX.md`, then this import's `changes/{NN}-{slug}/PLAN.md`. If missing, the import
+hasn't been scoped — hand off to [chisel-new](.claude/skills/chisel-new/SKILL.md) (Figma mode → a
+per-import `changes/{NN}-{slug}/` folder holding `PLAN.md` + one phase file per section, plus an
+INDEX row under `## Active`) and come back once the plan is approved.
 
 ### Phase 1 — Scope
 
@@ -83,7 +86,7 @@ For each section from top to bottom:
 4. Build pattern via `create-pattern` (or appropriate skill)
 5. Upload section images via `xfive-media-media-upload`
 6. Push section to page via `xfive-posts-post-update-content` (full page markup; for partial updates fetch with `post-get-content`/`block-tree`, modify the markup string, write the whole thing back)
-7. Update the `ai-progress/` files with what was built (phase file checklist + roadmap row outcome)
+7. Update the `context/` files with what was built (phase file steps + the `PLAN.md` row outcome)
 8. **Visual diff (mandatory before the next section):** call `get_screenshot(fileKey, sectionNodeId)` and compare against the rendered section in the browser — take a browser screenshot if you have the tooling, otherwise ask the user for one. Check spacing steps, colors, font sizes, and alignment against the Figma crop; fix drift now, not in a later QA round.
 
 Header/footer: use `adapt-header-footer` skill, not patterns.
@@ -106,9 +109,9 @@ Run checklist in [reference/screen-build-order.md](.claude/chisel/reference/scre
 
 When refining: fresh screenshot → compare rendered → adjust tokens first, then pattern SCSS, then block code.
 
-### Phase 7 — Update ai-progress/
+### Phase 7 — Update context/
 
-Flip the phase file's checkboxes + the roadmap row (status + one-line outcome), add patterns/blocks/CPTs to artifacts, append a session log line with absolute date to `LOG.md`, and refresh the INDEX row's state. When the whole import is done, move its INDEX row from `## Active` to `## Done`.
+Flip the phase file's steps + the `PLAN.md` phase row (status + one-line outcome), add patterns/blocks/CPTs to `Artifacts produced`, append a `## Log` line with an absolute date, and refresh the INDEX row's state. When the whole import is done, move its INDEX row from `## Active` to `## Done`.
 
 ## Output report
 

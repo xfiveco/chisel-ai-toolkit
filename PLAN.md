@@ -36,19 +36,23 @@ sibling themes. Fine for Chisel work, and WordPress writes go through MCP regard
 ## Status
 
 - [x] **Phase 1 — Scaffolding.** Installer, root detection, manifest, uninstall,
-      two emitters (`claude`, `agents`), skill validator, one real skill (`chisel-new-task`).
+      two emitters (`claude`, `agents`), skill validator, one real skill (`chisel-new-task`,
+      since split into `chisel-new` + `chisel-implement` — Phase 8).
       (The two-layout detection it shipped with was collapsed to theme-only — see Decisions.)
 - [x] **Phase 2 — Migrate real content.** 14 skills + reference/templates copied; all `ai/…`
       cross-links repointed to `.claude/…`; `rules/CLAUDE.md` authored as the managed block
       (hard rules + reference map, skill anchors preserved); `npm run validate` green. The
       reference theme is left untouched — it was the content source, not a target.
 - [x] **Phase 3 — Checks, not skills.** Cross-link check in the validator (`prepublishOnly`),
-      `verify.js` as a read-only `chisel-verify` bin, wired into `chisel-new-task` at
+      `verify.js` as a read-only `chisel-verify` bin, wired into the lifecycle skill at
       phase-complete, thin skill over it, `chisel-review` dropped into the script, `paths:` on
       `chisel-theme-json` only, model/effort left alone. `chisel-resume` also landed.
 - [x] **Phase 6 — The `core/` guard hook.** Built early, out of order: a `PreToolUse` hook that
       refuses writes into `core/`, plus the settings-merge machinery it needed. The lint hook was
       left out on purpose; MCP was split off into Phase 7.
+- [x] **Phase 8 — Lifecycle skills refactor.** `chisel-new-task` + `chisel-plan` replaced by
+      `chisel-new` (scope + plan) and `chisel-implement` (build); `ai-progress/` → `context/`,
+      `ROADMAP.md` → `PLAN.md`, `LOG.md` folded in. Plan: [SKILLS-REFACTOR.md](SKILLS-REFACTOR.md).
 - [ ] **Phase 4 — Publish.**
 - [ ] **Phase 5 — More agents.** (optional)
 - [ ] **Phase 7 — MCP config.** (optional)
@@ -85,10 +89,10 @@ Source: `H:\localhost\test\xfive-co\wp\wp-content\themes\xfive-co-chisel\`
 5. Fix the false claim in the old CLAUDE.md that `ai/skills/` is auto-discovered.
 6. `npm run validate` must pass.
 
-### FINDINGS.md format (implemented in `chisel-plan`)
+### FINDINGS.md format (implemented in `chisel-new`)
 
-A single global `ai-progress/FINDINGS.md` holds every finding, each line recording the task that
-surfaced it. Findings are usually unrelated to the task in hand, so they must outlive it.
+A single global `context/FINDINGS.md` holds every finding, each line recording the change that
+surfaced it. Findings are usually unrelated to the work in hand, so they must outlive it.
 
 Format is a checkbox list — findings contain paths and code, which break table cells.
 
@@ -122,7 +126,7 @@ a script that exits non-zero can't — and the checks were all deterministic any
       exist, pattern four-way sync, SCSS conventions (`@use '~design'` where helpers are used,
       no raw `var(--wp--*)`, unitless `px-rem`), and no modified files under `core/`.
       Run against the reference theme it found 4 real issues, 0 false positives.
-- [x] **Wired into the flow** — `chisel-new-task` runs it at phase-complete; the four-line
+- [x] **Wired into the flow** — the lifecycle skill runs it at phase-complete; the four-line
       checklist in `rules/CLAUDE.md` shrank to a one-line pointer (it loaded every turn for
       something that only matters at the end of a task).
 - [x] **`chisel-verify` skill** — thin wrapper: runs the command, explains each failure class,
@@ -222,7 +226,7 @@ and uninstall reverses it cleanly.
 *emitter* is a function that renders that shared source into one agent's expected on-disk layout.
 
 **Blocker to solve first: skills hardcode `.claude/…` paths in their prose.** Every cross-link
-(`.claude/chisel/reference/blocks.md`, `.claude/skills/chisel-plan/SKILL.md`) is Claude's installed
+(`.claude/chisel/reference/blocks.md`, `.claude/skills/chisel-implement/SKILL.md`) is Claude's installed
 layout baked into supposedly agent-neutral source. A `cursor` emitter would copy those paths
 verbatim into `.cursor/` and every one would be wrong. Needs a rendered token the way
 `{{THEME_ROOT}}` handles theme paths — e.g. `{{REFERENCE_DIR}}` / `{{SKILLS_DIR}}` per emitter.
@@ -295,6 +299,37 @@ running the installer by hand once.
 
 **Done when:** `node install.js --agent=mcp` registers the server, and uninstall removes it without
 touching anything else in the file.
+
+## Phase 8 — Lifecycle skills refactor
+
+**Why:** the lifecycle skills were cut along the wrong axis. `chisel-new-task` did scope + plan +
+build + close in 114 lines; `chisel-plan` was a 328-line standalone file-format spec that four
+other skills half-restated. Most of the `CLAUDE.md` ↔ new-task ↔ plan duplication existed *because*
+the spec was a separate file.
+
+- [x] **`chisel-new`** — mode → ground → scope ⏸ → plan ⏸ → hand off. Writes no code. Absorbs
+      `chisel-plan`'s templates inline, so nothing loads a spec to write one file. New: a
+      fixed-path grounding checklist (theme.json, `patterns/`, `src/blocks*/`, block styles/mods,
+      Twig components, `context/INDEX.md`) that turns `CLAUDE.md`'s "Reuse before building" hard
+      rule into a step, and `Done when` split `Automated:` / `Manual:` — the theme had no
+      acceptance criteria before this.
+- [x] **`chisel-implement`** — resolve → load → three-stop phase loop → commit ⏸ → close. New: the
+      `Expected / Found / Why it matters` escalation block with a three-way ask (adapt · skip ·
+      re-plan), a touched-file set that decides staging instead of `git status`, and a commit
+      section with ticket detection and a hard no-trailer rule.
+- [x] **Renames.** `ai-progress/` → `context/`, `ROADMAP.md` → `PLAN.md`, `LOG.md` folded into
+      `PLAN.md`'s `## Log`. Free: the package is unpublished, so no installed theme had the old
+      layout. Internal repointing still touched 8 files.
+- [x] **`reference/progress-template.md` deleted.** It existed only to point at `chisel-plan`;
+      with the templates inline it was a hop with no payload.
+
+Shape borrowed from `ai-toolkit/new-skills` (`start` / `new` / `implement`). Deliberately not
+taken: `PROJECT.md` (`CLAUDE.md` plus the design spec already cover that layer) and a `/start`
+equivalent (the toolkit ships `CLAUDE.md`; `chisel-new` creates `context/` on first run).
+
+**Deferred:** applying the reference-doc spine (scope line · hard rules · body · traps · mechanical
+check · related) to all 17 skills, and folding the link/anchor checker into
+`scripts/validate-skills.js` so a dead `#anchor` fails `prepublishOnly` the way a dead link does.
 
 ---
 
