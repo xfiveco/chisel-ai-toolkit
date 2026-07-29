@@ -1,6 +1,6 @@
-# Progress files (ai-progress/) — all modes
+# Progress Files
 
-The format and procedure for progress files is owned by the **`chisel-plan` skill** — see [.claude/skills/chisel-plan/SKILL.md](.claude/skills/chisel-plan/SKILL.md). The same layout serves **every mode** (Figma import, static-asset, prompt, rebuild, migration); only the roadmap's `## Source` block and the typical phase set differ per mode — both covered by the skill.
+Pointer only. The format and procedure for progress files under `ai-progress/` are owned by the **`chisel-plan` skill** — see [.claude/skills/chisel-plan/SKILL.md](.claude/skills/chisel-plan/SKILL.md). The same layout serves **every mode** (Figma import, static-asset, prompt, rebuild, migration); only the roadmap's `## Source` block and the typical phase set differ per mode — both covered by the skill. This file owns nothing of its own.
 
 That skill covers:
 
@@ -12,3 +12,11 @@ That skill covers:
 - Hard rules (roadmap = router with one-line outcomes, one status per phase + one per task, insert-don't-renumber, absolute dates, incidental findings → FINDINGS.md, files beat memory but code beats files, etc.)
 - Procedure for create / update / session start + end — phase files written up front, checklists filled at each phase's gate
 - Anti-patterns
+
+## Related
+
+- Format, templates, hard rules, procedure → [chisel-plan](.claude/skills/chisel-plan/SKILL.md)
+- Scoping new work → [chisel-new-task](.claude/skills/chisel-new-task/SKILL.md)
+- Picking up an active task → [chisel-resume](.claude/skills/chisel-resume/SKILL.md)
+- Mode that skips progress files entirely → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
+- When progress files are required, and the plan-review gate → [CLAUDE.md "Progress tracking"](CLAUDE.md#progress-tracking)

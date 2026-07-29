@@ -1,6 +1,16 @@
-# MCP Workflow (xfive-mcp-chisel)
+# MCP Workflow
 
-The `xfive-mcp-chisel` MCP server is the **only** supported path for creating or modifying Gutenberg content.
+The `xfive-mcp-chisel` MCP server is the **only** supported path for creating or modifying Gutenberg content. Owns the tool list, payload shapes, write procedure, and the block-seeding traps. Does **not** own block file structures or what each `block.json` key does ([blocks.md](.claude/chisel/reference/blocks.md)), spacer and margin seeding rules ([design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)), or the per-screen build order ([screen-build-order.md](.claude/chisel/reference/screen-build-order.md)).
+
+## Hard rules
+
+1. **Every Gutenberg content write goes through MCP** — never PHP seeds, WP-CLI, manual paste, or direct `wp_posts` edits. → [What goes through MCP](#what-goes-through-mcp)
+2. **If the `xfive-mcp-chisel-*` tools aren't in your tool list, STOP and ask** — do not improvise a fallback. → [Prerequisites](#prerequisites)
+3. **`post-update-content` replaces the entire `post_content` on every call** — always fetch current, concatenate onto the full markup, write the whole thing back. → [Workflow for inserting content](#workflow-for-inserting-content)
+4. **Call `block-schema` before hand-writing any block's markup** — wrong attributes are silently ignored. → [Traps](#traps)
+5. **Verify after every write with `block-tree`, counting ALL top-level sections** — a tree taken after a destructive write looks clean. → [Workflow for inserting content](#workflow-for-inserting-content)
+6. **Never use these tools on `patterns/*.php`** — those are source templates, not posts. → [What goes through MCP](#what-goes-through-mcp)
+7. **Pass `post_status: "publish"` explicitly when creating pages** — the tool defaults to draft. → [Post creation defaults](#post-creation-defaults)
 
 ## Prerequisites
 
@@ -11,7 +21,7 @@ The MCP server is provided by the custom `xfive-mcp` WordPress plugin (Xfive-int
 
 If either is missing: **stop**. Ask the user to install/activate the plugin and configure the MCP server, then restart the agent client. Do not improvise a fallback (PHP seeds, WP-CLI, manual paste are all forbidden — see "Do NOT" below).
 
-## Hard rule
+## What goes through MCP
 
 Any Gutenberg content insertion goes through MCP:
 
@@ -99,7 +109,7 @@ Common use cases:
 
 `nav-menu-create` may append items to an existing menu with the same name. Check first via `nav-menu-list` to avoid duplicates.
 
-## Silent-failure traps (block seeding)
+## Traps
 
 These cause "Block validation failed" or wrong markup the agent won't catch on its own. CLAUDE.md carries the headlines; the full explanation of each lives here — read this before hand-writing any block markup.
 
@@ -113,3 +123,29 @@ These cause "Block validation failed" or wrong markup the agent won't catch on i
 - **`post-update-content` un-escapes one backslash level.** ACF block `data` containing `\r\n` / `\t` (multi-line textarea / WYSIWYG fields) must be **double-escaped** (`\\r\\n`, `\\t`) in the content you send, or the escape sequence is stripped to its bare letters and corrupts the field. Re-fetch and verify any field carrying newlines/tabs after writing.
 - **When unsure: round-trip.** Insert one instance in the editor manually, save, `xfive-posts-post-get-content`, copy that exact markup. The block's own `save()` is ground truth.
 - Pages created with an explicit `post_status: "publish"` (the tool defaults to draft) for immediate preview. New ACF block → pause for the user to **compile** (`npm run build-scripts` — the block + field group register only from `build/`), then schema-check passes, then seed (schema fails until the compile runs).
+
+## Mechanical check
+
+Run after every content write, before calling a section done.
+
+1. `block-schema` was called for every block type before its markup was written.
+2. Static blocks (`renderMode: "static"`) seeded as paired tags with rendered inner HTML; only dynamic blocks self-close.
+3. ACF blocks referenced as `chisel/{name}`, never `acf/{name}`.
+4. The full post markup was sent to `post-update-content` — fetched current, concatenated, wrote the whole thing back.
+5. `block-tree` run after the write and **all** top-level sections counted against what should be there.
+6. Page created with an explicit `post_status: "publish"`.
+7. `core/cover` overlays use an `overlayColor` slug — no `customOverlayColor` with a raw hex.
+8. `core/group` carrying both `backgroundColor` and `textColor` also has `has-background` in its class list.
+9. ACF `data` containing `\r\n` / `\t` was double-escaped, then re-fetched and verified.
+10. Images uploaded during the section build with attachment IDs captured; SVG `<img>` tags carry `width` and `height`.
+11. A new ACF block was compiled (`npm run build-scripts`) before any seeding attempt.
+12. `nav-menu-list` checked before `nav-menu-create` so no duplicate menu was appended.
+
+## Related
+
+- Block file structures and what each `block.json` key does → [blocks.md](.claude/chisel/reference/blocks.md)
+- ACF seed-data shape (`_{name}: "field_key"` pointers) → [blocks.md](.claude/chisel/reference/blocks.md#acf-field-data-shape)
+- Spacer, margin and `disableBottomMargin` seeding → [design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)
+- Pattern markup templates → [pattern-markup.md](.claude/chisel/templates/pattern-markup.md)
+- Per-screen build order and verification checklist → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
+- Skills: [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md) · [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) · [figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md)

@@ -1,6 +1,6 @@
 # Screen Build Order
 
-Per-screen pipeline — applies whether the spec comes from Figma, static assets, or a written prompt.
+Per-screen pipeline — applies whether the spec comes from Figma, static assets, or a written prompt. Owns **the order work happens in** and the gate that must pass before a screen is called done. Does **not** own how to perform each step (the skill linked from each) or which block type a section becomes ([section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)). Phase numbers match [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md), which is why they start at 4.
 
 ## Phase 4 — Build order (for one screen)
 
@@ -37,3 +37,13 @@ Before declaring a screen done:
 - [ ] Rendered page matches the spec at primary viewport
 - [ ] Page is published (not draft)
 - [ ] Homepage set via `options-update` (if this is the Home page)
+
+## Related
+
+- Which block type each section becomes → [section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)
+- Block/pattern file structures, four-way sync, block mods → [blocks.md](.claude/chisel/reference/blocks.md)
+- Token inventory, spacer sizing, margin sync → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
+- Seeding sections into a page → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
+- Field-group naming check → [acf-naming.md](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
+- Progress files for multi-screen work → [progress-template.md](.claude/chisel/reference/progress-template.md)
+- Skills: [figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md) (orchestrator) · [verify](.claude/skills/chisel-verify/SKILL.md) (what each automated check means)

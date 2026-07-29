@@ -1,6 +1,23 @@
-# Blocks Reference
+# Blocks
 
-Descriptive lookup for block types, file structures, and existing styles/mods. For the decision ladder (which type to pick), see [section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md). For step-by-step scaffolding, see the matching skill linked from each section below.
+File structures, build-pipeline requirements, and existing styles/mods for the four block-ish things Chisel ships: native blocks, ACF blocks, patterns, and pattern categories. Owns the **what** — the file list for each type and the constraints that make it build. Does **not** own which type to pick ([section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)), ACF field-group naming ([acf-naming.md](.claude/chisel/reference/acf-naming.md)), or spacer sizing ([design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)). Step-by-step scaffolding lives in the skill linked from each section.
+
+## Hard rules
+
+Each one breaks silently — no error, wrong output. Detail in the linked section.
+
+1. **Every `.scss` is imported by a JS entry listed in `block.json`** — else webpack never compiles it and the block renders unstyled. → [File structures](#file-structures)
+2. **`script.js` exists on every block, even when it is one `import` line** — it is the SCSS entry; omit it and the styles never build. → [Block JS/CSS keys](#block-jscss-keys--what-each-file-is-for)
+3. **A block's frontend JS lives in its own `view.js` (`viewScript`)** — never `src/scripts/modules/`, never pushed to the editor via `script`. → [Block JS/CSS keys](#block-jscss-keys--what-each-file-is-for)
+4. **`ignoreScripts` means "this key has no JS to run"**, not "this file is CSS-only forever". → [Block JS/CSS keys](#block-jscss-keys--what-each-file-is-for)
+5. **ACF field-group naming**: hex-hash keys, filename = group key, namespace-prefixed field `name`s. → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
+6. **Every seeded ACF `data` field needs its `_{name}: "field_key"` partner** — without it `get_fields()` returns empty. → [ACF field data shape](#acf-field-data-shape)
+7. **A pattern category must be registered before use** — an unregistered slug is dropped and the pattern lands in "Uncategorized". → [Pattern categories](#pattern-categories)
+8. **Pattern slugs name the section's function, not the page it came from.** → [Pattern slug naming](#pattern-slug-naming-hard-rule)
+9. **Four-way sync**: `Slug:` header, filename, root class, SCSS file + scope all track the pattern slug. → [Root wrapper rule](#root-wrapper-rule)
+10. **Class only the root; target inner blocks by tag** — a BEM `__element` class on a text block only exists on the seeded instance. → [Root wrapper rule](#root-wrapper-rule)
+11. **When seeding a modded block, set the attr AND its companion class** — the attr alone renders nothing. → [Existing block mods](#existing-block-mods)
+12. **Default a `core/spacer` between sibling inner blocks**; never `blockGap`/CSS `gap` for vertical spacing. → [Spacing between sibling blocks](#spacing-between-sibling-blocks)
 
 ## File structures
 
@@ -67,7 +84,9 @@ See [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) for the 
 
 **ACF field group naming (HARD RULE).** Keys must be hex hashes, filename = group key, field `name`s must be namespace-prefixed (block initials → `bp_heading`), `label`s stay human. Full spec, prefix-derivation cases, per-context prefix sources, and example: **[acf-naming.md](.claude/chisel/reference/acf-naming.md)** — the canonical, all-context rule. Read it before authoring any field group JSON.
 
-**ACF field data shape (load-bearing — applies any time you seed an ACF block).** Markup is `wp:chisel/{name}`, NOT `wp:acf/{name}` — Chisel uses `register_block_type()`. Every `data` field needs a `_{name}: "field_key"` partner. ACF resolves values via these key-pointers; without them `get_fields()` returns empty. Repeaters need `items: N`, `_items: "field_B"` plus every sub-field per row with its key (field names below use the prefix rule above):
+### ACF field data shape
+
+**Load-bearing — applies any time you seed an ACF block.** Markup is `wp:chisel/{name}`, NOT `wp:acf/{name}` — Chisel uses `register_block_type()`. Every `data` field needs a `_{name}: "field_key"` partner. ACF resolves values via these key-pointers; without them `get_fields()` returns empty. Repeaters need `items: N`, `_items: "field_B"` plus every sub-field per row with its key (field names below use the prefix rule above):
 
 ```json
 "data": {
@@ -156,6 +175,8 @@ In `src/scripts/editor/mods/` (registered via `blocks-mods.js`). Several add cus
 - **blocks-alignment.js**: on select, force-sets a default `align` per block from the PHP-provided `chiselEditorScripts.blocksDefaultAlignment` map. A seeded `align` on those blocks may be overwritten when the user selects the block — check the map (or just rely on it) rather than fighting it.
 - **core-spacer.js**: forces every `core/spacer` to `height:"auto"` in the editor — spacer size comes ONLY from the `is-style-{size}` padding, never the `height` attr. Always seed `{"height":"auto","className":"is-style-{size}"}` — the style class is mandatory on every spacer, even for the default size (no bare spacers). See [design-tokens.md "Picking the spacer style"](.claude/chisel/reference/design-tokens.md#picking-the-spacer-style).
 
+Editor-only UI helpers (not seed-affecting): `components/BlockEditSelector.js` (an "Edit {block}" button), `components/RenderAppender.js` (custom InnerBlocks inserter), `blocks.js` (adds `e-block-sidebar--{block}` class to the inspector), `utils.js` (icon choices for the button mod).
+
 ## Spacing between sibling blocks
 
 Composition rule (the spacer _sizing_ math — px→style mapping, margin-sync, flex double-gap trap — lives in [design-tokens.md "Spacing between blocks"](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)):
@@ -163,6 +184,32 @@ Composition rule (the spacer _sizing_ math — px→style mapping, margin-sync, 
 - **Default a `core/spacer` between every two sibling inner blocks** — even when Figma uses a uniform `gap`. Editors need draggable handles; `blockGap` and CSS `gap` give none and are invisible to the editor. NEVER use `blockGap` or CSS `gap` in pattern SCSS for **vertical** sibling spacing. One-off margins or section padding in pattern SCSS are fine.
 - **Horizontal gutters are the exception**: gaps between columns in `core/columns` (or a grid) can't be spacers — set them ON the block via `blockGap` with a preset value (`"style":{"spacing":{"blockGap":{"left":"var:preset|spacing|{N}"}}}`). That's the correct, token-backed tool for the horizontal axis.
 - **Walk the markup BEFORE serializing.** For every adjacent sibling pair, if the design shows space, insert a spacer — do this while writing, not after.
-- Pair with the `disableBottomMargin` + `u-no-margin-bottom` rule above (every block immediately followed by a spacer, and every last child of a container) or base margin + spacer = double gap.
+- Pair with the `disableBottomMargin` + `u-no-margin-bottom` rule in [Existing block mods](#existing-block-mods) (every block immediately followed by a spacer, and every last child of a container) or base margin + spacer = double gap.
 
-Editor-only UI helpers (not seed-affecting): `components/BlockEditSelector.js` (an "Edit {block}" button), `components/RenderAppender.js` (custom InnerBlocks inserter), `blocks.js` (adds `e-block-sidebar--{block}` class to the inspector), `utils.js` (icon choices for the button mod).
+## Mechanical check
+
+Run before finishing any block or pattern.
+
+1. Every `.scss` in the block folder is `import`ed by a JS entry that `block.json` lists.
+2. Every `block.json` script key has its matching `style-{handle}.css` in `style` / `viewStyle` / `editorStyle`.
+3. Block's frontend JS is in `view.js` (`viewScript`) — nothing block-specific added to `src/scripts/modules/`.
+4. ACF block markup uses `wp:chisel/{name}`, never `wp:acf/{name}`.
+5. Every seeded ACF `data` field has its `_{name}: "field_key"` partner; repeaters also have `items: N` + `_items` + every sub-field per row.
+6. Field-group JSON passes [acf-naming.md "Mechanical check"](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group).
+7. Four-way sync per pattern: `Slug:` header, filename, root `p-{slug}` class, `src/styles/patterns/_{slug}.scss` scoped under `.p-{slug}`.
+8. No two pattern files share a `p-*` class base; no pattern slug is page-named.
+9. No BEM `__element` class on a leaf/text block — structural blocks only, and only when tag targeting can't single them out.
+10. Every `core/spacer` carries `height:"auto"` AND an explicit `is-style-*` class.
+11. Every seeded modded attr carries its companion class (`disableBottomMargin` + `u-no-margin-bottom`, `buttonIcon` + `has-icon-*`).
+12. Each pattern's `Categories:` slug is registered (built-in, or added via `chisel_block_patterns_categories`).
+
+## Related
+
+- Which block type to pick → [section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)
+- ACF field group naming (all contexts) → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
+- Per-field WPML translation preferences → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)
+- Spacer sizing, margin sync, flex double-gap trap → [design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)
+- Where block/pattern files live → [file-locations.md](.claude/chisel/reference/file-locations.md)
+- Seeding blocks into a page (silent-failure traps) → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
+- Pattern markup templates → [pattern-markup.md](.claude/chisel/templates/pattern-markup.md)
+- Skills: [create-block](.claude/skills/chisel-create-block/SKILL.md) · [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) · [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md) · [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md)

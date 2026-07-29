@@ -1,6 +1,6 @@
 # File Locations
 
-Where to add things in the Chisel theme.
+Where to add things in the Chisel theme — the lookup for "which path does this go in". Owns **paths and the filter/action that registers each thing**. Does **not** own how to write what goes there ([coding-conventions.md](.claude/chisel/reference/coding-conventions.md)), the internal file structure of a block or pattern ([blocks.md](.claude/chisel/reference/blocks.md)), or the core-vs-custom architecture these paths follow ([CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)).
 
 ## Registrations (PHP)
 
@@ -64,3 +64,13 @@ Block-specific field groups: `src/blocks-acf/{block-name}/acf-json/group_{hash}.
 - PHP namespace: `Chisel\` (core), `Chisel\WP\Custom\` (custom) — **the autoloader strips the `Custom` segment** when resolving paths. Mapping cases: [coding-conventions.md "Namespace ↔ path mapping"](.claude/chisel/reference/coding-conventions.md#namespace--path-mapping).
 - CSS class prefixes: `c-` components, `o-` objects, `u-` utilities, `b-` blocks, `p-` patterns, `is-`/`has-` state — ITCSS layer order and BEM rules: [coding-conventions.md "SCSS / CSS"](.claude/chisel/reference/coding-conventions.md#scss--css).
 - JS hook prefix: `js-` (separate from CSS).
+
+## Related
+
+- How to write the code that lives in these paths → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md)
+- What goes inside a block or pattern folder → [blocks.md](.claude/chisel/reference/blocks.md)
+- Twig template hierarchy and global context → [twig-templating.md](.claude/chisel/reference/twig-templating.md)
+- ACF JSON filename = group key, field naming → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
+- What lives in `theme.json` → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
+- Asset, icon and hook registration → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md)
+- Custom REST/AJAX endpoints → [rest-api.md](.claude/chisel/reference/rest-api.md)

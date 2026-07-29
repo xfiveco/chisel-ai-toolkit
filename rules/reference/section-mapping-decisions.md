@@ -1,6 +1,15 @@
 # Section Mapping Decisions
 
-For each distinct section/component in the spec (Figma node, mockup region, or described feature), apply this decision ladder. Stop at the first match — default to the simplest option that works. For file structures, existing styles/mods, and the build-pipeline rule, see [blocks.md](.claude/chisel/reference/blocks.md).
+For each distinct section/component in the spec (Figma node, mockup region, or described feature), apply this decision ladder. Owns **which approach a section becomes** — core blocks, block style, block mod, pattern, ACF block, native block, or CPT. Does **not** own how to build the chosen thing (the skill linked from each rung) or its file structures, existing styles/mods, and the build-pipeline rule ([blocks.md](.claude/chisel/reference/blocks.md)).
+
+## Hard rules
+
+1. **Stop at the first match on the ladder** — default to the simplest option that works. → [Block decision ladder](#block-decision-ladder)
+2. **ACF is the default custom block. Native React requires you to STOP and ask the user first**, with a specific justification — frontend-only interactivity is never one. → [Block decision ladder](#block-decision-ladder)
+3. **Reuse before building** — check existing patterns/blocks for a match; add a variant rather than minting `hero-2`. → [Shared components rule](#shared-components-rule)
+4. **Create a CPT only when all three conditions apply**; never for one-off pages, homepage sections, or content that only lives inside a pattern. → [CPT decision](#cpt-decision)
+5. **ACF metaboxes only for WooCommerce products** — never for regular CPTs. → [CPT decision](#cpt-decision)
+6. **Site-wide header/footer are Twig templates, not patterns** — unless the user explicitly wants block-based site editing. → [Header / footer / global elements](#header--footer--global-elements)
 
 ## Platform questions (answer first)
 
@@ -90,4 +99,13 @@ When you do create one:
 ## Forms
 
 - Use Gravity Forms (already integrated — `src/styles/gravity-forms.scss`)
-- Form designs → configure GF form → embed via `[gravityform]` shortcode or GF block → scope styles in `_p-{pattern-slug}.scss`
+- Form designs → configure GF form → embed via `[gravityform]` shortcode or GF block → scope styles in `src/styles/patterns/_{pattern-slug}.scss` (under `.p-{slug}`)
+
+## Related
+
+- File structures, block mods, existing styles, build-pipeline rule → [blocks.md](.claude/chisel/reference/blocks.md)
+- Where each kind of file goes → [file-locations.md](.claude/chisel/reference/file-locations.md)
+- The order to build a screen in → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
+- Twig components, header/footer templates → [twig-templating.md](.claude/chisel/reference/twig-templating.md)
+- WooCommerce products (the one sanctioned ACF metabox) → [woocommerce.md](.claude/chisel/reference/woocommerce.md)
+- Skills: [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md) · [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) · [create-block](.claude/skills/chisel-create-block/SKILL.md) · [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) · [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md) · [create-component](.claude/skills/chisel-create-component/SKILL.md) · [adapt-header-footer](.claude/skills/chisel-adapt-header-footer/SKILL.md)

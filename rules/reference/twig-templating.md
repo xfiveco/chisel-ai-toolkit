@@ -1,6 +1,13 @@
-# Twig Templating (Timber)
+# Twig Templating
 
-**All Twig templates live in `views/`.** `custom/views/` exists but is unused — edit `views/` directly. The `custom/` folder is for PHP only.
+Template hierarchy, the global Timber context, registered Twig functions, and the custom Timber class map. Owns **how templates are structured and what data they can reach**. Does **not** own Twig syntax conventions such as "never raw PHP in Twig" ([coding-conventions.md](.claude/chisel/reference/coding-conventions.md#twig-rules)), the icon system's internals ([assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#icon-system)), or block template file structure ([blocks.md](.claude/chisel/reference/blocks.md)).
+
+## Hard rules
+
+1. **All Twig templates live in `views/`** — `custom/views/` exists but is unused (legacy); `custom/` is for PHP only. Edit `views/` directly. → [Template hierarchy](#template-hierarchy)
+2. **Logic keyed on a single post/product/term goes as a method on its Timber class**, not a `fn(post)` Twig function. → [Per-post logic → method on the Timber class](#per-post-logic--method-on-the-timber-class-hard-rule)
+3. **Always use `breadcrumbs()` — never hand-roll breadcrumbs.** → [Custom Twig functions](#custom-twig-functions-from-corewptwigphp)
+4. **Request the smallest image size that fits the render width** — never `full` unless you genuinely need the original. → [Uploaded images](#uploaded-images)
 
 ## Template hierarchy
 
@@ -160,3 +167,13 @@ Configured in `core/Timber/Cache.php`:
 - **Development** (`WP_DEBUG` or `development` env): cache disabled, auto_reload + debug on
 - **Production**: cache enabled, auto_reload off, debug off
 - Adjust via `chisel_cache_expiry`, `chisel_cache_everything`, `chisel_environment_cache` filters
+
+## Related
+
+- "Never raw PHP in Twig", ACF block context vars → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md#twig-rules)
+- Icon system, `get_icon()` parameters and CSS classes → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#icon-system)
+- Twig/Timber registration hooks (`timber/context`, `chisel_twig_register_functions`) → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#twig)
+- Which path each template file goes in → [file-locations.md](.claude/chisel/reference/file-locations.md#twig-templates)
+- Block template locations and the build-pipeline rule → [blocks.md](.claude/chisel/reference/blocks.md)
+- WooCommerce template overrides → [woocommerce.md](.claude/chisel/reference/woocommerce.md)
+- Skills: [create-component](.claude/skills/chisel-create-component/SKILL.md) · [adapt-header-footer](.claude/skills/chisel-adapt-header-footer/SKILL.md)

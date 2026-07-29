@@ -1,8 +1,18 @@
-# Design Tokens (theme.json)
+# Design Tokens
 
-Chisel starter inventory and naming conventions. **Treat values below as the starter state — read `theme.json` for the project's current values before relying on any specific size/hex.** The protected slug names (palette + spacing aliases) are the only stable facts; everything else may have been adapted to the project's spec.
+The token inventory Chisel's `theme.json` ships, the naming conventions around it, and the rules for mapping a design's tokens onto it. **Treat values below as the starter state — read `theme.json` for the project's current values before relying on any specific size/hex.** The protected slug names (palette + spacing aliases) are the only stable facts; everything else may have been adapted to the project's spec. Does **not** own the extraction procedure ([setup-theme-json](.claude/skills/chisel-setup-theme-json/SKILL.md)), editing `theme.json` ([theme-json](.claude/skills/chisel-theme-json/SKILL.md)), or where spacers go in markup ([blocks.md](.claude/chisel/reference/blocks.md#spacing-between-sibling-blocks)).
 
 See [theme-json](.claude/skills/chisel-theme-json/SKILL.md) to modify.
+
+## Hard rules
+
+1. **Match every token by its resolved VALUE, never by its name** — Figma and Chisel share slug names that resolve to different values. → [Mapping Figma tokens → theme.json](#mapping-figma-tokens--themejson-hard-rule--match-values-never-names)
+2. **Never rename a protected slug** (palette + spacing aliases) — SCSS, helpers and theme.json reference them by name. → [Colors](#colors), [Spacing](#spacing)
+3. **Never call a `get-*` helper that isn't defined in `src/design/tools/`** — an undefined function fails the build. → [Layout](#layout)
+4. **A new `settings.custom.{category}` token needs its matching accessor added in the same change.** → [Layout](#layout)
+5. **Every spacer carries `height:"auto"` AND an explicit `is-style-*` class** — the `height` attr is force-overwritten, so size comes only from the style class. → [Picking the spacer style](#picking-the-spacer-style)
+6. **Spacers and `layout: flex` never mix** — flex adds its own gap on top, doubling the spacing. Use `layout: constrained`. → [Layout trap](#layout-trap)
+7. **Sync auto-margins in BOTH sources** — `src/styles/blocks/_core.scss` and `theme.json` `styles.blocks`, or they stack against spacers. → [Margin sync at project start](#margin-sync-at-project-start)
 
 ## Colors
 
@@ -21,12 +31,14 @@ Usage: `var(--wp--preset--color--{slug})` or SCSS `get-color('slug')`.
 
 Match every token by its **resolved value** (px / hex / weight), never by its name. Read the value from Figma (`get_variable_defs` — the only ground truth) and from the current `theme.json`, then pick the slug whose value matches. If none matches, map to the nearest step; extend `theme.json` only if Figma has a genuinely denser scale. **Never rename protected slugs** (palette + spacing aliases) to mirror Figma — SCSS, helpers, and theme.json reference them by name. Use a Figma name as a slug **only** for a brand-new token Chisel lacks.
 
-**False friends — same name, different value (never map name-to-name):**
+**Trap — false friends, same name, different value (never map name-to-name):**
 
 - `large` — Chisel's is mid-scale, not the biggest; Figma `large` / `xl` map _above_ it (`xlarge` / `big`).
 - `medium` — Chisel's spacing value ≠ Figma's; check the px.
 
-Don't trust the Figma token's **name**, the rendered `get_design_context` CSS, or the `weight:` / `size:` in a `Font(...)` summary — each can disagree with the bound variable. On conflict, the design's visual intent wins — surface it to the user. Always re-read `theme.json`; never assume a slug's value from memory or this doc.
+**Trap.** Don't trust the Figma token's **name**, the rendered `get_design_context` CSS, or the `weight:` / `size:` in a `Font(...)` summary — each can disagree with the bound variable. On conflict, the design's visual intent wins — surface it to the user. Always re-read `theme.json`; never assume a slug's value from memory or this doc.
+
+## Typography
 
 - **body**: Roboto 300/700 — `var(--wp--preset--font-family--body)`
 - **headings**: Manrope 700/800 — `var(--wp--preset--font-family--headings)`
@@ -104,7 +116,7 @@ For each spacer, derive the slug from `theme.json` instead of hardcoding. This i
 2. Compute the **rendered height of each spacer style**: each `is-style-{alias}` in `src/styles/blocks/_core-spacer.scss` sets `padding: get-margin('{alias}') 0`, so rendered height = **2× that margin alias's current value in `theme.json`** (if `small` resolves to 12px, the spacer renders 24px). The base `.wp-block-spacer` (no style class) uses `get-margin('normal')`. Always compute from the **current** `theme.json` `settings.custom.margin` values — never from remembered numbers; the scale is rewritten at project setup.
 3. Pick the `is-style-{alias}` whose **rendered height** matches the Figma px (closest if no exact). Seed `"className": "is-style-{alias}"`. **Every spacer carries an explicit `is-style-*` class — even when the default size is the right one.** A bare `wp-block-spacer` silently falls back to the base size and reads as an unmade decision, not a chosen one.
 
-**The `height` attribute is IGNORED — always seed `height:"auto"`.** `src/scripts/editor/mods/core-spacer.js` runs an `editor.BlockEdit` filter that force-sets every `core/spacer` to `height: "auto"` on load. So an inline `height:"32px"` is silently overwritten and the rendered size comes **only** from the `is-style-*` padding. Seeding a px height is dead markup that misleads — write `{"height":"auto","className":"is-style-{alias}"}` with `style="height:auto"` (matches [templates/pattern-markup.md](.claude/chisel/templates/pattern-markup.md)).
+**Trap — the `height` attribute is IGNORED; always seed `height:"auto"`.** `src/scripts/editor/mods/core-spacer.js` runs an `editor.BlockEdit` filter that force-sets every `core/spacer` to `height: "auto"` on load. So an inline `height:"32px"` is silently overwritten and the rendered size comes **only** from the `is-style-*` padding. Seeding a px height is dead markup that misleads — write `{"height":"auto","className":"is-style-{alias}"}` with `style="height:auto"` (matches [templates/pattern-markup.md](.claude/chisel/templates/pattern-markup.md)).
 
 If no alias's rendered height is close enough, extend the scale in `theme.json` (add a margin alias + matching spacer `is-style` in `_core-spacer.scss` + `registerSpacerStyles()`) rather than picking a misfit — never rename an existing alias to match Figma, and never rely on the `height` attr.
 
@@ -133,7 +145,7 @@ In practice: nearly every non-spacer block inside patterns. Why both are require
 
 ### Layout trap
 
-**Spacers + `layout: flex` = double spacing.** Flex groups add `gap: var(--wp--style--block-gap)` on top of spacers. If using spacers → `layout: constrained` (default). Use `flex` only when you need flex features AND rely on its gap instead of spacers. Never mix.
+**Trap — spacers + `layout: flex` = double spacing.** Flex groups add `gap: var(--wp--style--block-gap)` on top of spacers. If using spacers → `layout: constrained` (default). Use `flex` only when you need flex features AND rely on its gap instead of spacers. Never mix.
 
 ## Special cases
 
@@ -143,3 +155,28 @@ In practice: nearly every non-spacer block inside patterns. Why both are require
 ## Fonts
 
 Google Fonts: download WOFF2 from `https://gwfh.mranftl.com/fonts`, save to `assets/fonts/`, register `fontFace` in theme.json. Never fabricate font files — flag as follow-up if missing.
+
+## Mechanical check
+
+Run before finishing any token work.
+
+1. Every token mapped by its **resolved value**, not its name — a Figma name is used as a slug only for a token Chisel genuinely lacks.
+2. No protected slug renamed — palette slugs and spacing aliases keep their names; only values change.
+3. Every `get-*` helper called in new SCSS is defined in `src/design/tools/`.
+4. Any new `settings.custom.{category}` token has its matching accessor in `src/design/tools/_theme.scss`, added in the same change.
+5. No hardcoded `max-width: px-rem(N)` for a width that recurs — two patterns sharing a width means the token should exist.
+6. Every `core/spacer` seeded with `height:"auto"` AND an explicit `is-style-{alias}` class — no bare spacers.
+7. Spacer alias picked from **rendered height** (2× the margin alias's current `theme.json` value), not remembered numbers.
+8. Margin sync applied to **both** `src/styles/blocks/_core.scss` and `theme.json` `styles.blocks`.
+9. Any pattern using spacers is `layout: constrained`, never `flex`.
+10. `disableBottomMargin` + `u-no-margin-bottom` set together on the root wrapper, every block before a spacer, and every last child of a container.
+11. SVG `<img>` tags carry explicit `width` and `height`.
+12. Every registered `fontFace` points at a file that actually exists in `assets/fonts/`.
+
+## Related
+
+- Where spacers go in markup, root wrapper rule, block mods → [blocks.md](.claude/chisel/reference/blocks.md#spacing-between-sibling-blocks)
+- `get-*` helper signatures, ITCSS layers, tokenize-repeated-values → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md#tokenize-repeated-values)
+- Pattern markup templates (spacer + margin seeding) → [pattern-markup.md](.claude/chisel/templates/pattern-markup.md)
+- Build-order phase where tokens are confirmed → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
+- Skills: [setup-theme-json](.claude/skills/chisel-setup-theme-json/SKILL.md) (extraction) · [theme-json](.claude/skills/chisel-theme-json/SKILL.md) (editing) · [adapt-base-styles](.claude/skills/chisel-adapt-base-styles/SKILL.md)

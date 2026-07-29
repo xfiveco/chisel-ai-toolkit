@@ -1,10 +1,12 @@
-# ACF Field Group Naming (canonical — all ACF field groups)
+# ACF Field Group Naming
 
-Applies to **every** ACF field group JSON you author, regardless of where it attaches (block, options page, WooCommerce product meta box, term meta). Two independent properties, two independent rules — plus a context-dependent prefix source.
+Naming rules for **every** ACF field group JSON you author, regardless of where it attaches (block, options page, WooCommerce product meta box, term meta). This is the single source of truth — the block reference, the create-acf-block skill, and the create-acf-options skill all point here. Owns `key`, `name`, `label`, and `modified`. Does **not** own what WPML *does* with each field ([acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)) or block file structure and seed-data shape ([blocks.md](.claude/chisel/reference/blocks.md)).
 
-This is the single source of truth. The block reference, the create-acf-block skill, and the create-acf-options skill all point here.
+## Hard rules
 
-## Rule 1 — `key` (group + every field) = real ACF-style hex hash
+Two independent properties, two independent rules — plus a context-dependent prefix source.
+
+### Rule 1 — `key` (group + every field) = real ACF-style hex hash
 
 `group_` / `field_` followed by 13 hex chars, generated fresh per field — e.g. `group_6a1f3d2c9e740`, `field_6a1f3d2c9e741`. **Never** human-readable keys (`group_contact_fields`, `field_heading`).
 
@@ -12,7 +14,7 @@ This is the single source of truth. The block reference, the create-acf-block sk
 
 Why: the key is the field group's sync identity. ACF's admin UI writes edits back to a JSON file named after the group key. Human-named keys/files break the round-trip — import → edit-in-UI → save-back: the group imports, but UI edits don't persist to disk, and column/wrapper settings (e.g. a repeater sub-field `wrapper.width` of `25%`/`75%`) silently fail to populate. This is identical across all attachment points — it's about ACF's save mechanism, not about blocks.
 
-## Rule 2 — `name` (the field slug) = namespaced, globally unique
+### Rule 2 — `name` (the field slug) = namespaced, globally unique
 
 Every field `name` carries a namespace prefix so names are globally unique across the project. WPML registers translatable strings by field `name`; duplicate names bleed strings across contexts.
 
@@ -27,11 +29,11 @@ Every field `name` carries a namespace prefix so names are globally unique acros
 
 **Sub-fields** (repeater / group) use the **full parent name** as their base, in every context: repeater `bp_steps` → `bp_steps_label`, `bp_steps_title`. Options repeater `social_links` → `social_links_url`, `social_links_label`.
 
-## Rule 3 — `label` stays human-readable
+### Rule 3 — `label` stays human-readable
 
 Only `name` is prefixed. `label` is what editors see: `Heading`, `Step label`, `CTA text`. Never prefix labels.
 
-## Rule 4 — bump `modified` on EVERY edit to a field-group JSON
+### Rule 4 — bump `modified` on EVERY edit to a field-group JSON
 
 Any time you hand-edit a field-group JSON — adding/removing a field, renaming, changing a preference, fixing a key, anything — set the group's top-level `"modified"` to the current unix timestamp (seconds). This applies to **every** ACF JSON file, not just WPML/preference changes.
 
@@ -61,9 +63,9 @@ Block `blueprint-process` → prefix `bp`:
 3. **Every** field and sub-field `name` starts with the context prefix. Generic unprefixed names (`mode`, `count`, `heading`, `body`, `style`, `terms`) are violations even when they read fine in isolation — two blocks both shipping `mode` is exactly the WPML collision this rule prevents.
 4. Top-level `"modified"` is set to the current unix timestamp (Rule 4) — on creation and on every edit.
 
-## Skills
+## Related
 
-- Block field group → [create-acf-block skill](.claude/skills/chisel-create-acf-block/SKILL.md)
-- Options page field group → [create-acf-options skill](.claude/skills/chisel-create-acf-options/SKILL.md)
-- Block file structure + ACF seed-data shape (`_{name}: "field_key"` pointers) → [blocks.md](.claude/chisel/reference/blocks.md)
 - Per-field WPML translation preferences (`wpml_cf_preferences`, Expert mode) → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)
+- Block file structure + ACF seed-data shape (`_{name}: "field_key"` pointers) → [blocks.md](.claude/chisel/reference/blocks.md)
+- Where ACF JSON lives → [file-locations.md](.claude/chisel/reference/file-locations.md)
+- Skills: [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) (block field group) · [create-acf-options](.claude/skills/chisel-create-acf-options/SKILL.md) (options page field group)

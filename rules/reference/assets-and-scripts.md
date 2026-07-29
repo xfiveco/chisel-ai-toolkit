@@ -1,5 +1,14 @@
 # Assets, Icons & Hooks
 
+Asset registration filters, the icon system, Swiper wiring, and the load-bearing Chisel hooks. Owns **how** styles/scripts get enqueued and how icons and sliders are configured. Does **not** own SCSS conventions or ITCSS layering ([coding-conventions.md](.claude/chisel/reference/coding-conventions.md)), or where asset source files live ([file-locations.md](.claude/chisel/reference/file-locations.md)).
+
+## Hard rules
+
+1. **Register custom scripts/styles via filters in `custom/app/WP/Assets.php`** (`filter_hooks()` method, `HooksSingleton` trait) — **not** in `custom/functions.php`. → [Asset registration](#asset-registration)
+2. **Overriding a shared component style is diff-only** — read the global source first, then write only the rules that differ. → [Overriding shared component styles](#overriding-shared-component-styles-slider-base-styles)
+3. **Initialize Swiper via `data-*` attributes on `.swiper.js-slider`** — never hand-instantiate in JS. → [Swiper](#swiper)
+4. **The hook lists below are not exhaustive** — grep `core/` for `apply_filters` / `do_action` before concluding a hook doesn't exist. → [Chisel hooks reference](#chisel-hooks-reference)
+
 ## Asset registration
 
 Managed by `core/WP/Assets.php`. Add custom scripts/styles via filters in `custom/app/WP/Assets.php` (`filter_hooks()` method, `HooksSingleton` trait) — **not** in `custom/functions.php` (see [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)). The filter hooks below all apply:
@@ -72,7 +81,7 @@ Static icons for buttons are listed in `src/design/settings/_index.scss` as `$st
 
 ### Cleaning Figma-exported SVGs
 
-Figma's SVG export inlines `fill="var(--fill-0, #xxxxxx)"` and `width="100%"` / `height="100%"` attributes. Before saving to `assets/icons-source/{name}.svg`:
+**Trap.** Figma's SVG export inlines `fill="var(--fill-0, #xxxxxx)"` and `width="100%"` / `height="100%"` attributes — saved as-is, the icon ignores CSS color and renders at the wrong size. Before saving to `assets/icons-source/{name}.svg`:
 
 - Strip `var(--fill-…)` wrappers; set `fill="currentColor"` (or remove `fill` entirely so the icon inherits via CSS `mask`).
 - Remove `width`/`height` attributes — the icon system sets them.
@@ -91,7 +100,7 @@ Initialize Swiper sliders via `data-*` attributes on `.swiper.js-slider` — nev
 | `data-breakpoints`     | JSON for per-breakpoint overrides                                     |
 | `data-args`            | JSON for any other Swiper option                                      |
 
-`slidesPerView: "auto"` requires each slide to have a fixed width in CSS; otherwise use numeric values + `data-breakpoints`.
+**Trap.** `slidesPerView: "auto"` requires each slide to have a fixed width in CSS; otherwise use numeric values + `data-breakpoints`.
 
 ### Customizing default arrows
 
@@ -110,7 +119,7 @@ The framework renders text arrows in `.swiper-button` `::after`. To replace with
 
 ### Pagination
 
-When the pagination container is a flex row, bullets need `flex-shrink: 0` or they collapse to 0 width and disappear.
+**Trap.** When the pagination container is a flex row, bullets need `flex-shrink: 0` or they collapse to 0 width and disappear.
 
 ## Overriding shared component styles (slider, base styles)
 
@@ -155,3 +164,11 @@ The lists below cover the load-bearing hooks. **Not exhaustive** — for less co
 | `chisel_cache_expiry`      | Cache duration                   |
 | `chisel_cache_everything`  | Cache all contexts               |
 | `chisel_environment_cache` | Environment-specific cache rules |
+
+## Related
+
+- SCSS conventions, ITCSS layers, don't-duplicate-globals → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md)
+- Where asset, icon and font source files live → [file-locations.md](.claude/chisel/reference/file-locations.md)
+- Using `get_icon()` and registering Twig functions → [twig-templating.md](.claude/chisel/reference/twig-templating.md)
+- Where a block's own JS/CSS goes → [blocks.md](.claude/chisel/reference/blocks.md#block-jscss-keys--what-each-file-is-for)
+- Skills: [adapt-base-styles](.claude/skills/chisel-adapt-base-styles/SKILL.md) · [create-component](.claude/skills/chisel-create-component/SKILL.md)

@@ -1,6 +1,6 @@
 # REST API / AJAX Endpoints
 
-Chisel provides an AJAX/REST system built on `WP_REST_Controller`.
+Chisel provides an AJAX/REST system built on `WP_REST_Controller`. Owns the `chisel/v2` route contract, how endpoint classes are discovered, and the procedure for adding one. Does **not** own where endpoint files live ([file-locations.md](.claude/chisel/reference/file-locations.md)) or the autoloader's `Custom`-segment rule these paths depend on ([coding-conventions.md "Namespace ↔ path mapping"](.claude/chisel/reference/coding-conventions.md#namespace--path-mapping)).
 
 ## Architecture
 
@@ -75,3 +75,11 @@ REST URL localized to frontend script as `chisel_ajax.rest_url`:
 const response = await fetch(`${chiselAjax.rest_url}search/?query=${term}`);
 const data = await response.json();
 ```
+
+## Related
+
+- Where endpoint and hook-registration files go → [file-locations.md](.claude/chisel/reference/file-locations.md)
+- The autoloader's `Custom`-segment stripping (why the path drops `Custom`) → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md#namespace--path-mapping)
+- Frontend JS conventions and where site-wide scripts live → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md#javascript)
+- How `chisel_ajax.rest_url` gets localized onto `app.js` → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#default-assets)
+- Core vs custom, and why hooks never go in `custom/functions.php` → [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)

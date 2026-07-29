@@ -1,5 +1,18 @@
 # Coding Conventions
 
+PHP, JavaScript, SCSS and Twig style rules for code you write in this theme, plus the design-helper API (`get-*` functions, `bp()` mixins). Owns **how** code is written. Does **not** own where files go ([file-locations.md](.claude/chisel/reference/file-locations.md)), block and pattern file structures ([blocks.md](.claude/chisel/reference/blocks.md)), or the token inventory ([design-tokens.md](.claude/chisel/reference/design-tokens.md)).
+
+## Hard rules
+
+1. **`phpcs.xml` at the theme root is the source of truth for PHP style** — it deviates from stock WPCS; read the ruleset rather than assuming. → [PHP](#php)
+2. **Always `@use '~design' as *;` at the top of every SCSS file** — use the helper functions, never raw `var(--wp--*)`. → [SCSS / CSS](#scss--css)
+3. **Don't duplicate global styles** — theme.json and base mixins cascade everywhere; restating a global value is dead CSS that drifts. → [Don't duplicate global styles](#dont-duplicate-global-styles-hard-rule)
+4. **Tokenize repeated values** — any repeated dimension belongs in `theme.json` + a `get-*` helper, never a hardcoded literal. → [Tokenize repeated values](#tokenize-repeated-values)
+5. **Nest breakpoints inside the rule** — never re-declare a selector in a trailing media query. → [Nest breakpoints inside the rule](#nest-breakpoints-inside-the-rule-hard-rule)
+6. **Asset URLs go through the `background-image()` mixin** — a raw `url('../../assets/…')` silently breaks the webpack build. → [Asset URLs in SCSS](#asset-urls-in-scss-build-trap)
+7. **Never hand-edit `_index.scss` barrels** — the build generates them; drop the partial in and it is picked up. → [Tokenize repeated values](#tokenize-repeated-values)
+8. **Never use raw PHP in Twig** — use a Timber built-in, the `function()` bridge, or a registered Twig function. → [Twig rules](#twig-rules)
+
 ## PHP
 
 - Core namespace: `Chisel\`. Custom: `Chisel\WP\Custom\`.
@@ -146,3 +159,12 @@ Never use raw PHP in Twig. Use one of:
 2. `function()` bridge: `{{ function('wp_head') }}`, `{{ function('get_stylesheet_directory_uri') }}`
 3. Registered Twig function: `{{ get_responsive_image() }}`, `{{ get_icon() }}`, `{{ bem() }}`
 4. Custom Twig function via `chisel_twig_register_functions`
+
+## Related
+
+- Where each kind of file goes → [file-locations.md](.claude/chisel/reference/file-locations.md)
+- Token inventory, protected slugs, width ladder → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
+- Template hierarchy, Timber context, custom Twig functions → [twig-templating.md](.claude/chisel/reference/twig-templating.md)
+- Block/pattern file structures and the build-pipeline rule → [blocks.md](.claude/chisel/reference/blocks.md)
+- Asset registration, icons, Swiper, Chisel hooks → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md)
+- Skills: [adapt-base-styles](.claude/skills/chisel-adapt-base-styles/SKILL.md) · [create-component](.claude/skills/chisel-create-component/SKILL.md) · [theme-json](.claude/skills/chisel-theme-json/SKILL.md)
