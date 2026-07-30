@@ -178,5 +178,7 @@ Run before finishing any token work.
 - Where spacers go in markup, root wrapper rule, block mods → [blocks.md](.claude/chisel/reference/blocks.md#spacing-between-sibling-blocks)
 - `get-*` helper signatures, ITCSS layers, tokenize-repeated-values → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md#tokenize-repeated-values)
 - Pattern markup templates (spacer + margin seeding) → [pattern-markup.md](.claude/chisel/templates/pattern-markup.md)
+- JSON shape for each token type → [theme-json-recipes.md](.claude/chisel/templates/theme-json-recipes.md)
+- Which file each base style lives in → [base-styles.md](.claude/chisel/reference/base-styles.md)
 - Build-order phase where tokens are confirmed → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
 - Skills: [setup-theme-json](.claude/skills/chisel-setup-theme-json/SKILL.md) (extraction) · [theme-json](.claude/skills/chisel-theme-json/SKILL.md) (editing) · [adapt-base-styles](.claude/skills/chisel-adapt-base-styles/SKILL.md)

@@ -72,7 +72,7 @@ Load-bearing rules that cut across skills — breaking them causes silent failur
 - ACF + WPML per-field translation → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)
 - Custom Post Type → [cpt.md](.claude/chisel/reference/cpt.md)
 - Header / footer / nav / logo → [header-footer.md](.claude/chisel/reference/header-footer.md)
-- `adapt-base-styles` has no reference owner — open the skill directly.
+- Buttons / typography / links / forms / per-block defaults → [base-styles.md](.claude/chisel/reference/base-styles.md)
 
 ### Change tracking
 
@@ -146,6 +146,7 @@ Load the matching doc before its skill (see "Scaffolding"):
 - [section-mapping-decisions](.claude/chisel/reference/section-mapping-decisions.md) — decision ladder + quick-pick table
 - [cpt](.claude/chisel/reference/cpt.md) — Custom Post Type options, factory defaults, Gutenberg requirement
 - [header-footer](.claude/chisel/reference/header-footer.md) — site chrome file map + which source feeds each element
+- [base-styles](.claude/chisel/reference/base-styles.md) — where every base style lives + the icon system
 - [screen-build-order](.claude/chisel/reference/screen-build-order.md) — phase order + verification checklist
 - [mcp-workflow](.claude/chisel/reference/mcp-workflow.md) — MCP tool usage (posts, blocks, media, ACF, terms, menus, options, widgets)
 - [coding-conventions](.claude/chisel/reference/coding-conventions.md) — PHP/JS/SCSS/Twig conventions
