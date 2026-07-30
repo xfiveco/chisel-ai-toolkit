@@ -116,11 +116,13 @@ Appends to: `templates/pattern-markup.md`
 Creates: `rules/reference/base-styles.md`, `rules/reference/header-footer.md`,
 `templates/theme-json-recipes.md`
 
-### Batch 3 — orchestrator + tail (2 skills)
+### Batch 3 — orchestrator + tail (2 skills) — done
 
 `figma-to-chisel` · `extend-core-block`
 
-Appends to: `templates/block-mod-template.md`
+Appends to: `templates/block-mod-template.md`, retitled "Block Style & Mod Template" since it now
+covers all three approaches, not just mods. Filename kept — three inbound links, no gain in churning
+them.
 
 ### Batch 4 — the wiring
 

@@ -306,7 +306,7 @@ Filled in as each batch lands.
 | 0 | — | — | Two `## Related` blocks added, nothing moved |
 | 1 | ~600 removed across 7 skills | ~530 into 4 new templates + 2 new reference docs + 57 into `blocks.md` | New prose: `## Related` and `## Mechanical check` on 7 skills, plus `## Traps` rewrites of Guidelines lists. 465 links resolve (was 326) |
 | 2 | ~230 removed across 3 skills | ~200 into `base-styles.md` + ~150 into `theme-json-recipes.md` | `chisel-theme-json` gained a `## Procedure` it never had; `setup-theme-json` gained Traps + Mechanical check |
-| 3 | | | |
+| 3 | ~60 removed across 2 skills | ~90 into `block-mod-template.md` (retitled "Block Style & Mod Template") | `figma-to-chisel` gained `## Traps` and `## Mechanical check`, which it had neither of; `extend-core-block` gained all three closing sections |
 
 ### Batch 1 scope change
 
