@@ -72,6 +72,7 @@ Variant maps to `is-style-{variant}` (Gutenberg button block) or `c-btn--{varian
 ## Related
 
 - File map for every base style, icons, design tools → [base-styles.md](.claude/chisel/reference/base-styles.md)
+- `get_icon()` parameters, `.o-icon` classes, and overriding shared component styles → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#icon-system)
 - Token slugs, protected set, margin sync → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
 - Adding or changing a token → [theme-json](.claude/skills/chisel-theme-json/SKILL.md)
 - A variant instead of a new default → [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md)

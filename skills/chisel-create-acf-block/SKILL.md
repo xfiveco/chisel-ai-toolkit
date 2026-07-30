@@ -35,7 +35,7 @@ For free-form composition use [create-pattern](.claude/skills/chisel-create-patt
 3. **Run `npm run dev` or `build-scripts` to compile** — Chisel registers blocks from `build/blocks-acf/`, NOT `src/blocks-acf/`. Until the build runs, the block won't appear and the editor will show "your site doesn't include {block-name} block" on existing posts referencing it.
 4. **Verify** in editor under "Chisel Blocks", then `xfive-blocks-block-schema` to confirm registration.
 
-Need the block to open at full width by default? [reference/blocks.md "Default block alignment"](.claude/chisel/reference/blocks.md#default-block-alignment).
+Need the block to open at full width by default? [reference/blocks.md "Default block alignment"](.claude/chisel/reference/blocks.md#default-block-alignment). Building a slider? Chisel initializes Swiper from `data-*` attributes on `.swiper.js-slider` — never hand-instantiate it in `view.js`: [assets-and-scripts.md "Swiper"](.claude/chisel/reference/assets-and-scripts.md#swiper).
 
 ## Traps
 
@@ -62,4 +62,6 @@ Need the block to open at full width by default? [reference/blocks.md "Default b
 - Per-field WPML translation preferences → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)
 - Build-pipeline rule, JS/CSS keys, field-data shape → [blocks.md](.claude/chisel/reference/blocks.md)
 - Entity-like content that wants a CPT → [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md)
+- Swiper `data-*` API, icons, asset registration → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md)
+- `view.js` fetching from the server (`chisel/v2` AJAX endpoints) → [rest-api.md](.claude/chisel/reference/rest-api.md)
 - Seeding the block into a page → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)

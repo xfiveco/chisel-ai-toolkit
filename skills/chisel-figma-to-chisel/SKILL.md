@@ -101,7 +101,7 @@ Header/footer: use `adapt-header-footer` skill, not patterns.
 **When `get_design_context` returns an asset URL (`const imgFoo = "https://www.figma.com/api/mcp/asset/..."`), DOWNLOAD it — never redraw from scratch.** This applies to icons, illustrations, logos, photos, decorative SVGs — anything Figma exposes as an asset reference. Use `curl` to fetch the URL, then either:
 
 - For raster (PNG/JPG/WEBP): upload via `xfive-media-media-upload` and use the attachment ID.
-- For SVG icons that should join Chisel's mask-based icon system: save to `assets/icons-source/{name}.svg` (and convert stroke-only paths to fills if the icon will be masked — Chisel uses `mask: url(...)` + `background-color: currentColor`, which needs filled shapes; round-trip the SVG to a fill-equivalent silhouette if needed). Registering it: [base-styles.md "Icons"](.claude/chisel/reference/base-styles.md#icons).
+- For SVG icons that should join Chisel's mask-based icon system: save to `assets/icons-source/{name}.svg` (and convert stroke-only paths to fills if the icon will be masked — Chisel uses `mask: url(...)` + `background-color: currentColor`, which needs filled shapes; round-trip the SVG to a fill-equivalent silhouette if needed). **Clean the export first** — Figma inlines `fill="var(--fill-0, #xxxxxx)"` and `width`/`height` attributes that break color and sizing: [assets-and-scripts.md "Cleaning Figma-exported SVGs"](.claude/chisel/reference/assets-and-scripts.md#cleaning-figma-exported-svgs). Registering it: [base-styles.md "Icons"](.claude/chisel/reference/base-styles.md#icons).
 - For SVG illustrations used as `<img>` or background-image: upload via `xfive-media-media-upload`.
 
 Asset URLs returned by Figma are short-lived (~7 days) but stable for the duration — download them at the moment `get_design_context` returns them, alongside the rest of the section's work. If you skip the download and "draw something close" instead, the section won't match Figma and the user will catch it in browser review (wasted round-trip).
@@ -151,3 +151,4 @@ Skills are in the Skill map above. Reference docs this import leans on:
 - Matching Figma tokens to theme.json by value → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
 - Seeding sections into a page, and its silent-failure traps → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
 - Registering a downloaded icon → [base-styles.md](.claude/chisel/reference/base-styles.md#icons)
+- Cleaning a Figma SVG export, and the `get_icon()` runtime → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#icon-system)

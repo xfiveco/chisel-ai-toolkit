@@ -64,4 +64,6 @@ Class prefixes, JS hook classes, block name and category: [reference/blocks.md "
 - Why ACF is the default instead → [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md)
 - Whether a block is needed at all → [section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)
 - A core block variant instead of a new block → [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md)
+- Swiper `data-*` API, icons, asset registration → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md)
+- `view.js` fetching from the server (`chisel/v2` AJAX endpoints) → [rest-api.md](.claude/chisel/reference/rest-api.md)
 - Seeding the block into a page → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)

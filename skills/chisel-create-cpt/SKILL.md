@@ -68,4 +68,5 @@ When the CPT has to appear on the homepage or another page (latest N, or a curat
 - Registration, taxonomy and block-data filter code → [cpt-template.md](.claude/chisel/templates/cpt-template.md)
 - The block that displays the entries → [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md)
 - `single-{slug}.twig` / `archive-{slug}.twig` → [twig-templating.md](.claude/chisel/reference/twig-templating.md#template-hierarchy)
+- Load-more pagination on the archive (built-in endpoint, no code) → [rest-api.md](.claude/chisel/reference/rest-api.md#built-in-endpoint)
 - Seeding entries and images → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
