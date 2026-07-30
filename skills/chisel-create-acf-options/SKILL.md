@@ -1,6 +1,7 @@
 ---
 name: chisel-create-acf-options
-description: Register an ACF Options page or sub-page for global site settings (theme options, social links, footer content, header settings) accessible from any template via `get_field('name', 'option')`.
+description: Register an ACF Options page or sub-page for global site settings — theme options, social links, header CTA, footer content — reachable from any template as `{{ options.field_name }}`. Use when a value is site-wide and editable but belongs to no single post. Do NOT use for content a widget area, nav menu, or the Customizer already covers, or for per-post fields (those attach to the post type or the block).
+argument-hint: "[options page name]"
 allowed-tools:
   - Read
   - Write
@@ -15,128 +16,43 @@ allowed-tools:
 
 # Create ACF Options Page
 
-No paired reference doc — this skill is self-contained.
+Theme root: `{{THEME_ROOT}}`. All paths below are relative to it.
+
+## Before you start
+
+**Load [reference/acf-naming.md](.claude/chisel/reference/acf-naming.md) first** — hex-hash keys, filename = group key, prefixed field names. Getting this wrong breaks ACF's edit-in-UI → save-back sync, and it is not something you can fix later without re-keying. This skill is the _how_; reference is the _what_.
+
+Then confirm ACF Options is the right home. For header and footer content specifically, **widgets, menus and the Customizer come first** — ACF Options is the fallback for what they can't express. The mapping: [header-footer.md "Content source rule"](.claude/chisel/reference/header-footer.md#content-source-rule).
 
 ## Procedure
 
-1. Register options page in `custom/app/WP/Acf.php`
-2. Add `options` to Timber context in `custom/app/WP/Site.php` (if not already done)
-3. Create ACF field group JSON in `acf-json/group_{hash}.json`
-4. Populate fields immediately via `xfive-acf-acf-field-update` (don't leave empty)
+1. **Register the options page** in `custom/app/WP/Acf.php` (top-level or sub-page) — code in [templates/acf-options-template.md](.claude/chisel/templates/acf-options-template.md). The filters are `chisel_acf_options_pages` / `chisel_acf_options_sub_pages`.
+2. **Add `options` to the Timber context** in `custom/app/WP/Site.php`, if the project hasn't already. This is a one-time step, not per page.
+3. **Create the field group JSON** at `acf-json/group_{hash}.json`, with `location` pointing at the options page menu slug.
+4. **Populate the fields immediately** via `xfive-acf-acf-field-update` with `post_id: "option"` — don't leave an options page empty. See [mcp-workflow.md "ACF fields"](.claude/chisel/reference/mcp-workflow.md#acf-fields).
 
-## 1. Register options page
+Common field types: `text`, `textarea`, `wysiwyg`, `url`, `email`, `image` (return: `id`), `file`, `gallery`, `repeater` with `sub_fields`, `group` with `sub_fields`, `select`, `radio`, `checkbox`, `true_false`, `link`, `relationship`, `post_object`, `taxonomy`.
 
-Edit `custom/app/WP/Acf.php`:
+## Traps
 
-### Top-level page
+- ❌ **A human-readable group key.** Keys are hex hashes and the filename must equal the key — anything else breaks the save-back sync.
+- ❌ **Unprefixed field names.** `cta_text` collides across groups and breaks WPML uniqueness; use `header_cta_text`. Sub-fields take the full parent name (`social_links_url`).
+- ❌ **Forgetting to bump `modified`** on an edited field group — ACF won't pick the change up.
+- ❌ **Adding the Timber context filter twice.** Check `custom/app/WP/Site.php` before adding — one `options` context line serves every options page.
+- ❌ **Rebuilding footer columns or copyright as an ACF repeater.** Those are registered widget areas already wired into `footer.twig` — [header-footer.md](.claude/chisel/reference/header-footer.md).
+- ❌ Leaving fields empty after registering. An empty options page reads as broken.
 
-```php
-public function register_acf_options_pages( $options_pages ) {
-    $options_pages[] = array(
-        'menu_slug'  => '{menu-slug}',
-        'page_title' => __( '{Page Title}', 'chisel' ),
-    );
-    return $options_pages;
-}
-```
+## Mechanical check
 
-### Sub-page
+1. Run [acf-naming.md "Mechanical check"](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group) — key format, filename = key, every field and sub-field prefixed, `modified` bumped.
+2. If the project uses WPML, set each field's translation preference: [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md).
+3. Confirm the page appears in the admin menu and `{{ options.field_name }}` resolves in a template.
 
-```php
-public function register_acf_options_sub_pages( $options_sub_pages ) {
-    $options_sub_pages[] = array(
-        'menu_slug'   => '{sub-page-slug}',
-        'page_title'  => __( '{Sub Page Title}', 'chisel' ),
-        'menu_title'  => __( '{Menu Title}', 'chisel' ),
-        'parent_slug' => '{parent-menu-slug}',
-    );
-    return $options_sub_pages;
-}
-```
+## Related
 
-## 2. Add options to Timber context
-
-In `custom/app/WP/Site.php`:
-
-```php
-public function filter_hooks(): void {
-    add_filter( 'timber/context', array( $this, 'add_to_context' ), 11 );
-    // ... existing hooks
-}
-
-public function add_to_context( array $context ): array {
-    if ( function_exists( 'get_fields' ) ) {
-        $context['options'] = get_fields( 'option' );
-    }
-    return $context;
-}
-```
-
-Access in Twig: `{{ options.field_name }}`.
-
-## 3. ACF field group JSON
-
-**Naming is a HARD RULE** ([reference/acf-naming.md](.claude/chisel/reference/acf-naming.md)): `key` (group + every field) = real ACF-style hex hash; **filename = group key** (`group_{hash}.json`) — human-readable keys break ACF's edit-in-UI → save-back sync. Field `name`s = page/section-slug prefix for WPML uniqueness (`header_cta_text`, `footer_logo`, `social_links`); sub-fields use the full parent name (`social_links_url`). `label` stays human.
-
-Create `acf-json/group_{hash}.json`:
-
-```json
-{
-  "key": "group_{hex_hash}",
-  "title": "{Page Title} Fields",
-  "fields": [
-    {
-      "key": "field_{hex_hash}",
-      "label": "{Field Label}",
-      "name": "{slug}_{field_name}",
-      "type": "{text|image|repeater|select|etc}",
-      "required": 0
-    }
-  ],
-  "location": [[{ "param": "options_page", "operator": "==", "value": "{menu-slug}" }]],
-  "menu_order": 0,
-  "position": "normal",
-  "style": "default",
-  "label_placement": "top",
-  "instruction_placement": "label",
-  "hide_on_screen": "",
-  "active": true
-}
-```
-
-Use tabs for large field groups:
-
-```json
-{ "key": "field_{hash}", "label": "Header", "name": "", "type": "tab", "placement": "top" }
-```
-
-## 4. Populate fields
-
-```
-xfive-acf-acf-field-update {
-  post_id: "option",
-  fields: { "header_cta_text": "Let's talk", "header_cta_url": "#contact" }
-}
-```
-
-## Common field types
-
-`text`, `textarea`, `wysiwyg`, `url`, `email`, `image` (return: `id`), `file`, `gallery`, `repeater` with `sub_fields`, `group` with `sub_fields`, `select`, `radio`, `checkbox`, `true_false`, `link`, `relationship`, `post_object`, `taxonomy`.
-
-## Accessing in Twig
-
-After adding to context:
-
-```twig
-{{ options.header_cta_text }}
-{{ options.footer_logo.url }}
-{% for item in options.social_links %}
-  <a href="{{ item.url }}">{{ item.label }}</a>
-{% endfor %}
-```
-
-For images, use Chisel helpers:
-
-```twig
-{{ get_responsive_image(options.footer_logo, 'medium') }}
-```
+- Registration, context wiring and field-group JSON → [acf-options-template.md](.claude/chisel/templates/acf-options-template.md)
+- Field-group naming rules → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
+- Per-field WPML translation preferences → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)
+- Which source each header/footer element should use → [header-footer.md](.claude/chisel/reference/header-footer.md)
+- Writing values into the fields → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md#acf-fields)
+- Reading them in templates → [twig-templating.md](.claude/chisel/reference/twig-templating.md#global-context-from-corewpsitephp)

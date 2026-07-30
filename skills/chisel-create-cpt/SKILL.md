@@ -1,6 +1,7 @@
 ---
 name: chisel-create-cpt
-description: Register a Custom Post Type (and optional taxonomy). Use when the design shows multiple instances of the same content shape (portfolio, team, case studies, services, events).
+description: Register a Custom Post Type and optional taxonomy, and wire it up for display. Use when the design shows multiple instances of the same content shape that editors manage individually and that has a single view or an archive — portfolio, team, case studies, services, events, locations. Do NOT use for one-off pages, homepage sections, content that only appears inside one pattern, or WooCommerce products.
+argument-hint: "[cpt slug]"
 allowed-tools:
   - Read
   - Write
@@ -15,128 +16,56 @@ allowed-tools:
 
 # Create Custom Post Type
 
-**Run the CPT ladder in [reference/section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md#cpt-decision) first** — confirms a CPT is the right call (vs. ACF block / pattern / one-off page). This skill is the _how_; reference is the _what_.
+Theme root: `{{THEME_ROOT}}`. All paths below are relative to it.
 
-## Rules
+## Before you start
 
-- **Always include `editor` in supports** (Gutenberg) unless explicitly told otherwise. `show_in_rest` must be `true` for Gutenberg.
-- For WooCommerce products: don't create a CPT — use WooCommerce's built-in product type with ACF metaboxes.
+**Run the CPT ladder in [reference/section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md#cpt-decision) first** — it confirms a CPT is the right call rather than an ACF block, a pattern, or a one-off page. All three conditions must hold.
+
+Then load [reference/cpt.md](.claude/chisel/reference/cpt.md) — supported options, what the factory supplies, and the two hard rules (`editor` in `supports`; WooCommerce products are never a CPT). This skill is the _how_; reference is the _what_.
 
 ## Procedure
 
-Edit `custom/app/WP/CustomPostTypes.php`:
+1. **Register the post type** in `custom/app/WP/CustomPostTypes.php` — code in [templates/cpt-template.md](.claude/chisel/templates/cpt-template.md). Include `editor` in `supports`; `supports` merges with the factory defaults, so list only additions.
+2. **Register a taxonomy** in the same file, if the content needs one.
+3. **Flush permalinks** — Settings → Permalinks → Save. Archive and single URLs don't resolve until you do.
+4. **Templates only if asked.** WordPress falls back to `single.php` / `archive.php`, which is usually enough. See [twig-templating.md "Template hierarchy"](.claude/chisel/reference/twig-templating.md#template-hierarchy).
+5. **Seed entries** via `xfive-posts-post-create` (`post_type: "case-study"`, with title, featured image, excerpt, ACF fields) — [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md).
 
-```php
-public function register_custom_post_types( $post_types ) {
-    $post_types['{slug}'] = array(
-        'singular'      => __( '{Singular Name}', 'chisel' ),
-        'plural'        => __( '{Plural Name}', 'chisel' ),
-        'supports'      => array( 'editor', 'thumbnail', 'excerpt' ),
-        'menu_icon'     => 'dashicons-{icon}',
-        'hierarchical'  => false,
-        'public'        => true,
-        'has_archive'   => true,
-        'menu_position' => 20,
-        'rewrite'       => array( 'slug' => '{url-slug}' ),
-    );
+### Displaying entries on a page
 
-    return $post_types;
-}
-```
+When the CPT has to appear on the homepage or another page (latest N, or a curated selection), build a **CPT-driven block** — never an ACF repeater duplicating the entries.
 
-The `RegisterCustomPostType` factory handles labels, capabilities, REST, etc. `supports` merges with defaults: `title`, `page-attributes`, `revisions`, `author`.
-
-## Taxonomy
-
-```php
-public function register_custom_taxonomies( $taxonomies ) {
-    $taxonomies['{slug}'] = array(
-        'singular'   => __( '{Singular Name}', 'chisel' ),
-        'plural'     => __( '{Plural Name}', 'chisel' ),
-        'post_types' => array( '{cpt-slug}' ),
-        'public'     => true,
-        'rewrite'    => array( 'slug' => '{url-slug}' ),
-    );
-    return $taxonomies;
-}
-```
-
-## All CPT options
-
-All `register_post_type()` options supported:
-
-- `singular`, `plural` (required)
-- `supports`, `menu_icon`, `menu_position`
-- `hierarchical`, `public`, `publicly_queryable`, `exclude_from_search`
-- `show_ui`, `show_in_menu`, `show_in_nav_menus`, `show_in_admin_bar`
-- `show_in_rest` (default: true)
-- `has_archive`, `rewrite`, `capability_type`, `capabilities`
-- `template`, `template_lock` (default block layout)
-- `taxonomies`, `labels`
-
-## Block template (default layout)
-
-```php
-'template' => array(
-    array( 'core/heading', array( 'level' => 2, 'placeholder' => 'Add title...' ) ),
-    array( 'core/paragraph', array( 'placeholder' => 'Add description...' ) ),
-    array( 'core/image' ),
-),
-'template_lock' => false, // or 'all' / 'insert'
-```
-
-## Templates (only if user asks)
-
-- `views/single-{slug}.twig` — single item
-- `views/archive-{slug}.twig` — archive
-- `single-{slug}.php` + `archive-{slug}.php` in theme root
-
-By default, WordPress falls back to `single.php` / `archive.php` — usually sufficient.
-
-## After registering
-
-Flush permalinks: Settings > Permalinks > Save (no changes needed, just save).
-
-## Pair with a custom block (display on homepage / any page)
-
-When a CPT needs to appear on the homepage or other pages (latest N, manually-selected), DO NOT use an ACF repeater — use a CPT-driven block with variant modes:
-
-1. **Seed CPT entries** via `xfive-posts-post-create` (`post_type: "case-study"`, populate title, featured image, excerpt, ACF fields).
-2. **Optional custom Timber\Post class** at `custom/app/Timber/{ChiselCpt}.php` if the CPT needs custom methods; map it in `custom/app/WP/Site.php` `post_classmap` (`'case-study' => \Chisel\Timber\Custom\CaseStudy::class`).
-3. **Custom block** (`chisel/{cpt-plural}`) with fields:
+1. **Optional custom `Timber\Post` class** at `custom/app/Timber/{ChiselCpt}.php` if the CPT needs its own methods; map it in `custom/app/WP/Site.php`'s `post_classmap`.
+2. **Build the block** (`chisel/{cpt-plural}`) via [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md), with fields:
    - `mode` (select): `latest` | `selected`
-   - `count` (number): only shown when mode=latest (ACF conditional logic)
-   - `selected_items` (relationship to CPT): only shown when mode=selected
-   - Plus presentation fields (heading, closing text, CTA link)
-4. **Query inside filter hook** via `chisel_timber_acf_blocks_data_{slug}` (applied by `BlocksHelpers::acf_block_render` for every ACF block). Create `custom/app/WP/AcfBlocksData.php` — class `Chisel\WP\Custom\AcfBlocksData` with the `HooksSingleton` trait — if the project doesn't have it yet (the starter doesn't ship one), and register the filter in its `filter_hooks()` — **never in `custom/functions.php`** (see [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)):
+   - `count` (number): shown only when mode=latest (ACF conditional logic)
+   - `selected_items` (relationship to the CPT): shown only when mode=selected
+   - plus presentation fields (heading, closing text, CTA link)
+3. **Query inside the block-data filter** — `chisel_timber_acf_blocks_data_{slug}`, registered in `custom/app/WP/AcfBlocksData.php`. Code and bootstrap line: [templates/cpt-template.md "CPT-driven block data filter"](.claude/chisel/templates/cpt-template.md).
+4. **Twig loops `posts`**, not `fields.items` — use `post.thumbnail`, `post.title`, `post.excerpt`, `post.link`. No data duplication between the page and the archive.
 
-   ```php
-   // custom/app/WP/AcfBlocksData.php
-   public function filter_hooks(): void {
-       add_filter( 'chisel_timber_acf_blocks_data_case-studies', array( $this, 'case_studies' ) );
-       // ...register more block-data filters here
-   }
+## Traps
 
-   public function case_studies( array $context ): array {
-       $fields = $context['fields'] ?? array();
-       $mode   = $fields['mode'] ?? 'latest';
-       $args   = array(
-           'post_type'     => 'case-study',
-           'post_status'   => 'publish',
-           'no_found_rows' => true,
-       );
-       if ( $mode === 'selected' && ! empty( $fields['selected_items'] ) ) {
-           $args['post__in']       = array_map( 'intval', (array) $fields['selected_items'] );
-           $args['orderby']        = 'post__in';
-           $args['posts_per_page'] = -1;
-       } else {
-           $args['posts_per_page'] = max( 1, (int) ( $fields['count'] ?? 3 ) );
-       }
-       $context['posts'] = Timber::get_posts( $args );
-       return $context;
-   }
-   ```
+- ❌ **Omitting `editor` from `supports`,** or setting `show_in_rest: false` — either one drops the CPT into the classic editor.
+- ❌ **An ACF repeater instead of a CPT-driven block.** The same entry then exists twice and the copies drift.
+- ❌ **ACF metaboxes on a regular CPT.** Those are for WooCommerce products only; regular CPTs get blocks.
+- ❌ **Creating a CPT for a WooCommerce product.** Use the built-in product type.
+- ❌ Registering hooks directly in `custom/functions.php` instead of the class's `filter_hooks()` — see [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom).
+- ❌ Forgetting to flush permalinks, then debugging a 404 that isn't a code problem.
+- ❌ A `rewrite.slug` that collides with an existing page slug.
 
-   Bootstrap it once in `custom/functions.php`: `\Chisel\WP\Custom\AcfBlocksData::get_instance();` (skip if the line already exists).
+## Mechanical check
 
-5. **Twig loops `posts`** (not `fields.items`). Use `post.thumbnail`, `post.title`, `post.excerpt`, `post.link` — no data duplication between homepage and archive.
+1. `npx chisel-verify` — token references, SCSS conventions, untouched `core/`.
+2. Walk [cpt.md "Mechanical check"](.claude/chisel/reference/cpt.md#mechanical-check) — `editor` in supports, translated labels, registration in `custom/`, no slug collision, permalinks flushed.
+3. Confirm the CPT appears in the admin menu with the right icon, and that an entry saves and renders.
+
+## Related
+
+- Whether the content warrants a CPT at all → [section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md#cpt-decision)
+- Options, factory defaults, constraints → [cpt.md](.claude/chisel/reference/cpt.md)
+- Registration, taxonomy and block-data filter code → [cpt-template.md](.claude/chisel/templates/cpt-template.md)
+- The block that displays the entries → [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md)
+- `single-{slug}.twig` / `archive-{slug}.twig` → [twig-templating.md](.claude/chisel/reference/twig-templating.md#template-hierarchy)
+- Seeding entries and images → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)

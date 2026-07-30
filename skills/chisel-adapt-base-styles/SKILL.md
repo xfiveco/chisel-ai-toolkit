@@ -136,7 +136,7 @@ Chisel has a built-in icon system. Icons ship as SVG source files and are compil
 1. Export the icon as a single-color SVG with `fill="currentColor"` (or no fill — gets masked).
 2. Save as `assets/icons-source/{kebab-case-name}.svg`.
 3. Add the name to `$static-icons` tuple in `src/design/settings/_index.scss`.
-4. Add the name → label mapping via the `chisel_editor_scripts` filter in `custom/app/WP/Assets.php`: `$data['editor']['localize']['data']['icons']['{name}'] = __( '{Label}', 'chisel' );` (same filter shape as the `blocksDefaultAlignment` example in [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md#default-alignment)) — **never edit `core/WP/Assets.php`**.
+4. Add the name → label mapping via the `chisel_editor_scripts` filter in `custom/app/WP/Assets.php`: `$data['editor']['localize']['data']['icons']['{name}'] = __( '{Label}', 'chisel' );` (same filter shape as the `blocksDefaultAlignment` example in [blocks.md "Default block alignment"](.claude/chisel/reference/blocks.md#default-block-alignment)) — **never edit `core/WP/Assets.php`**.
 5. Use via `has-icon has-icon-{name}` + `buttonIcon` attribute.
 
 Don't inline SVG in Twig/patterns when a registered icon would do — single source of truth.

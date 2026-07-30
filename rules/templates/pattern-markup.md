@@ -1,6 +1,41 @@
 # Pattern Markup Reference
 
-WordPress block grammar for common pattern building blocks. Copy and adapt. Always call `xfive-blocks-block-schema` on a block before writing markup for it — attribute names matter.
+WordPress block grammar for common pattern building blocks, plus the two files every pattern needs. Copy and adapt. Always call `xfive-blocks-block-schema` on a block before writing markup for it — attribute names matter. Procedure: [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md).
+
+## Pattern file scaffold
+
+`patterns/{slug}.php`:
+
+```php
+<?php
+/**
+ * Title: {Pattern Title}
+ * Slug: chisel/{slug}
+ * Categories: chisel-patterns/{category}
+ * Description: {Description}
+ * Keywords: {keyword1}, {keyword2}
+ *
+ * @package Chisel
+ */
+
+?>
+
+<!-- block markup here — see the sections below -->
+```
+
+`src/styles/patterns/_{slug}.scss`, scoped under `.p-{slug}`:
+
+```scss
+@use '~design' as *;
+
+.p-{slug} {
+  // scoped styles only
+}
+```
+
+Breakpoints: `@include bp('large') { ... }`, `@include bp-down('medium') { ... }`.
+
+The filename is unprefixed — the `patterns/` folder already provides the context (never `_p-{slug}.scss`); the `p-` prefix belongs to the CSS class only. Slug, filename, root class and SCSS scope must all match: [blocks.md "Root wrapper rule"](.claude/chisel/reference/blocks.md#root-wrapper-rule). The SCSS index is auto-generated — never edit `src/styles/patterns/_index.scss` by hand.
 
 ## Root wrappers
 

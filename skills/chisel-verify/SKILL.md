@@ -55,3 +55,11 @@ Mention it only if the pattern clearly should have styles.
 `npm run build-scripts` — whether the SCSS actually compiles. Ask the user to run it; never invoke
 it yourself. Nor does it cover judgement: duplicated global styles, a component that should have
 been reused, a mapping that's technically valid but wrong for the design. Those need reading.
+
+## Related
+
+- Where these checks sit in a phase → [chisel-implement](.claude/skills/chisel-implement/SKILL.md)
+- Running them after a fix batch → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
+- The per-screen done gate they feed → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
+- Why a token reference fails → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
+- Why a pattern four-way sync fails → [blocks.md](.claude/chisel/reference/blocks.md)

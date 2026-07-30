@@ -86,10 +86,11 @@ Create a CPT when ALL three apply:
 
 When you do create one:
 
-- Use [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md)
+- Use [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md); options and constraints in [cpt.md](.claude/chisel/reference/cpt.md)
 - Default Gutenberg-enabled (`editor` in supports, `show_in_rest: true`)
 - ACF metaboxes only for WooCommerce products — never regular CPTs
 - Per-entry layout: block template (seed blocks) + custom/ACF blocks for unique sections
+- **To show the entries on a page** (homepage "latest 3", a curated row): a CPT-driven block with `latest` / `selected` variant modes — **never an ACF repeater duplicating the entries.** A repeater forks the content: the same case study now exists twice and drifts. The block queries the CPT, so one edit updates everywhere.
 
 ## Header / footer / global elements
 

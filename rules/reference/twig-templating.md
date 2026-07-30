@@ -24,6 +24,8 @@ All templates extend `views/base.twig` (html, head, header, main, footer).
 | Author          | `author.php`      | `views/author.twig`                       |
 | WooCommerce     | `woocommerce.php` | `views/woocommerce/*.twig`                |
 
+**CPTs need no templates by default.** WordPress falls back to `single.php` / `archive.php`, which is usually sufficient. Add `views/single-{slug}.twig` / `views/archive-{slug}.twig` (plus `single-{slug}.php` / `archive-{slug}.php` in the theme root) only when a CPT genuinely needs its own layout.
+
 ## Base layout
 
 ```twig

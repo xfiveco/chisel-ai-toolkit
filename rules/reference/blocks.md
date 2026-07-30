@@ -18,6 +18,8 @@ Each one breaks silently — no error, wrong output. Detail in the linked sectio
 10. **Class only the root; target inner blocks by tag** — a BEM `__element` class on a text block only exists on the seeded instance. → [Root wrapper rule](#root-wrapper-rule)
 11. **When seeding a modded block, set the attr AND its companion class** — the attr alone renders nothing. → [Existing block mods](#existing-block-mods)
 12. **Default a `core/spacer` between sibling inner blocks**; never `blockGap`/CSS `gap` for vertical spacing. → [Spacing between sibling blocks](#spacing-between-sibling-blocks)
+13. **A property the block `supports` is set on the block** as attribute + preset class, never in SCSS. → [Setting block properties](#setting-block-properties-presets-over-scss-hard-rule)
+14. **Pattern source files ship no dead media** — no `src=""`, no install-specific attachment IDs. → [Pattern](#pattern-patternsslugphp)
 
 ## File structures
 
@@ -77,7 +79,7 @@ style.scss              # styles — must be `import`ed by script.js so webpack 
 script.js               # REQUIRED — webpack entry. Even if only `import './style.scss';`. Omit and SCSS never compiles → block renders unstyled.
 view.js                 # frontend-only JS (viewScript) — the block's own interactivity lives HERE, not src/scripts/modules/. Add only when the block is interactive.
 view.scss               # frontend-only CSS (viewStyle) — imported by view.js. Optional.
-acf-json/*.json         # ACF field group
+acf-json/*.json         # ACF field group — auto-loads from this folder, no registration needed
 ```
 
 See [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) for the full procedure and required block.json keys — always load it before scaffolding a new ACF block. For custom WP blocks see [create-block](.claude/skills/chisel-create-block/SKILL.md).
@@ -97,6 +99,10 @@ See [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) for the 
 }
 ```
 
+### ACF field validation defaults
+
+Default `"required": 0` on all fields and `"min": 0` on repeaters. Required fields and min-row constraints fire validation errors in the editor when the block is first inserted (before the editor reads serialized data) — confusing for editors and blocks the page from saving. If a field is genuinely required, enforce it in Twig (skip rendering the card) rather than at the ACF layer.
+
 ### Pattern (`patterns/{slug}.php`)
 
 ```php
@@ -113,6 +119,21 @@ See [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) for the 
 ?>
 <!-- block markup with p-{slug} root wrapper -->
 ```
+
+**Pattern source files never contain dead media (HARD RULE).** `patterns/{slug}.php` must not ship `src=""`, empty `<figure>`s, or `mediaId`/`id` attrs pointing at site-specific attachments — those IDs don't exist on other installs. In the pattern file, omit the `id` attr and reference a theme-shipped placeholder: `<img src="<?php echo esc_url( get_stylesheet_directory_uri() ); ?>/assets/images/placeholders/{name}.jpg" alt="">` (drop the file into `assets/images/placeholders/`). Attachment IDs and upload URLs belong on the **seeded page** (written via MCP), never in the pattern file.
+
+## Block naming and classes
+
+| Thing | Form |
+| --- | --- |
+| Block name | `chisel/{block-name}` |
+| Block category | `chisel-blocks` |
+| CSS class | `b-{block-name}` + BEM (`__element`, `--modifier`) |
+| JS hook class | `js-{block-name}` — separate from the CSS class, never select on the styling class |
+| State classes | `is-*`, `has-*` |
+| Translation | `__('text', 'chisel')` |
+
+Pattern classes are `p-{slug}` — see [Root wrapper rule](#root-wrapper-rule). The full prefix set across every layer (`c-`, `o-`, `u-`, `b-`, `p-`) lives in [file-locations.md "Naming"](.claude/chisel/reference/file-locations.md#naming).
 
 ## Pattern categories
 
@@ -159,6 +180,16 @@ Pattern SCSS: `src/styles/patterns/_{slug}.scss`, scoped under `.p-{slug}`. File
 
 **Class only the root; target inner blocks by tag (HARD RULE).** Only the root group carries `p-{slug}`. **Never** add a BEM `__element` class to leaf/text blocks (paragraph, heading, list, image) — style them by tag from the root: `.p-{slug} h2`, `.p-{slug} p`, or by the block's own class `.p-{slug} .wp-block-media-text`. A `p-{slug}__heading` class lives only on the seeded instance, so a paragraph an editor adds later inherits nothing. Add a `p-{slug}__{name}` class to a **structural** block (inner group, columns, media-text) **only when** tag/descendant targeting can't single it out (e.g. two sibling inner groups needing different styles) — never to text elements.
 
+## Setting block properties: presets over SCSS (HARD RULE)
+
+**If a block's `supports` exposes a property and theme.json has a matching preset, set it on the block — not in SCSS.** Color background/text, font-size, font-family, alignment, block gap, border, spacing padding/margin: each goes on as a block attribute **plus** its preset class — `{"backgroundColor":"primary"}` → `class="… has-primary-background-color has-background"`, `{"textColor":"secondary"}` → `has-secondary-color has-text-color`, `{"fontSize":"extra-large"}` → `has-extra-large-font-size`, `is-style-primary`. Editors then see and change it in the block UI, and it stays token-backed.
+
+Check the block's `supports` (via `xfive-blocks-block-schema`) before styling a color/size/gap/padding in SCSS. **Never set a raw hex or px on the block** — preset slugs only; if no preset exists, the value goes in tokenized SCSS, not as an inline block style.
+
+**Reserve pattern/block SCSS for what the block can't express:** custom layout widths, line-height overrides with no preset **that differ from the global default** (theme.json already sets element/heading line-heights globally — don't restate them; see [coding-conventions.md "Don't duplicate global styles"](.claude/chisel/reference/coding-conventions.md#dont-duplicate-global-styles-hard-rule)), multi-element relationships, responsive tweaks.
+
+Section band padding is the load-bearing case of this rule — see [Root wrapper rule](#root-wrapper-rule).
+
 ## Existing block styles
 
 Registered in `src/scripts/editor/blocks-styles.js` — **read that file for the current list** (the project may have added/removed variants since these docs were written). Each top-level `register*Styles()` method holds one block's variants:
@@ -176,6 +207,24 @@ In `src/scripts/editor/mods/` (registered via `blocks-mods.js`). Several add cus
 - **core-spacer.js**: forces every `core/spacer` to `height:"auto"` in the editor — spacer size comes ONLY from the `is-style-{size}` padding, never the `height` attr. Always seed `{"height":"auto","className":"is-style-{size}"}` — the style class is mandatory on every spacer, even for the default size (no bare spacers). See [design-tokens.md "Picking the spacer style"](.claude/chisel/reference/design-tokens.md#picking-the-spacer-style).
 
 Editor-only UI helpers (not seed-affecting): `components/BlockEditSelector.js` (an "Edit {block}" button), `components/RenderAppender.js` (custom InnerBlocks inserter), `blocks.js` (adds `e-block-sidebar--{block}` class to the inspector), `utils.js` (icon choices for the button mod).
+
+## Default block alignment
+
+`blocks-alignment.js` (see [Existing block mods](#existing-block-mods)) reads a PHP-provided map. Add an entry via the `chisel_editor_scripts` filter inside `custom/app/WP/Assets.php` — the class is already registered in `custom/functions.php` via `get_instance()`. Use its existing `filter_hooks()` method; don't add hooks directly in `custom/functions.php` (see [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)):
+
+```php
+// custom/app/WP/Assets.php
+public function filter_hooks(): void {
+    add_filter( 'chisel_editor_scripts', array( $this, 'set_block_default_alignment' ) );
+}
+
+public function set_block_default_alignment( array $data ): array {
+    $data['editor']['localize']['data']['blocksDefaultAlignment']['chisel/{block-name}'] = 'full';
+    return $data;
+}
+```
+
+The same filter carries the editor-visible icon list — see [assets-and-scripts.md "Icon system"](.claude/chisel/reference/assets-and-scripts.md#icon-system).
 
 ## Spacing between sibling blocks
 
@@ -202,6 +251,8 @@ Run before finishing any block or pattern.
 10. Every `core/spacer` carries `height:"auto"` AND an explicit `is-style-*` class.
 11. Every seeded modded attr carries its companion class (`disableBottomMargin` + `u-no-margin-bottom`, `buttonIcon` + `has-icon-*`).
 12. Each pattern's `Categories:` slug is registered (built-in, or added via `chisel_block_patterns_categories`).
+13. No color, font-size, gap or padding in SCSS that the block's `supports` could carry as a preset.
+14. No `src=""`, empty `<figure>`, or attachment `id` in any `patterns/*.php`.
 
 ## Related
 
@@ -211,5 +262,7 @@ Run before finishing any block or pattern.
 - Spacer sizing, margin sync, flex double-gap trap → [design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)
 - Where block/pattern files live → [file-locations.md](.claude/chisel/reference/file-locations.md)
 - Seeding blocks into a page (silent-failure traps) → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
-- Pattern markup templates → [pattern-markup.md](.claude/chisel/templates/pattern-markup.md)
+- Pattern markup, file header and SCSS stub → [pattern-markup.md](.claude/chisel/templates/pattern-markup.md)
+- ACF block file contents → [acf-block-template.md](.claude/chisel/templates/acf-block-template.md)
+- Custom React block file contents → [custom-block-template.md](.claude/chisel/templates/custom-block-template.md)
 - Skills: [create-block](.claude/skills/chisel-create-block/SKILL.md) · [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) · [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md) · [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md)

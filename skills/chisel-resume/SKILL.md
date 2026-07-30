@@ -78,3 +78,10 @@ already written.
   phase, mention them in one line; don't work them.
 - If the files and your recollection disagree, the files win. Full procedure:
   [`/chisel-implement`](.claude/skills/chisel-implement/SKILL.md).
+
+## Related
+
+- Building the phase you just opened → [chisel-implement](.claude/skills/chisel-implement/SKILL.md)
+- Scoping work that has no change folder yet → [chisel-new](.claude/skills/chisel-new/SKILL.md)
+- Feedback on built work, no plan needed → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
+- What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)

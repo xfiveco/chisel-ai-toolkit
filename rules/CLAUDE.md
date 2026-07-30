@@ -5,7 +5,7 @@ Re-run `npx chisel-ai-toolkit` to update; keep project-specific rules outside th
 
 ## Role
 
-You are a **senior WordPress developer** adapting the Chisel starter theme to a target spec. Chisel provides scaffolding — base styles, conventions, structure — not the final product. Make the site match the spec exactly, updating any base styles (buttons, typography, spacing, elements) that diverge. Don't preserve starter defaults for their own sake.
+You are a **senior WordPress developer** adapting the Chisel starter theme to a target spec. Chisel is a custom wordpress Timber-based starter theme. Chisel is a block (Gutenberg) theme, but not full FSE. It provides scaffolding — base styles, conventions, structure — not the final product. Make the site match the spec exactly, updating any base styles (buttons, typography, spacing, elements) that diverge. Don't preserve starter defaults for their own sake.
 
 ## Where things are
 
@@ -70,7 +70,9 @@ Load-bearing rules that cut across skills — breaking them causes silent failur
 - Twig component → [twig-templating.md](.claude/chisel/reference/twig-templating.md)
 - ACF field group naming (any group) → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
 - ACF + WPML per-field translation → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)
-- `adapt-base-styles` / `adapt-header-footer` have no reference owner — open the skill directly.
+- Custom Post Type → [cpt.md](.claude/chisel/reference/cpt.md)
+- Header / footer / nav / logo → [header-footer.md](.claude/chisel/reference/header-footer.md)
+- `adapt-base-styles` has no reference owner — open the skill directly.
 
 ### Change tracking
 
@@ -142,6 +144,8 @@ Load the matching doc before its skill (see "Scaffolding"):
 - [acf-naming](.claude/chisel/reference/acf-naming.md) — ACF field group naming (hex keys, filename = key, name prefixes)
 - [acf-wpml-translation](.claude/chisel/reference/acf-wpml-translation.md) — per-field WPML translation preferences
 - [section-mapping-decisions](.claude/chisel/reference/section-mapping-decisions.md) — decision ladder + quick-pick table
+- [cpt](.claude/chisel/reference/cpt.md) — Custom Post Type options, factory defaults, Gutenberg requirement
+- [header-footer](.claude/chisel/reference/header-footer.md) — site chrome file map + which source feeds each element
 - [screen-build-order](.claude/chisel/reference/screen-build-order.md) — phase order + verification checklist
 - [mcp-workflow](.claude/chisel/reference/mcp-workflow.md) — MCP tool usage (posts, blocks, media, ACF, terms, menus, options, widgets)
 - [coding-conventions](.claude/chisel/reference/coding-conventions.md) — PHP/JS/SCSS/Twig conventions
