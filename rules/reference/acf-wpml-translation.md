@@ -4,39 +4,50 @@ How to set the per-field WPML translation preference in ACF field-group JSON. Ap
 
 ## Hard rules
 
-The site runs WPML + ACFML (ACF Multilingual). ACFML reads two things from the field-group JSON:
+**This doc applies only on projects running WPML + ACFML (ACF Multilingual).** The Chisel starter ships neither — none of its four field groups carries an ACFML key. Confirm both plugins are active before adding any of this; on a monolingual site these keys are noise.
 
-1. `acfml_field_group_mode` on the **group** — must be `"advanced"` or per-field preferences are ignored.
+ACFML reads two things from the field-group JSON:
+
+1. `acfml_field_group_mode` on the **group** — which of three modes the group is in.
 2. `wpml_cf_preferences` on **each field** (and each sub-field) — the integer translation preference.
 
-### Rule 1 — group must be in Expert ("advanced") mode
+### Rule 1 — Expert ("advanced") is the mode you want, and it is the default
 
-Per-field `wpml_cf_preferences` only take effect when the group carries:
+ACFML has three group modes: `translation`, `localization`, and `advanced` (labelled "Expert" in the UI). There is no "standard" mode.
 
 ```json
 "acfml_field_group_mode": "advanced"
 ```
 
-In ACFML's default ("standard") mode the per-field values are dormant and ACFML applies its own type defaults. Without this key on the group, editing `wpml_cf_preferences` in JSON does nothing visible. ACFML adds this key itself the first time you toggle Expert mode in the field-group UI and re-save; author it directly in JSON to avoid the manual step.
+**A group with no `acfml_field_group_mode` key is already in advanced mode** — `Mode::isAdvanced()` matches both `"advanced"` and a missing key. So per-field `wpml_cf_preferences` in a hand-authored group take effect immediately; you do not have to add the key to "unlock" them.
+
+Write it anyway, for one reason: it pins the mode so a later UI toggle or ACFML default change can't silently move the group into `translation` or `localization`, where the per-field values give way to the preset table in Rule 3. Don't treat a group that lacks the key as broken.
 
 ### Rule 2 — the `wpml_cf_preferences` enum (from WPML source)
 
-| Value | WPML constant                 | Meaning                                                            | UI label      |
-| ----- | ----------------------------- | ------------------------------------------------------------------ | ------------- |
-| `1`   | `WPML_COPY_CUSTOM_FIELD`      | value copied identically to every language, stays in sync          | **Copy**      |
-| `2`   | `WPML_TRANSLATE_CUSTOM_FIELD` | field is editable per language / shows in the Translation Editor   | **Translate** |
-| `3`   | `WPML_COPY_ONCE_CUSTOM_FIELD` | copied to the translation on creation, then independently editable | **Copy Once** |
+| Value | WPML constant                 | Meaning                                                            | UI label            |
+| ----- | ----------------------------- | ------------------------------------------------------------------ | ------------------- |
+| `0`   | `WPML_IGNORE_CUSTOM_FIELD`    | field is left out of translation handling entirely                 | **Don't translate** |
+| `1`   | `WPML_COPY_CUSTOM_FIELD`      | value copied identically to every language, stays in sync          | **Copy**            |
+| `2`   | `WPML_TRANSLATE_CUSTOM_FIELD` | field is editable per language / shows in the Translation Editor   | **Translate**       |
+| `3`   | `WPML_COPY_ONCE_CUSTOM_FIELD` | copied to the translation on creation, then independently editable | **Copy once**       |
 
-These are the literal integers WPML defines (`sitepress-multilingual-cms`) — use the value from the table above (`1` Copy, `2` Translate, `3` Copy Once); the integer does not rank "how much translation." A missing key falls back to ACFML's type default, so always set it explicitly in Expert mode.
+These are the literal integers WPML defines in `sitepress-multilingual-cms/inc/constants.php`, and all four are accepted by ACFML. The integer does not rank "how much translation" — `0` is a valid preference, not an absent one. In practice Chisel groups use `1`, `2` and `3`; reach for `0` only to deliberately exclude a field.
+
+A missing key falls back to the Rule 3 preset for that field's type, and for a type ACFML doesn't list the fallback is **Translate (`2`)**. Set it explicitly rather than relying on either.
 
 ### Rule 3 — preset preference per ACF field type
 
-Two columns, matching ACFML's own preset table. Pick the column by whether the field's value is **the same content across languages** or **genuinely different per language**:
+This is ACFML's own preset table (`ACFML\FieldGroup\ModeDefaults::MAP`), copied verbatim. **The two columns are the two non-Expert group modes, not a judgement you make per field:**
 
-- **Same fields across languages** — the field holds the same data everywhere (a shared setting, a shared asset). Use this column by default for settings/media/relational fields.
-- **Different fields across languages** — the field's value legitimately differs per language. Use this column when an editor would want an independent value in each language but no auto-translation.
+- **Same fields across languages** = the group is in `translation` mode
+- **Different fields across languages** = the group is in `localization` mode
+
+In `advanced` (Expert) mode — the default, see Rule 1 — ACFML applies **no** preset at all; every field carries whatever `wpml_cf_preferences` you wrote. So read this table as *what ACFML would have chosen*, and use it as the sane default for the value you author by hand. Column 1 is the right default for Chisel work.
 
 For Text / Text Area / Wysiwyg / Message the answer is **Translate (`2`)** in both columns — translatable text is always translatable.
+
+`acfml_field_group_mode_field_translation_preference` (`$preference`, `$groupMode`, `$field`) overrides a preset in PHP if a project needs a different default.
 
 #### Basic Fields
 
@@ -79,6 +90,7 @@ For Text / Text Area / Wysiwyg / Message the answer is **Translate (`2`)** in bo
 | `date_time_picker` | Copy `1`          | Copy Once `3`          |
 | `time_picker`      | Copy `1`          | Copy Once `3`          |
 | `color_picker`     | Copy `1`          | Copy Once `3`          |
+| `icon_picker`      | Copy `1`          | Copy Once `3`          |
 
 #### Layout Fields
 
@@ -111,7 +123,9 @@ Structural fields with no stored value (`tab`, `accordion`, `clone` display) sti
 
 ### Rule 5 — let ACFML re-serialize after a sync
 
-When a group is synced in **Custom Fields → Field Groups**, ACFML rewrites the JSON file: it reorders keys, adds `acfml_field_group_mode`, `display_title`, and `allow_in_bindings`, and bumps `modified`. This is expected. Author the minimum (`acfml_field_group_mode` + `wpml_cf_preferences`), sync once, and let ACFML normalize the rest. Do not fight the re-serialized key order.
+When a group is synced in **Custom Fields → Field Groups**, the JSON file is rewritten: keys get reordered, `acfml_field_group_mode` is written out, and `modified` is bumped. This is expected. Author the minimum (`acfml_field_group_mode` + `wpml_cf_preferences`), sync once, and let the plugins normalize the rest. Do not fight the re-serialized key order.
+
+Don't read every unfamiliar key as ACFML's. `allow_in_bindings` is plain ACF — it appears on fields in the starter's own Mega Menu groups, which carry no ACFML keys at all. Only `acfml_field_group_mode` and `wpml_cf_preferences` belong to ACFML.
 
 > **Bump `modified` after editing preferences, then sync** — the JSON edit is inert until synced, and sync only fires when `modified` is newer than the DB copy. This is the same rule that governs every ACF JSON edit: [acf-naming.md "Rule 4 — bump `modified` on EVERY edit"](.claude/chisel/reference/acf-naming.md).
 
@@ -127,17 +141,29 @@ Unless a site is explicitly set up for per-language master content, use the **"S
 
 Switch a specific field to the **"Different across languages"** column (Copy Once `3`) only when an editor genuinely needs an independent non-text value per language with no auto-translation — rare; confirm with the site owner before deviating.
 
+## Twig strings and WPML String Translation
+
+Separate from ACF fields, and easy to miss: **WPML's theme scan only parses `.php` / `.inc` / `.js`, so a `__()` call inside a Twig template is invisible to String Translation.** Chisel works around this in `core/Plugins/Wpml/Wpml.php` — right before WPML builds its file list, it extracts gettext calls from Twig into a generated `wpml-twig-strings.php` stub the scanner can read. The stub is regenerated on every scan; never edit it.
+
+Three limits decide whether your string actually gets registered:
+
+- **Only `views/` is walked.** A `__()` in `src/blocks-acf/{block}/{block}.twig` — or in `custom/views/` — is never picked up. Put translatable copy in a `views/` template, or pass it in from PHP.
+- **Only string literals are extracted.** `{{ __('Read more', 'chisel') }}` works; anything assembled from a Twig variable is skipped silently.
+- **String Translation must be active** (`WPML_ST_VERSION`). `add_filter( 'chisel_wpml_twig_strings', '__return_false' )` turns the whole mechanism off.
+
 ## Mechanical check
 
 Run before finishing any field group.
 
-1. Group carries `"acfml_field_group_mode": "advanced"` — without it every per-field preference is dormant. *(Rule 1)*
-2. **Every** field and sub-field has an explicit `wpml_cf_preferences` — a missing key silently falls back to ACFML's type default. *(Rule 2)*
-3. Every value is `1`, `2`, or `3` — no other integer is a WPML constant. *(Rule 2)*
+0. WPML and ACFML are actually active on this project. If not, none of this applies — don't add the keys. *(Hard rules)*
+1. Group carries `"acfml_field_group_mode": "advanced"` — pins the mode. A group missing the key is already advanced, so this is belt-and-braces, not a bug fix. *(Rule 1)*
+2. **Every** field and sub-field has an explicit `wpml_cf_preferences` — a missing key falls back to the Rule 3 preset, or to Translate for a type ACFML doesn't list. *(Rule 2)*
+3. Every value is `0`, `1`, `2`, or `3`; in practice `1`/`2`/`3` unless a field is deliberately excluded. *(Rule 2)*
 4. Prose fields (`text`, `textarea`, `wysiwyg`, `message`) are `2`. *(Rule 3, both columns)*
 5. Media, choice, jQuery-picker and relational fields are `1` under the default baseline; `3` only where the site owner confirmed a per-language value. *(Default baseline)*
 6. Containers (`repeater`, `group`, `flexible_content`, `clone`, `accordion`, `tab`) are `1`, and each sub-field carries its own preference by its own type. *(Rule 4)*
 7. Top-level `modified` bumped, and the user told to sync — the JSON edit is inert until then. *(Rule 5)*
+8. Any translatable copy you added to a Twig template lives under `views/` and uses string literals, or String Translation will never see it. *(Twig strings)*
 
 ## Related
 

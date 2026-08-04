@@ -54,11 +54,16 @@ Same file, no style class — this changes the block's default everywhere:
 
 ## Block mod — server-side attribute
 
-Only needed when the attribute must survive REST/MCP validation. Goes in a `custom/app/WP/{Feature}.php` class using the `HooksSingleton` trait — **never in `custom/functions.php`** ([CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)):
+Only needed when the attribute must survive REST/MCP validation.
+
+**Check core first.** `core/WP/Blocks.php` already hooks `register_block_type_args`, and already registers `disableBottomMargin` on every `core/*` and `chisel/*` block. Write your own handler only for an attribute core doesn't already cover.
+
+`custom/app/WP/Blocks.php` **already exists** and already has a populated `filter_hooks()` — append to it, don't replace it. It's a `Chisel\WP\Custom` class using the `HooksSingleton` trait; the logic never goes in `custom/functions.php` itself ([CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)):
 
 ```php
-// custom/app/WP/Blocks.php (or another feature class)
+// custom/app/WP/Blocks.php — the existing filter_hooks(), with one line added
 public function filter_hooks(): void {
+    add_filter( 'chisel_block_patterns_categories', array( $this, 'block_patterns_categories' ) );
     add_filter( 'register_block_type_args', array( $this, 'add_block_attribute' ), 10, 2 );
 }
 
@@ -77,13 +82,17 @@ public function add_block_attribute( array $args, string $block_name ): array {
 }
 ```
 
-Bootstrap it once in `custom/functions.php`: `\Chisel\WP\Custom\Blocks::get_instance();`.
+All eight custom classes are **already bootstrapped** in `custom/functions.php` — `\Chisel\WP\Custom\Blocks::get_instance();` is already there. Add a line only when you create a genuinely new class file.
 
 ## Block mod — editor JS
 
-Scaffold for `src/scripts/editor/mods/{block-name}-{feature}.js`, imported from `src/scripts/editor/blocks-mods.js`.
+Name the file after its **target**, not its feature, and import it from `src/scripts/editor/blocks-mods.js`:
 
-Follows the pattern in `src/scripts/editor/mods/core.js` (disableBottomMargin).
+- one core block → `mods/core-{block}.js` (`core-button.js`, `core-spacer.js`)
+- a feature across many blocks → `mods/blocks-{feature}.js` (`blocks-alignment.js`)
+- every block → already `mods/core.js`; add to it rather than making a new file
+
+Follows the pattern in `src/scripts/editor/mods/core.js` (disableBottomMargin) — but note that file and `core-button.js` import `InspectorControls` from `@wordpress/blockEditor`. Use the canonical `@wordpress/block-editor` below, as every file under `src/blocks/` does.
 
 ```js
 import { __ } from '@wordpress/i18n';

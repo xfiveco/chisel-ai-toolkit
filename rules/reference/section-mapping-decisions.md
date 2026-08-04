@@ -8,7 +8,7 @@ For each distinct section/component in the spec (Figma node, mockup region, or d
 2. **ACF is the default custom block. Native React requires you to STOP and ask the user first**, with a specific justification — frontend-only interactivity is never one. → [Block decision ladder](#block-decision-ladder)
 3. **Reuse before building** — check existing patterns/blocks for a match; add a variant rather than minting `hero-2`. → [Shared components rule](#shared-components-rule)
 4. **Create a CPT only when all three conditions apply**; never for one-off pages, homepage sections, or content that only lives inside a pattern. → [CPT decision](#cpt-decision)
-5. **ACF metaboxes only for WooCommerce products** — never for regular CPTs. → [CPT decision](#cpt-decision)
+5. **A CPT's *content* goes in blocks, never an ACF metabox** — a metabox is only for *settings about* the entry. → [CPT decision](#cpt-decision)
 6. **Site-wide header/footer are Twig templates, not patterns** — unless the user explicitly wants block-based site editing. → [Header / footer / global elements](#header--footer--global-elements)
 
 ## Platform questions (answer first)
@@ -35,15 +35,15 @@ When implementing a feature end-to-end, follow this order — it prevents costly
 
 ## Quick pick
 
-| Need                                | Approach               | Skill                                                                 | Example                         |
-| ----------------------------------- | ---------------------- | --------------------------------------------------------------------- | ------------------------------- |
-| Simple text/image section           | Core blocks directly   | —                                                                     | No custom code                  |
-| Visual variant of a core block      | Block style            | [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) | Button colors, spacer sizes     |
-| Extra toggle/setting on a block     | Block mod              | [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) | Disable bottom margin           |
-| Layout section with standard blocks | Pattern                | [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md)       | Hero, CTA, features grid        |
-| Repeatable field-driven content     | ACF block              | [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md)   | Slider, team grid, testimonials |
-| Complex interactive component       | Custom WP block        | [create-block](.claude/skills/chisel-create-block/SKILL.md)           | Accordion, tabs, carousel       |
-| Entity-like repeating content       | CPT + CPT-driven block | [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md)               | Case studies, team, portfolio   |
+| Need                                | Approach               | Skill                                                                 | Example                                                  |
+| ----------------------------------- | ---------------------- | --------------------------------------------------------------------- | -------------------------------------------------------- |
+| Simple text/image section           | Core blocks directly   | —                                                                     | No custom code                                           |
+| Visual variant of a core block      | Block style            | [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) | Button colors, spacer sizes                              |
+| Extra toggle/setting on a block     | Block mod              | [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) | Disable bottom margin                                    |
+| Layout section with standard blocks | Pattern                | [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md)       | Hero, CTA, features grid                                 |
+| Repeatable field-driven content     | ACF block              | [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md)   | Slider, team grid, testimonials carousel                 |
+| Editors nest arbitrary child blocks | Custom WP block        | [create-block](.claude/skills/chisel-create-block/SKILL.md)           | Accordion (`chisel/accordion` + `chisel/accordion-item`) |
+| Entity-like repeating content       | CPT + CPT-driven block | [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md)               | Case studies, team, portfolio                            |
 
 ## Block decision ladder
 
@@ -52,11 +52,11 @@ When implementing a feature end-to-end, follow this order — it prevents costly
 3. **Core block + mod (toggle)** — on/off behavior (hide margin, reverse columns, invert colors) → block mod filter in `src/scripts/editor/mods/`. Use [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md).
 4. **Pattern** — layout composed of several blocks (hero, features grid, CTA band, testimonials, logo strip, FAQ list, pricing table) → use [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md). **Default for most section layouts.**
 5. **ACF block** — anything beyond a pure pattern that needs structured editor fields (slider, team grid, testimonials carousel, logo grid with links, stats counters, hero with file/image/link fields). **Default custom-block choice in Chisel.** Use [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md).
-6. **Custom WP (native React) block** — STOP AND ASK THE USER FIRST. Reserve for cases where ACF fields genuinely can't express what the editor canvas needs (in-canvas interactive state, drag-to-reorder, `<InnerBlocks>` composability where editors place arbitrary nested blocks, performance-critical server-render unsuitability). State the specific justification before proposing native React. Use [create-block](.claude/skills/chisel-create-block/SKILL.md) only after user approval.
+6. **Custom WP (native React) block** — STOP AND ASK THE USER FIRST. Reserve for cases where ACF fields genuinely can't express what the editor canvas needs (in-canvas interactive state, drag-to-reorder, `<InnerBlocks>` composability where editors place arbitrary nested blocks, performance-critical server-render unsuitability). The one native block Chisel ships, `chisel/accordion`, is here for exactly that reason: its `edit.js` renders `<InnerBlocks allowedBlocks={['chisel/accordion-item']}>` so editors add and reorder real child blocks — not because the accordion opens and closes. State the specific justification before proposing native React. Use [create-block](.claude/skills/chisel-create-block/SKILL.md) only after user approval.
 
 > **Editability note:** Patterns are fully editable in the WP editor — they're composed of native blocks. "Editable in admin" is not a reason to choose ACF block over pattern. Choose ACF block (rung 5) when content has structured fields the editor should fill via a form (single instance OR repeating with a fixed shape).
 >
-> **ACF vs native React (rung 5 vs 6):** ACF is the default. Native React requires user approval AND a documented exception — interactive editor canvas, true `<InnerBlocks>` composability, or performance need that rules out server rendering. A slider that's only interactive on the frontend, tabs that only toggle visibility on the frontend, an accordion whose expand/collapse runs in vanilla JS — all of these are ACF blocks with frontend JS. Native React is for editor-canvas interactivity, not frontend interactivity.
+> **ACF vs native React (rung 5 vs 6):** ACF is the default. Native React requires user approval AND a documented exception — interactive editor canvas, true `<InnerBlocks>` composability, or performance need that rules out server rendering. A slider that's only interactive on the frontend, tabs that only toggle visibility on the frontend, an accordion whose items are a fixed-shape repeater — all of these are ACF blocks with frontend JS; Chisel's own `chisel/slider` is one. Native React is for editor-canvas interactivity, not frontend interactivity. The line runs through the *editor*, not the visitor: `chisel/accordion` is native because editors compose its items as nested blocks, and an ACF repeater couldn't express that.
 
 ## Shared components rule
 
@@ -87,8 +87,8 @@ Create a CPT when ALL three apply:
 When you do create one:
 
 - Use [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md); options and constraints in [cpt.md](.claude/chisel/reference/cpt.md)
-- Default Gutenberg-enabled (`editor` in supports, `show_in_rest: true`)
-- ACF metaboxes only for WooCommerce products — never regular CPTs
+- **Pass `editor` in `supports` explicitly** — Chisel's defaults are `title`, `page-attributes`, `revisions`, `author`, so `editor` is *not* inherited. `show_in_rest` does default to `true`, but without `editor` the entry still opens in the classic editor
+- Keep the entry's **content** in blocks. An ACF metabox on a CPT is only for *settings about* the entry — a layout toggle, a display option — the way the starter's own `Page Title` and `Slider Settings` groups work
 - Per-entry layout: block template (seed blocks) + custom/ACF blocks for unique sections
 - **To show the entries on a page** (homepage "latest 3", a curated row): a CPT-driven block with `latest` / `selected` variant modes — **never an ACF repeater duplicating the entries.** A repeater forks the content: the same case study now exists twice and drifts. The block queries the CPT, so one edit updates everywhere.
 
@@ -99,8 +99,9 @@ When you do create one:
 
 ## Forms
 
-- Use Gravity Forms (already integrated — `src/styles/gravity-forms.scss`)
-- Form designs → configure GF form → embed via `[gravityform]` shortcode or GF block → scope styles in `src/styles/patterns/_{pattern-slug}.scss` (under `.p-{slug}`)
+- Use Gravity Forms (already integrated — `core/Plugins/GravityForms/`, bootstrapped from `functions.php`, styles in `src/styles/gravity-forms.scss`)
+- **Embed with the `gravityforms/form` block, not the `[gravityform]` shortcode.** The theme enqueues its `gravity-forms` stylesheet only when `has_block( 'gravityforms/form', $post )` is true, so a shortcode-embedded form silently renders with GF's own styling and none of the theme's. If a shortcode is unavoidable, say so — that page needs the style loaded another way
+- Form designs → configure GF form → embed the block → scope styles in `src/styles/patterns/_{pattern-slug}.scss` (under `.p-{slug}`)
 
 ## Related
 
@@ -108,5 +109,5 @@ When you do create one:
 - Where each kind of file goes → [file-locations.md](.claude/chisel/reference/file-locations.md)
 - The order to build a screen in → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
 - Twig components, header/footer templates → [twig-templating.md](.claude/chisel/reference/twig-templating.md)
-- WooCommerce products (the one sanctioned ACF metabox) → [woocommerce.md](.claude/chisel/reference/woocommerce.md)
+- WooCommerce products (not a CPT — use Woo's own product type) → [woocommerce.md](.claude/chisel/reference/woocommerce.md)
 - Skills: [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md) · [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) · [create-block](.claude/skills/chisel-create-block/SKILL.md) · [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md) · [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md) · [create-component](.claude/skills/chisel-create-component/SKILL.md) · [adapt-header-footer](.claude/skills/chisel-adapt-header-footer/SKILL.md)

@@ -37,7 +37,7 @@ Once approved: **load [reference/blocks.md](.claude/chisel/reference/blocks.md)*
 
 1. **Create all files** in `src/blocks/{block-name}/` — contents in [templates/custom-block-template.md](.claude/chisel/templates/custom-block-template.md). File list, including the optional `view.js` (frontend interactivity, class-based vanilla ES6) and `init.php` (server-side registration, required for child blocks to exist in the registry for REST/MCP validation): [reference/blocks.md "Custom WP Block"](.claude/chisel/reference/blocks.md#custom-wp-block-srcblocksname).
 2. **Run `npm run dev` or `npm run build-scripts`** to compile — Chisel registers blocks from `build/blocks/`, NOT `src/blocks/`. Until the build runs, the block won't appear in the editor.
-3. **Verify** in editor under "Chisel Blocks" category. `xfive-blocks-block-schema` to confirm registration + check `renderMode`.
+3. **Verify** — `xfive-blocks-block-schema` to confirm registration + check `renderMode`. In the editor the block sits under the `chisel-blocks` category, whose visible label is "{Theme Name} Blocks" (core builds it from the theme name, so it is not literally "Chisel Blocks" on a renamed theme).
 4. **Test** in editor and on frontend.
 
 Class prefixes, JS hook classes, block name and category: [reference/blocks.md "Block naming and classes"](.claude/chisel/reference/blocks.md#block-naming-and-classes).

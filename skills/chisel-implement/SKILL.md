@@ -45,6 +45,12 @@ are in [CLAUDE.md "Scaffolding"](CLAUDE.md#scaffolding-hard-rule).
 Find the current phase: the first row that is `[~]`, or the first `[ ]` after the last `[x]`. If a
 `phase N` argument was passed, jump to that row instead.
 
+**Figma-mode change?** If `## Source` says `Mode: Figma`, the section phases are built through
+[chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md) — it owns the section loop,
+the asset-download hard rule and the mandatory visual diff, none of which are repeated here. The
+three stops still apply and are still yours: gate the phase, hand the build to the orchestrator,
+come back for verify, summary and close-out.
+
 ## 2. The phase loop
 
 ### Stop 1 — the gate
@@ -79,6 +85,8 @@ Two rules that bite hardest here, both from `CLAUDE.md`:
   post creation — `xfive-mcp-chisel` tools only. Never a PHP seed, WP-CLI, or a manual paste. Read
   the [block-seeding traps](.claude/chisel/reference/mcp-workflow.md) before hand-writing block markup.
 - **Never edit `core/`.** A PreToolUse hook refuses the write. Mirror the file into `custom/app/`.
+  The hook only sees file-editing tools — a shell redirect into `core/` walks straight past it, so
+  this one is on you when you're in `Bash`.
 
 **If the plan doesn't match reality**, stop and say so plainly:
 
@@ -96,7 +104,8 @@ Then ask with `AskUserQuestion`: **adapt and continue** (adjust to reality, expl
 **Blocked outright?** Flip the phase row to `[!]`, write what's blocked and what unblocks it under
 the phase file's `Notes / blockers`, and stop there. Don't half-build around it.
 
-**New work appears mid-flight?** Insert `Phase Na` — a new row plus a new `phase-Na-*.md`. Never
+**New work appears mid-flight?** Insert `Phase 2a` between 2 and 3 — a new row plus a new
+`phase-02a-{slug}.md` (same zero-padded number as the phase it follows, plus the letter). Never
 renumber. A whole new *goal* is not a phase: that's a new change folder via `/chisel-new`.
 
 Notice a bug or oddity along the way, even unrelated? One line in `context/FINDINGS.md`, then keep going:
@@ -109,10 +118,13 @@ Don't derail the phase to chase it.
 
 ### Stop 2 — verify and summarize
 
-1. Run `npx chisel-verify`. It's the mechanical checklist — token references, preset classes,
-   pattern four-way sync, SCSS conventions, untouched `core/` — and it is not optional. Fix what it
-   flags, or say why a finding stands. A failing check is never "probably fine". What each failure
-   class means: [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
+1. Run `npx chisel-verify`. It's the mechanical checklist — token references, undefined helpers,
+   preset classes, hand-written markup colors, margin pairs, pattern four-way sync, ACF group keys,
+   SCSS conventions, untouched `core/` — and it is not optional. **Fix what's unambiguous; ask when
+   the fix could go either way** (a missing token vs. a mistyped reference). A failing check is
+   never "probably fine". Two things it won't tell you: exit code `2` means it never ran, and it
+   can't read page content you seeded through MCP — that lives in the database. Full detail:
+   [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
 2. **Ask the user to run `npm run build-scripts`** to confirm the SCSS compiles. Never invoke it
    yourself. Tick that done-when item once they report it passed.
 3. Tick the phase file's **Done when · Automated** items that now pass.
@@ -149,8 +161,10 @@ Once the user confirms, offer a commit — don't just make one.
    **Never add a trailer.** No `Co-Authored-By:`, no "Generated with Claude Code", no attribution of
    any kind. The message is one line and ends there.
 5. Ask: **commit as proposed** · **edit the message** · **skip the commit for now**.
-6. Never `--no-verify`, never `--amend`. If a hook fails, fix the cause and make a new commit — the
-   pre-commit hook that catches `core/` edits is doing its job.
+6. Never `--no-verify`, never `--amend`, never `CHISEL_SKIP_CORE_CHECK=1`. If a hook fails, fix the
+   cause and make a new commit. The theme's pre-commit hook does two things: it blocks *modified*
+   files under `core/` — a newly **added** file there slips through, so don't lean on it — and then
+   runs lint-staged, so eslint, stylelint, phpcs or twigcs can fail the commit on their own.
 7. Clear the touched-file set.
 
 ### Stop 3 — close the phase, then wait
@@ -206,7 +220,7 @@ Then print how to pick it up:
 6. **Never commit without asking.** One line, no trailers, no `Co-Authored-By:`. Prefix with the
    ticket key when there is one.
 7. **Stage by path.** The touched-file set decides, not `git status`.
-8. **Insert, never renumber.** New work mid-flight becomes `Phase Na`.
+8. **Insert, never renumber.** New work mid-flight becomes `Phase 2a`, filed as `phase-02a-{slug}.md`.
 9. **Absolute dates.** `2026-07-21`, never "today".
 
 ## Anti-patterns
@@ -217,6 +231,10 @@ Then print how to pick it up:
 - ❌ Ticking manual items because the automated ones passed.
 - ❌ Running `npm run build-scripts` yourself instead of asking the user.
 - ❌ Building the next phase because this one went well.
+- ❌ Hand-building a Figma section instead of routing the phase through the orchestrator. (You lose
+  the asset download and the visual diff, and the section won't match.)
+- ❌ Reporting "verify clean" for content seeded into a page. (That lives in the database, not a
+  file — the script never sees it.)
 - ❌ Seeding content with a PHP script or WP-CLI because the MCP call was fiddly.
 - ❌ Hiding unwanted content with `display: none` instead of removing it at the source.
 - ❌ `git add -A`. (Sweeps in whatever else was dirty.)
@@ -234,5 +252,6 @@ Then print how to pick it up:
 - Picking up an active change cold → [chisel-resume](.claude/skills/chisel-resume/SKILL.md)
 - Feedback on built work, no plan needed → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
+- Building a Figma-mode phase → [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md)
 - Per-screen build order and the done gate → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
 - WordPress state writes and seeding traps → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)

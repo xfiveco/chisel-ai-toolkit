@@ -40,17 +40,19 @@ Spec source: Figma `get_design_context`, a mockup/screenshot, or a written descr
 1. Extract design properties from the spec — `get_design_context` output (Figma mode), or read the mockup / user description.
 2. For each property, find its home in [base-styles.md](.claude/chisel/reference/base-styles.md) and read the current value.
 3. If it should be the global default → update the base file.
-4. Map spec component variants to **existing Chisel slots** (primary/secondary/tertiary). Don't create new variant names (white, etc.) while leaving old ones unused — remap instead.
+4. Map spec component variants to **existing Chisel slots**. For buttons there are exactly four — `primary`, `primary-outline`, `secondary`, `secondary-outline` (no `tertiary`). Don't invent a fifth name (white, ghost, dark) while one of the four sits unused — remap instead. Adding a genuinely new variant means registering it in `src/scripts/editor/blocks-styles.js` **and** writing its mixins and `.c-btn--` rules; a name alone renders unstyled.
 
 ### Reading button variants from Figma
 
-A button on a dark hero is **not** automatically the "primary" variant — it could be tertiary (text-only). When `get_design_context` returns a button component, look at:
+A button on a dark hero is **not** automatically the "primary" variant — a transparent, text-only button is a different variant that happens to sit on a dark band. When `get_design_context` returns a button component, look at:
 
-1. The **component description** (e.g. "Button component (3 variants): primary, secondary, tertiary") for the variant names.
-2. The **rendered markup** of that specific instance — does it have a `bg-` class? a `border-` class? Or just `flex items-center px-… py-…` with text and an icon (= tertiary, transparent)?
-3. The **node name**, when component instances are individually named (e.g. `button/tertiary/dark`).
+1. The **component description** (e.g. "Button component (3 variants): …") for the spec's own variant names.
+2. The **rendered markup** of that specific instance — does it have a `bg-` class? a `border-` class? Or just `flex items-center px-… py-…` with text and an icon (= transparent, so an outline slot or a remap)?
+3. The **node name**, when component instances are individually named (e.g. `button/ghost/dark`).
 
-Variant maps to `is-style-{variant}` (Gutenberg button block) or `c-btn--{variant}` (raw `.c-btn`). Light/dark is an **orthogonal axis** — append `is-style-on-dark` / `c-btn--on-dark`. Conflating the two ("dark theme = primary variant on dark") silently picks the wrong visual.
+Then map the spec's names onto Chisel's four: `is-style-{variant}` on the Gutenberg button block, `c-btn--{variant}` on a raw `.c-btn`.
+
+**Chisel has no light/dark variant axis.** There is no `is-style-on-dark` or `c-btn--on-dark` — nothing in the theme registers or styles one. If the spec genuinely needs a dark-background treatment, either fold it into an existing variant, scope it under the section's `.p-{slug}`, or register a real new block style via [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md). Don't emit a class that doesn't exist.
 
 ## Traps
 
@@ -58,7 +60,7 @@ Variant maps to `is-style-{variant}` (Gutenberg button block) or `c-btn--{varian
 - ❌ **Scoping a global under `.p-{slug}` because it was faster.** Every later section pays for it.
 - ❌ **Restating a global downstream.** Once theme.json (`styles.typography`, `styles.elements.hN`, `settings.custom.*`) or a base mixin sets a value, it cascades — never re-declare it in pattern/component/block SCSS. [coding-conventions.md "Don't duplicate global styles"](.claude/chisel/reference/coding-conventions.md#dont-duplicate-global-styles-hard-rule).
 - ❌ **A hardcoded `px-rem(…)`, hex literal, or magic number in a base file.** Check whether the value recurs — if it does, or could, it belongs in `theme.json` plus a `get-*` helper. Width-token ladder: [design-tokens.md "Layout"](.claude/chisel/reference/design-tokens.md#layout). Same for padding/margin steps, radii, shadows, transitions.
-- ❌ **Creating a new variant slot** (`white`, `dark`) while `tertiary` sits unused. Remap.
+- ❌ **Creating a new variant slot** (`white`, `dark`, `ghost`) while one of the four real ones sits unused. Remap. And a variant name with no mixin and no `.c-btn--` rule renders as an unstyled button.
 - ❌ **`display: none` on seeded content the design doesn't want.** Remove it at the source via MCP (`xfive-widgets-widget-remove`, `xfive-posts-post-trash`) or ask the user. [CLAUDE.md "Content vs CSS"](CLAUDE.md#content-vs-css-hard-rule).
 - ❌ Inlining an SVG when a registered icon exists — [base-styles.md "Icons"](.claude/chisel/reference/base-styles.md#icons).
 

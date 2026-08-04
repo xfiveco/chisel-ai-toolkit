@@ -130,15 +130,16 @@ Say in one line why you split the way you did.
 
 ### Typical phase sets
 
-**Figma / static-asset — one screen.** Phases 1–4 are per-project, not per-screen: on the second
-screen they're already done, so note that in `## Scope` and start at the sections.
+**Figma / static-asset — one screen.** The build order is owned by
+[screen-build-order.md](.claude/chisel/reference/screen-build-order.md) — read its steps and turn
+them into phases. Don't restate a second, competing order here. What planning adds on top:
 
-1. **Inspect + tokens** — `get_metadata` + `get_variable_defs`, theme.json deltas applied, fonts downloaded
-2. **Adapt base styles** — buttons, typography, links, forms, body
-3. **Header + footer** — Twig + nav menu
-4. **Create the page, set as front page** (MCP)
-5. …N. **One phase per section**, top to bottom
-6. N+1. **Verification** — the [screen-build-order.md](.claude/chisel/reference/screen-build-order.md) Phase 5 checklist
+- **The project-wide steps happen once.** Tokens, base styles, header and footer are done on the
+  first screen and already done on the second — say so in `## Scope` and start at the sections.
+- **Steps with no visible section of their own** — a CPT, a custom block, a block style — ride
+  along in the phase of the first section that needs them, unless one is big enough to review alone.
+- **The last phase is the gate**, run against the
+  [verification checklist](.claude/chisel/reference/screen-build-order.md#verification-checklist).
 
 Multi-screen imports get **one change folder per screen** (`01-home`, `02-about`), sharing the
 token and base-style phases by reference. Only fold two screens into one folder if they're tightly
@@ -311,11 +312,11 @@ even for small work: it's the only part of the conversation that survives.
 
 ## Active
 
-- `[~]` [Home Figma import](changes/01-home-import/PLAN.md) — Figma · 8 sections · on Phase 6
+- `[~]` [Home Figma import](changes/02-home-import/PLAN.md) — Figma · 8 sections · on Phase 6
 
 ## Done
 
-- `[x]` [Contact form](changes/02-contact-form/PLAN.md) — prompt · done 2026-06-02
+- `[x]` [Contact form](changes/01-contact-form/PLAN.md) — prompt · done 2026-06-02
 ```
 
 ```markdown
@@ -353,8 +354,9 @@ Stop. Don't start Phase 1 because the plan looks approved.
    `## Decisions` is the only copy that survives the session.
 3. **One change, one goal, one mode.** Never mix Figma and prompt work in one `PLAN.md`, and never
    bolt an unrelated new goal onto a finished one — new goal, new folder, new INDEX row.
-4. **Insert, never renumber.** New work mid-flight becomes `Phase 2a` between 2 and 3. Renumbering
-   breaks every reference already written down.
+4. **Insert, never renumber.** New work mid-flight becomes `Phase 2a` between 2 and 3, filed as
+   `phase-02a-{slug}.md` — the padded number it follows, plus the letter. Renumbering breaks every
+   reference already written down.
 5. **Absolute dates.** `2026-07-21`, never "today" or "next Tuesday". These files are read months later.
 6. **Incidental findings go to `context/FINDINGS.md`** — one line, then keep going. A bug you
    notice while scoping doesn't derail the scoping. Append-only: the sole edit permitted to an

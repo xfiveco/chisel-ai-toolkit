@@ -22,7 +22,7 @@ Theme root: `{{THEME_ROOT}}`. All paths below are relative to it.
 
 **Run the CPT ladder in [reference/section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md#cpt-decision) first** — it confirms a CPT is the right call rather than an ACF block, a pattern, or a one-off page. All three conditions must hold.
 
-Then load [reference/cpt.md](.claude/chisel/reference/cpt.md) — supported options, what the factory supplies, and the two hard rules (`editor` in `supports`; WooCommerce products are never a CPT). This skill is the _how_; reference is the _what_.
+Then load [reference/cpt.md](.claude/chisel/reference/cpt.md) — supported options, what the factory supplies, and the three hard rules (`editor` in `supports`; WooCommerce products are never a CPT; content in blocks, not metaboxes). This skill is the _how_; reference is the _what_.
 
 ## Procedure
 
@@ -48,8 +48,9 @@ When the CPT has to appear on the homepage or another page (latest N, or a curat
 ## Traps
 
 - ❌ **Omitting `editor` from `supports`,** or setting `show_in_rest: false` — either one drops the CPT into the classic editor.
+- ❌ **Omitting `plural` on a post type, or `post_types` on a taxonomy.** Both factories read those keys unguarded — a missing `plural` is a PHP warning, a missing `post_types` attaches the taxonomy to nothing. The other options all have defaults; these two don't.
 - ❌ **An ACF repeater instead of a CPT-driven block.** The same entry then exists twice and the copies drift.
-- ❌ **ACF metaboxes on a regular CPT.** Those are for WooCommerce products only; regular CPTs get blocks.
+- ❌ **A CPT's content in an ACF metabox.** Content goes in blocks. A metabox on a CPT is only for settings *about* the entry — a display toggle, a layout option — like the starter's own `Page Title` and `Slider Settings` groups.
 - ❌ **Creating a CPT for a WooCommerce product.** Use the built-in product type.
 - ❌ Registering hooks directly in `custom/functions.php` instead of the class's `filter_hooks()` — see [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom).
 - ❌ Forgetting to flush permalinks, then debugging a 404 that isn't a code problem.

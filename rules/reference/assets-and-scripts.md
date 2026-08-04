@@ -6,7 +6,7 @@ Asset registration filters, the icon system, Swiper wiring, and the load-bearing
 
 1. **Register custom scripts/styles via filters in `custom/app/WP/Assets.php`** (`filter_hooks()` method, `HooksSingleton` trait) — **not** in `custom/functions.php`. → [Asset registration](#asset-registration)
 2. **Overriding a shared component style is diff-only** — read the global source first, then write only the rules that differ. → [Overriding shared component styles](#overriding-shared-component-styles-slider-base-styles)
-3. **Initialize Swiper via `data-*` attributes on `.swiper.js-slider`** — never hand-instantiate in JS. → [Swiper](#swiper)
+3. **Build sliders by including `components/slider.twig` with a `params` map** — never write the swiper markup or the `data-*` attributes yourself, and never hand-instantiate Swiper in JS. → [Swiper](#swiper)
 4. **The hook lists below are not exhaustive** — grep `core/` for `apply_filters` / `do_action` before concluding a hook doesn't exist. → [Chisel hooks reference](#chisel-hooks-reference)
 
 ## Asset registration
@@ -24,7 +24,7 @@ Managed by `core/WP/Assets.php`. Add custom scripts/styles via filters in `custo
 ### Config keys
 
 - **Style**: `src`, `deps`, `ver`, `media`, `condition`, `inline`
-- **Script**: `src`, `deps`, `ver`, `strategy` (defer/async), `condition`, `localization`, `inline`
+- **Script**: `src`, `deps`, `ver`, `strategy` (defer/async), `condition`, `localize`, `inline` — the key is `localize`, taking `{ 'name': …, 'data': … }`
 
 Scripts default to `{'in_footer': true, 'strategy': 'defer'}`.
 
@@ -52,18 +52,24 @@ Handles prefixed with `chisel-`. Build outputs to `build/scripts/` and `build/st
 
 ### HMR / Fast Refresh
 
-Active when `WP_DEBUG` + `SCRIPT_DEBUG` + `WP_ENVIRONMENT_TYPE='development'`. Enqueues `build/runtime.js`, creates companion JS files for CSS hot-reload.
+Active when **both** `wp_get_environment_type() === 'development'` (set `WP_ENVIRONMENT_TYPE` in `wp-config-local.php`) **and** `build/runtime.js` exists — the latter only after `npm run start`, never after `npm run build-scripts`. `WP_DEBUG` and `SCRIPT_DEBUG` play no part. Enqueues `build/runtime.js`, creates companion JS files for CSS hot-reload. The editor bundle gets no runtime script, so fast refresh never covers it.
 
 ## Icon system
 
-Two modes via `CHISEL_USE_ICONS_MODULE` constant:
+Two modes:
 
-| Mode             | Source          | Path                                 |
-| ---------------- | --------------- | ------------------------------------ |
-| Source (default) | Individual SVGs | `assets/icons-source/{name}.svg`     |
-| Module           | Compiled sprite | `assets/icons/icons.svg#{name}-view` |
+| Mode             | Source          | Path                                      |
+| ---------------- | --------------- | ----------------------------------------- |
+| Source (default) | Individual SVGs | `assets/icons-source/{name}.svg`          |
+| Module           | Compiled sprite | `assets/icons/icons.svg#icon-{name}-view` |
 
-Color variants in `assets/icons-source/color/{name}.svg`.
+**The mode is three switches that must agree**, or PHP and SCSS disagree about where the icon lives and one side silently resolves nothing:
+
+1. `CHISEL_USE_ICONS_MODULE` in `functions.php` (the runtime switch — `should_use_icons_module()` reads it)
+2. `$use-icons-module` in `src/design/settings/_index.scss` (the SCSS switch)
+3. `--use-icons-module` on the npm `start` / `build-scripts` job
+
+**Color icons are detected by name, not by folder.** An icon whose name starts with `color-` renders as a colour icon; there is no `color/` subdirectory — the file sits flat at `assets/icons-source/color-{name}.svg`. `force_mono: true` exists to override that prefix detection when a monochrome icon happens to be named `color-…`. Animated icons are the exception that *does* use a subfolder: `assets/icons/animated/{name}.svg`.
 
 **Usage in Twig**: `{{ get_icon({ name: 'arrow', alt: 'Next' }) }}`
 
@@ -71,13 +77,19 @@ Color variants in `assets/icons-source/color/{name}.svg`.
 
 `name` (required), `inline`, `rectangle`, `force_mono`, `alt`, `is_css`, `color`.
 
+Passing `alt` sets `role="img"` + `aria-label`; omitting it sets `aria-hidden="true"`. Rendered output is cached per unique argument set.
+
 ### CSS classes
 
-`.o-icon`, `.o-icon--{name}`, `.o-icon--inline`, `.o-icon--color`, `.o-icon--mono`.
+`.o-icon`, `.o-icon--icon-{name}` (note the `icon-` prefix), `.o-icon--inline`, `.o-icon--color`, `.o-icon--mono`, plus `.is-css` when `is_css` is set.
 
 Monochromatic icons use CSS `mask-image` (colorable via CSS). Color icons use `background-image`.
 
-Static icons for buttons are listed in `src/design/settings/_index.scss` as `$static-icons`. Button system uses `has-icon-{name}` classes with `icon-svg()` mixin.
+### The three icon registries (silent-failure trap)
+
+`src/design/settings/_index.scss` holds `$static-icons`, `$animated-icons` and `$multicolor-icons`. The `icon-svg()` mixin **only emits the `mask` / `background-image` if the name is in the matching list** — call it with an unregistered name and you still get the sizing and the background colour, but no glyph. A blank box, no Sass error. Add the name to the right list in the same change as the SVG.
+
+`icon-svg($name, $multicolor, $animated, $is-block, $ext)` takes the same `$is-block: true` flag as `background-image()` for block SCSS one level deeper. The `icon()` mixin wraps it in a `::before`. The button system uses `has-icon-{name}` classes on top of `icon-svg()`.
 
 ### Cleaning Figma-exported SVGs
 
@@ -89,18 +101,54 @@ Static icons for buttons are listed in `src/design/settings/_index.scss` as `$st
 
 ## Swiper
 
-Initialize Swiper sliders via `data-*` attributes on `.swiper.js-slider` — never hand-instantiate in JS.
+**You never write the slider markup.** Include the shared component and pass a `params` map; the registered Twig function `slider_prepare_params()` turns every key into `data-{key}="{value}"` (arrays and objects are JSON-encoded), and `components/slider.twig` emits the `.swiper-container.js-slider-container` → `.swiper.js-slider` → `.swiper-wrapper` scaffold around your slides. `src/scripts/modules/slider.js` then picks up every `.js-slider` on the page and instantiates Swiper from those attributes.
 
-| Attribute              | Purpose                                                               |
-| ---------------------- | --------------------------------------------------------------------- |
-| `data-slides-per-view` | Number of slides visible per row, or `"auto"` (requires fixed widths) |
-| `data-space-between`   | Gap between slides (px)                                               |
-| `data-arrows`          | `true` / `false`                                                      |
-| `data-dots`            | `true` / `false`                                                      |
-| `data-breakpoints`     | JSON for per-breakpoint overrides                                     |
-| `data-args`            | JSON for any other Swiper option                                      |
+```twig
+{% include 'components/slider.twig' with {
+  slides_html,
+  params: {
+    'slides-per-view': 1,
+    'arrows': 'yes',
+  }
+} %}
+```
 
-**Trap.** `slidesPerView: "auto"` requires each slide to have a fixed width in CSS; otherwise use numeric values + `data-breakpoints`.
+`slides_html` is a pre-rendered string; each slide needs the `swiper-slide` class. Optional `slider_class_names` / `slider_container_class_names` add classes to the two wrappers. The working example is `src/blocks-acf/slider/slider.twig` — copy that shape.
+
+Param keys are written **kebab-case**, exactly as they appear in the attribute.
+
+### Param reference
+
+**HARD RULE: booleans are the strings `yes` / `no`, never `true` / `false`.** `slider.js` compares `=== 'yes'`, so `true` is simply not a match — the feature stays off, silently, with no console error.
+
+**Switches** — all take `yes` / `no` and default to `no`: `arrows`, `dots`, `loop`, `autoplay`, `center`, `auto-height`, `free-mode`, `parallax`, `scrollbar`.
+
+**Values:**
+
+| Param                  | Values / default                                                            |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `type`                 | `default` — picks the `{type}SliderParams()` hook in `slider.js`            |
+| `slides-per-view`      | number, or `auto` (needs fixed slide widths). Default `1`                   |
+| `space-between`        | px. Default `10` — but see the trap below                                   |
+| `autoplay-timeout`     | ms. Default `5000`; under 1000 is raised to 1000                            |
+| `dots-dynamic`         | `0` off, else the dynamic main-bullet count                                 |
+| `direction`            | `horizontal` (default) / `vertical`                                         |
+| `effect`               | `slide` (default), `fade`, `cube`, `coverflow`, `flip`, `creative`, `cards` |
+| `initial-slide`        | index. Default `0`                                                          |
+| `speed`                | ms. Default `1000`; `0` under `prefers-reduced-motion`                      |
+| `thumbnails`           | `0` off, else thumb count — slides need `data-thumbnail-url`                |
+| `breakpoints`          | JSON, per-breakpoint overrides                                              |
+| `args`                 | JSON merged over everything above                                           |
+| `thumbs-slider-params` | JSON overrides for the generated thumbs slider                              |
+| `thumbs-module-params` | JSON overrides for the generated thumbs slider                              |
+
+`block_settings` is not an attribute — pass an ACF options group under that key and `slider_prepare_params()` maps its `slider_settings` checkboxes onto `arrows` / `dots` / `loop` / `autoplay` / `thumbnails` for you. That's how the shipped slider block works.
+
+**Trap — `space-between` is discarded on the default slider type.** `setSliderTypeParams()` runs last, and `defaultSliderParams()` hard-sets `spaceBetween: 0`. Since `type` defaults to `default`, both `space-between` and a `spaceBetween` inside `args` are overwritten. To get a gap, add a new `{type}SliderParams()` method in `slider.js` and pass that `type`.
+
+**Trap.** `slides-per-view: auto` requires each slide to have a fixed width in CSS; otherwise use numeric values + `breakpoints`.
+
+Autoplay, arrows, dots, scrollbar and the autoplay pause control are all **generated by the JS** — don't author those elements in Twig.
 
 ### Customizing default arrows
 

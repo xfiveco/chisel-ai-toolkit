@@ -338,7 +338,9 @@ For CPT feeds (case studies, team), set `"postType":"case-study"` (etc.). For "m
 
 ## Design token preset classes
 
-- Colors: `has-primary-color`, `has-foreground-background-color`, `has-secondary-background-color`
-- Font sizes: `has-large-font-size`, `has-extra-large-font-size`, `has-huge-font-size`
+Class **shapes**, not a roster — the slugs inside them are per project. Read `theme.json` for colors and font sizes, `src/scripts/editor/blocks-styles.js` for the registered `is-style-*` names, and `$static-icons` in `src/design/settings/_index.scss` for icon names.
+
+- Colors: `has-{slug}-color`, `has-{slug}-background-color` (+ bare `has-text-color` / `has-background`)
+- Font sizes: `has-{slug}-font-size`
 - Alignment: `has-text-align-center`, `alignfull`, `alignwide`
-- Button styles: `is-style-primary`, `is-style-secondary`, `is-style-primary-outline`, `is-style-secondary-outline`
+- Button styles: `is-style-{name}`; button sizes `is-size-small` / `is-size-large` (default size sets no class)

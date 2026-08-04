@@ -54,6 +54,8 @@ Content problems go through MCP tools, never CSS hiding.
 
 Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
 
+**It can't see seeded content.** SCSS, patterns, Twig and ACF groups are all read — but content pushed into a page through MCP lives in the database, and a fix batch is often exactly that. A clean run says nothing about it. Say so, and list what still needs a human eye.
+
 ### 5. Leave a trail
 
 Skipping the plan doesn't mean skipping the record. **Every batch gets one line**, written *before* the commit so it lands in it.
@@ -95,6 +97,7 @@ Summarize: items fixed, items escalated (with why), files touched, and anything 
 - ❌ Hiding a reviewed-out element with `display: none`. (Content vs CSS hard rule still applies.)
 - ❌ Editing a shared partial, component, or token without checking who else depends on it.
 - ❌ Skipping `npx chisel-verify` because the fixes were small.
+- ❌ Reporting a clean `chisel-verify` as proof a content fix landed. (It can't read the database.)
 - ❌ Running `npm run build-scripts` yourself instead of asking the user.
 - ❌ Fixing the escalated items anyway, at the end, quietly.
 - ❌ A batch that leaves no line in `FIXES.md`.

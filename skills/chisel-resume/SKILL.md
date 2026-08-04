@@ -20,7 +20,7 @@ layout exists so you *don't* load everything.
 
 ## 1. Find the change
 
-Read `{{THEME_ROOT}}/context/INDEX.md`.
+Read `context/INDEX.md`.
 
 - **Argument given** (`/chisel-resume 03-about-page`) — use that folder. Accept a bare number
   (`03`), the full folder name, or a path; match against `changes/`. No match → say so, list what
@@ -69,6 +69,19 @@ Then ask whether to start that phase. **Stop.** Starting it means stop 1 of
 [`/chisel-implement`](.claude/skills/chisel-implement/SKILL.md) — flip the row to `[~]`, fill in the
 steps against the code as it now stands, pause again. Don't skip ahead to code because the plan was
 already written.
+
+## 5. Before you stop
+
+Resuming is a session like any other. If step 3 corrected drift, or the user reads the report and
+leaves, that has to survive — do this **before** your final message:
+
+- Append a `## Log` line to `PLAN.md`, even when nothing was built: `2026-07-21 — resumed; Phase 4's
+  Touches corrected against the code. Phase 4 next.`
+- Refresh the change's line in `context/INDEX.md` if its state moved.
+- Leave `**Status:**` and the phase row alone unless the phase actually started — flipping to `[~]`
+  belongs to [`/chisel-implement`](.claude/skills/chisel-implement/SKILL.md)'s stop 1, not here.
+
+Full rule → [CLAUDE.md "Change tracking"](CLAUDE.md#change-tracking).
 
 ## Notes
 

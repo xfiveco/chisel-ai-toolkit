@@ -26,7 +26,9 @@ This skill calls other skills — don't reinvent their work.
 ### Required prerequisites
 
 1. Load the `figma:figma-use` skill before any `mcp__plugin_figma_figma__*` call.
-2. Read [reference/screen-build-order.md](.claude/chisel/reference/screen-build-order.md) for the phase checklist. Its Phase 4/5 numbering matches this skill's — that's why the phases here start at 4.
+2. Read [reference/screen-build-order.md](.claude/chisel/reference/screen-build-order.md) — it owns the build order and the done gate; the stages below are how this skill walks it.
+
+**The stages below are not phases.** A *phase* is one row in the import's `PLAN.md`, and that's what `/chisel-implement {NN} phase N` refers to. Don't cross the two numbering schemes.
 
 ### Load-bearing rules for Figma mode
 
@@ -53,18 +55,18 @@ This skill calls other skills — don't reinvent their work.
 
 ## Procedure
 
-### Phase 0 — Project setup (first time)
+### Project setup (first time)
 
 If `theme.json` still has example palette (`#dd2424` primary, `#22dbdb` secondary), run `setup-theme-json` first.
 
-### Phase 0.5 — context/ plan
+### The change folder
 
 Read `context/INDEX.md`, then this import's `changes/{NN}-{slug}/PLAN.md`. If missing, the import
 hasn't been scoped — hand off to [chisel-new](.claude/skills/chisel-new/SKILL.md) (Figma mode → a
 per-import `changes/{NN}-{slug}/` folder holding `PLAN.md` + one phase file per section, plus an
 INDEX row under `## Active`) and come back once the plan is approved.
 
-### Phase 1 — Scope
+### Scope
 
 Ask user (unless answered):
 
@@ -73,7 +75,7 @@ Ask user (unless answered):
 3. Editor-driven or hardcoded content?
 4. Interactive behavior? (accordion, tabs, slider → forces custom block)
 
-### Phase 2 — Inspect
+### Inspect
 
 1. `get_metadata(fileKey, nodeId)` — cheap skeleton, extract section node IDs
 2. `get_screenshot(fileKey, nodeId)` — visual reference (full page)
@@ -81,7 +83,7 @@ Ask user (unless answered):
 
 Do NOT call `get_design_context` on all sections at once — overflow risk.
 
-### Phase 3-4 — Section loop (one at a time, end-to-end)
+### Section loop (one at a time, end-to-end)
 
 For each section from top to bottom:
 
@@ -106,15 +108,15 @@ Header/footer: use `adapt-header-footer` skill, not patterns.
 
 Asset URLs returned by Figma are short-lived (~7 days) but stable for the duration — download them at the moment `get_design_context` returns them, alongside the rest of the section's work. If you skip the download and "draw something close" instead, the section won't match Figma and the user will catch it in browser review (wasted round-trip).
 
-### Phase 5 — Verification
+### Verification
 
-Run checklist in [reference/screen-build-order.md](.claude/chisel/reference/screen-build-order.md) > "Phase 5".
+Run the checklist in [reference/screen-build-order.md "Verification checklist"](.claude/chisel/reference/screen-build-order.md#verification-checklist).
 
-### Phase 6 — Iteration
+### Iteration
 
 When refining: fresh screenshot → compare rendered → adjust tokens first, then pattern SCSS, then block code.
 
-### Phase 7 — Update context/
+### Close out the context/ files
 
 Flip the phase file's steps + the `PLAN.md` phase row (status + one-line outcome), add patterns/blocks/CPTs to `Artifacts produced`, append a `## Log` line with an absolute date, and refresh the INDEX row's state. When the whole import is done, move its INDEX row from `## Active` to `## Done`.
 
@@ -140,7 +142,7 @@ Flip the phase file's steps + the `PLAN.md` phase row (status + one-line outcome
 
 1. `npx chisel-verify` after each section — not once at the end. A token typo in section two is cheap now and expensive after six more.
 2. Ask the user to run `npm run build-scripts`; never invoke it yourself.
-3. Then the full screen gate: [screen-build-order.md "Phase 5"](.claude/chisel/reference/screen-build-order.md) — raw-value audit, markup color audit, margin-pair audit, slug sync.
+3. Then the full screen gate: [screen-build-order.md "Verification checklist"](.claude/chisel/reference/screen-build-order.md#verification-checklist) — raw-value audit, markup color audit, margin-pair audit, slug sync.
 
 ## Related
 

@@ -6,8 +6,9 @@ Template hierarchy, the global Timber context, registered Twig functions, and th
 
 1. **All Twig templates live in `views/`** — `custom/views/` exists but is unused (legacy); `custom/` is for PHP only. Edit `views/` directly. → [Template hierarchy](#template-hierarchy)
 2. **Logic keyed on a single post/product/term goes as a method on its Timber class**, not a `fn(post)` Twig function. → [Per-post logic → method on the Timber class](#per-post-logic--method-on-the-timber-class-hard-rule)
-3. **Always use `breadcrumbs()` — never hand-roll breadcrumbs.** → [Custom Twig functions](#custom-twig-functions-from-corewptwigphp)
+3. **Breadcrumbs are already rendered on every page** by the `breadcrumbs` block in `views/base.twig` — never hand-roll them, and don't call `breadcrumbs()` again in a child template. → [Base layout](#base-layout)
 4. **Request the smallest image size that fits the render width** — never `full` unless you genuinely need the original. → [Uploaded images](#uploaded-images)
+5. **Twig autoescapes HTML** — anything that is intentionally markup needs `|raw`. → [Autoescaping](#autoescaping)
 
 ## Template hierarchy
 
@@ -26,15 +27,36 @@ All templates extend `views/base.twig` (html, head, header, main, footer).
 
 **CPTs need no templates by default.** WordPress falls back to `single.php` / `archive.php`, which is usually sufficient. Add `views/single-{slug}.twig` / `views/archive-{slug}.twig` (plus `single-{slug}.php` / `archive-{slug}.php` in the theme root) only when a CPT genuinely needs its own layout.
 
+Also in `views/` but outside the route table: `single-password.twig`, `page-plugin.twig`, `sidebar-blog.twig`, `sidebar-woocommerce.twig`.
+
 ## Base layout
 
+`views/base.twig` defines six overridable blocks:
+
 ```twig
-{% block header %} → views/components/header.twig {% endblock %}
+{% block head %}          → extra <head> output (empty by default)
+{% block header %}        → views/components/header.twig
 <main id="main" class="o-wrapper">
-  {% block content %} → filled by child templates {% endblock %}
+  {% block breadcrumbs %} → breadcrumbs(), already on every page
+  {% block content %}     → filled by child templates
 </main>
-{% block footer %} → views/components/footer.twig {% endblock %}
+{% block footer %}        → views/components/footer.twig
+{% block foot %}          → extra pre-</body> output (empty by default)
 ```
+
+To inject markup without overriding a block, hook `chisel_after_wp_head` or `chisel_after_wp_footer`.
+
+## Autoescaping
+
+`core/WP/Twig.php` sets `autoescape = 'html'`, so **every** `{{ }}` is escaped. Anything that is intentionally markup needs `|raw`:
+
+```twig
+{{ post.title|raw }}
+{{ post.excerpt({words: 20})|raw }}
+{{ post.get_thumbnail()|raw }}
+```
+
+Custom Twig functions that return HTML — `get_icon`, `get_responsive_image`, `breadcrumbs`, `comments_template` — are registered with `is_safe => html` and need no `|raw`. Forgetting it elsewhere fails silently: the tags render as visible text.
 
 ## Global context (from `core/WP/Site.php`)
 
@@ -44,9 +66,9 @@ All templates extend `views/base.twig` (html, head, header, main, footer).
 | `menus`           | array         | All registered nav menus                                             |
 | `sidebar`         | array         | Auto-detects blog/woo context                                        |
 | `copyright`       | array         | `chisel-sidebar-copyright` widget area (`copyright.content`)         |
-| `footer_sidebars` | array         | 4 footer-column widget areas + grid class (`.columns`)               |
+| `footer_sidebars` | array         | `columns` — whichever of `chisel-sidebar-footer-1..4` have widgets; `column_class` — an `o-layout__item--*` class chosen by how many are populated |
 | `the_title`       | array         | Page/archive title + class                                           |
-| `options`         | array         | ACF Options (if added via custom filter in `custom/app/WP/Site.php`) |
+| `options`         | array         | **Not set by the theme.** Add it on `timber/context` yourself if the project needs ACF Options in every template |
 
 ## Custom Twig functions (from `core/WP/Twig.php`)
 
@@ -61,6 +83,7 @@ All templates extend `views/base.twig` (html, head, header, main, footer).
 | `breadcrumbs()`                         | Yoast breadcrumbs (empty string if Yoast inactive). Style via `.c-breadcrumbs` in `src/styles/vendor/_breadcrumbs.scss`. Always use this — never hand-roll. |
 | `comments_template()`                   | WordPress comments block                                                                                                                                    |
 | `slider_prepare_params(params)`         | Prepare ACF slider data                                                                                                                                     |
+| `timber_set_product(post)`              | Set the global WooCommerce `$product` from a Timber post                                                                                                    |
 
 Extend via `chisel_twig_register_functions` / `chisel_twig_register_filters` / `chisel_twig_register_tests` hooks in `custom/app/WP/Twig.php`.
 
@@ -139,15 +162,20 @@ Located in `core/Timber/`:
 | `ChiselTerm`            | `Timber\Term`  | Base term                                                |
 | `ChiselProductCategory` | `ChiselTerm`   | Product category                                         |
 | `ChiselImage`           | `Timber\Image` | Attachment image                                         |
+| `Components`            | —              | Static helpers behind the global context (`get_logo()`, `get_menus()`, `get_sidebar()`, `get_icon()`) — not a Timber subclass |
 
-Class mapping in `Site.php`: `post` and `page` → `ChiselPost`, `product` → `ChiselProduct`, `attachment` → `ChiselImage`.
+Class mapping, both in `core/WP/Site.php`:
+
+- **Posts** (`timber/post/classmap`): `post` and `page` → `ChiselPost`, `product` → `ChiselProduct`, `attachment` → `ChiselImage`, **plus every registered CPT → `ChiselPost` automatically** — a new CPT needs no mapping unless you want a subclass of its own.
+- **Terms** (`timber/term/classmap`): `category` → `ChiselTerm`, `product_cat` → `ChiselProductCategory`, plus every registered custom taxonomy → `ChiselTerm`.
 
 ### Per-post logic → method on the Timber class (HARD RULE)
 
 Logic keyed on a single post/product/term goes as a **method on its Timber class**, read as `{{ post.method }}` — NOT a `fn(post)` Twig function in `custom/app/WP/Twig.php` (those are for ownerless cross-cutting helpers only: breadcrumbs, global lookups).
 
 - **Why**: memoize an expensive lookup (a WC product, ACF group, related query) once in a private accessor and every method reuses it; a Twig function re-resolves on each call. Reads naturally and the object is the obvious home for the next dev.
-- **How**: `post`/`page`/`product`/`attachment` are already mapped, so a custom class **subclasses** the core one (place in `custom/app/Timber/`, `extends` the `\Chisel\Timber\*` class) and remaps in `Site.php` `post_classmap()`. New CPT: extend `ChiselPost`. Items must come via Timber (`Timber::get_posts()` / context) or the classmap won't apply.
+- **How, for `post`**: already wired. `custom/app/Timber/ChiselPost.php` (namespace `Chisel\Timber\Custom`) is an empty subclass of core's `ChiselPost`, remapped by `custom/app/WP/Site.php` on `timber/post/classmap` at **priority 11** so it beats core's 10. Add your method to that class and stop — no new file, no new filter.
+- **How, for anything else**: copy that pair. Subclass the core `\Chisel\Timber\*` class in `custom/app/Timber/`, then add a line to the **custom** `post_classmap()` — never edit `core/`. New CPT: extend `ChiselPost`. Items must come via Timber (`Timber::get_posts()` / context) or the classmap won't apply.
 
 ## Components
 
@@ -164,11 +192,12 @@ Logic keyed on a single post/product/term goes as a **method on its Timber class
 
 ## Caching
 
-Configured in `core/Timber/Cache.php`:
+Configured in `core/Timber/Cache.php`. The switch is `wp_get_environment_type() === 'development'` — **not `WP_DEBUG`**:
 
-- **Development** (`WP_DEBUG` or `development` env): cache disabled, auto_reload + debug on
-- **Production**: cache enabled, auto_reload off, debug off
-- Adjust via `chisel_cache_expiry`, `chisel_cache_everything`, `chisel_environment_cache` filters
+- **Development**: Twig template cache off, `auto_reload` + `debug` on
+- **Production**: template cache on, `auto_reload` off, `debug` off
+- **Fragment caching is off entirely by default** — `timber/cache/mode` returns `Loader::CACHE_NONE`
+- Adjust via `chisel_cache_expiry`, `chisel_cache_everything`, `chisel_environment_cache`, `chisel_cache_mode`
 
 ## Related
 

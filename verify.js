@@ -74,6 +74,15 @@ const PRESET_CLASS_PATTERNS = [
   [/\bhas-([a-z0-9-]+?)-font-size\b/g, "fontSize"],
 ];
 
+/** Colors that belong in a preset but got written into the markup by hand. */
+const MARKUP_COLOR_PATTERNS = [
+  [/"customOverlayColor"/g, "use an overlayColor preset slug"],
+  [/\b(?:background-)?color:\s*#[0-9a-fA-F]{3,8}/g, "use a preset class, not a literal hex"],
+];
+
+/** SCSS written per-section, where a raw value is nearly always a missed token. */
+const RAW_VALUE_DIRS = ["src/styles/patterns", "src/blocks", "src/blocks-acf"];
+
 class Report {
   constructor() {
     this.entries = [];
@@ -128,23 +137,118 @@ function checkHelpers(report, { scss, themeRoot, rel }) {
   }
 }
 
-/** Preset classes in pattern markup must match a theme.json preset. */
-function checkPresetClasses(report, { patterns, theme, rel }) {
+/**
+ * Preset classes must match a theme.json preset. The same class is just as
+ * wrong in a Twig template as in a pattern, so both get read.
+ */
+function checkPresetClasses(report, { patterns, twig, theme, rel }) {
   const sources = {
     color: slugs(theme.settings?.color?.palette),
     gradient: slugs(theme.settings?.color?.gradients),
     fontSize: slugs(theme.settings?.typography?.fontSizes),
   };
 
-  for (const { file, text } of patterns) {
+  for (const { file, text } of [...patterns, ...twig]) {
+    const seen = new Set();
     for (const [pattern, kind] of PRESET_CLASS_PATTERNS) {
       for (const match of text.matchAll(pattern)) {
-        if (PRESET_CLASS_EXCEPTIONS.has(match[0])) continue;
+        if (PRESET_CLASS_EXCEPTIONS.has(match[0]) || seen.has(match[0])) continue;
         const allowed = sources[kind];
         if (allowed.size && !allowed.has(match[1])) {
+          seen.add(match[0]);
           report.error("presets", `${rel(file)}: class ${match[0]} — no such ${kind} preset in theme.json`);
         }
       }
+    }
+  }
+}
+
+/** Hand-written colors in block markup — presets exist for exactly this. */
+function checkMarkupColors(report, { patterns, rel }) {
+  for (const { file, text } of patterns) {
+    const seen = new Set();
+    for (const [pattern, advice] of MARKUP_COLOR_PATTERNS) {
+      for (const [value] of text.matchAll(pattern)) {
+        if (seen.has(value)) continue;
+        seen.add(value);
+        report.error("markup", `${rel(file)}: ${value} — ${advice}`);
+      }
+    }
+  }
+}
+
+/**
+ * `disableBottomMargin` and `u-no-margin-bottom` are one rule in two places:
+ * the attribute drops the block's own margin, the class covers the theme's.
+ * Either alone leaves a gap nobody sees until the section is stacked.
+ */
+function checkMarginPairs(report, { patterns, rel }) {
+  for (const { file, text } of patterns) {
+    for (const [block] of text.matchAll(/<!--\s+wp:[\s\S]*?-->/g)) {
+      const attribute = /"disableBottomMargin"\s*:\s*true/.test(block);
+      const className = /\bu-no-margin-bottom\b/.test(block);
+      if (attribute === className) continue;
+
+      const name = /wp:([\w/-]+)/.exec(block);
+      const missing = attribute ? "u-no-margin-bottom in className" : '"disableBottomMargin":true';
+      report.error("markup", `${rel(file)}: wp:${name ? name[1] : "?"} is missing ${missing} — the pair goes together`);
+    }
+  }
+}
+
+/** ACF group filename is the key, and the key has a fixed shape. */
+function checkAcfGroups(report, { acfGroups, rel }) {
+  for (const file of acfGroups) {
+    const name = path.basename(file, ".json");
+
+    let group;
+    try {
+      group = JSON.parse(fs.readFileSync(file, "utf8"));
+    } catch (error) {
+      report.error("acf", `${rel(file)}: not valid JSON — ${error.message}`);
+      continue;
+    }
+
+    const key = group && group.key;
+    if (!key) {
+      report.error("acf", `${rel(file)}: no "key" field`);
+    } else if (key !== name) {
+      report.error("acf", `${rel(file)}: key "${key}" does not match filename "${name}"`);
+    } else if (!/^group_[0-9a-f]{13}$/.test(key)) {
+      report.error("acf", `${rel(file)}: key "${key}" is not group_ + 13 hex characters`);
+    }
+  }
+}
+
+/**
+ * The starter ships no patterns layer, so the first pattern of a project has to
+ * add the import by hand — to both entry points. Miss one and the partial
+ * compiles into nothing, with no error anywhere.
+ */
+function checkPatternsLayer(report, { themeRoot, rel }) {
+  const layer = path.join(themeRoot, "src", "styles", "patterns");
+  if (!walk(layer, ".scss").length) return;
+
+  for (const entry of ["main.scss", "editor.scss"]) {
+    const file = path.join(themeRoot, "src", "styles", entry);
+    if (!fs.existsSync(file)) continue;
+    if (!/@use\s+['"]patterns['"]/.test(fs.readFileSync(file, "utf8"))) {
+      report.error("scss", `${rel(file)}: src/styles/patterns/ exists but @use 'patterns'; is missing — the layer compiles into nothing`);
+    }
+  }
+}
+
+/** Raw colors in section SCSS. A warning: genuine one-offs do exist. */
+function checkRawValues(report, { scss, themeRoot, rel }) {
+  const dirs = RAW_VALUE_DIRS.map((dir) => path.join(themeRoot, ...dir.split("/")) + path.sep);
+
+  for (const { file, text } of scss) {
+    if (!dirs.some((dir) => file.startsWith(dir))) continue;
+    const seen = new Set();
+    for (const [value] of text.matchAll(/#[0-9a-fA-F]{3,8}\b|rgba?\(\s*\d+\s*,/g)) {
+      if (seen.has(value)) continue;
+      seen.add(value);
+      report.warn("raw", `${rel(file)}: literal ${value} — tokenize it in theme.json unless it's a genuine one-off`);
     }
   }
 }
@@ -189,8 +293,10 @@ function checkScssConventions(report, { scss, themeRoot, rel }) {
     if (/var\(\s*--wp--/.test(text)) {
       report.error("scss", `${rel(file)}: raw var(--wp--…) — use a get-* helper`);
     }
+    // House style, not an API constraint: px-rem() strips units itself, so the
+    // px form compiles. Warn, so nobody "fixes" working code as if it were broken.
     for (const [call] of text.matchAll(/px-rem\(\s*-?[\d.]+px\s*\)/g)) {
-      report.error("scss", `${rel(file)}: ${call} takes a unitless number`);
+      report.warn("scss", `${rel(file)}: ${call} — write it unitless, px-rem(24); the px form compiles but isn't house style`);
     }
   }
 }
@@ -257,27 +363,47 @@ function main() {
     return { file, raw, text: stripComments(raw) };
   };
 
+  // Markup keeps its comments: a pattern's Slug header is a PHP docblock, and
+  // a block's attributes live inside an HTML comment.
+  const readMarkup = (file) => {
+    const raw = fs.readFileSync(file, "utf8");
+    return { file, raw, text: raw };
+  };
+
   const context = {
     theme,
     themeRoot,
     rel,
     scss: walk(path.join(themeRoot, "src"), ".scss").map(read),
-    // Patterns keep their comments: the Slug/Title header is a PHP docblock.
-    patterns: walk(path.join(themeRoot, "patterns"), ".php").map((file) => {
-      const raw = fs.readFileSync(file, "utf8");
-      return { file, raw, text: raw };
-    }),
+    patterns: walk(path.join(themeRoot, "patterns"), ".php").map(readMarkup),
+    twig: [
+      ...walk(path.join(themeRoot, "views"), ".twig"),
+      ...walk(path.join(themeRoot, "src", "blocks"), ".twig"),
+      ...walk(path.join(themeRoot, "src", "blocks-acf"), ".twig"),
+    ].map(readMarkup),
+    acfGroups: [
+      ...walk(path.join(themeRoot, "acf-json"), ".json"),
+      ...walk(path.join(themeRoot, "src", "blocks-acf"), ".json"),
+    ].filter((file) => path.basename(file).startsWith("group_")),
   };
 
   const report = new Report();
   checkTokens(report, context);
   checkHelpers(report, context);
   checkPresetClasses(report, context);
+  checkMarkupColors(report, context);
+  checkMarginPairs(report, context);
   checkPatternSync(report, context);
+  checkPatternsLayer(report, context);
+  checkAcfGroups(report, context);
   checkScssConventions(report, context);
+  checkRawValues(report, context);
   checkCoreUntouched(report, context);
 
-  console.log(`${pkg.name} verify — ${rel(themeRoot) || "."} (${context.scss.length} scss, ${context.patterns.length} patterns)`);
+  console.log(
+    `${pkg.name} verify — ${rel(themeRoot) || "."} (${context.scss.length} scss, ` +
+      `${context.patterns.length} patterns, ${context.twig.length} twig, ${context.acfGroups.length} acf groups)`,
+  );
 
   for (const entry of [...report.errors, ...report.warnings]) {
     const tag = entry.level === "error" ? "ERROR" : " WARN";
@@ -290,6 +416,7 @@ function main() {
 
   console.log(`\n  ${report.errors.length} error(s), ${report.warnings.length} warning(s)`);
   console.log("  not checked here: run `npm run build-scripts` to confirm SCSS compiles.");
+  console.log("  nor: seeded page content, or anything needing judgement — reuse, mapping, design fidelity.");
 
   process.exitCode = report.errors.length ? 1 : 0;
 }

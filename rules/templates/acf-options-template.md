@@ -16,6 +16,11 @@ public function register_acf_options_pages( $options_pages ) {
 }
 ```
 
+`menu_slug` and `page_title` are all the factory needs. It accepts nine more — read `core/Factories/RegisterAcfOptionsPage.php` for the full list and every default rather than guessing. Two are worth setting deliberately:
+
+- **`capability`** defaults to `edit_posts`, so any Author can change site-wide settings. Raise it to `manage_options` unless editors are meant to have it.
+- **`autoload`** defaults to `false`. Turn it on for values read on every page load (logo, footer, social links) so they come from the autoloaded options cache instead of a query per field.
+
 Sub-page:
 
 ```php

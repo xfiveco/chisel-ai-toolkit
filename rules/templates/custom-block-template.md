@@ -4,6 +4,8 @@ File structure for `src/blocks/{block-name}/`. Canonical reference: `assets/exam
 
 ## block.json
 
+Start lean. This is the shape of the shipped `chisel/accordion` block — `index.js` imports `style.scss`, so `style` is a single string and there is **no `script.js`**:
+
 ```json
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
@@ -18,18 +20,15 @@ File structure for `src/blocks/{block-name}/`. Canonical reference: `assets/exam
   "supports": { "html": false },
   "textdomain": "chisel",
   "attributes": {},
-  "ignoreScripts": ["script"],
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
-  "style": ["file:./style-index.css", "file:./style-script.css"],
-  "script": "file:./script.js",
-  "viewScript": "file:./view.js",
-  "viewStyle": "file:./view.css"
+  "style": "file:./style-index.css",
+  "viewScript": "file:./view.js"
 }
 ```
 
-- Drop `"ignoreScripts": ["script"]` if `script.js` has real frontend JS (not just `import './style.scss';`).
-- Drop `viewScript` / `viewStyle` if no frontend-only JS or CSS.
+- **`script.js` is optional on a native block** — unlike an ACF block, where it is the only entry. Add it only to also bundle the shared CSS under the `script` key, or to run JS in the editor canvas. If you do, `style.scss` gets imported by two entries, webpack emits two files, and `style` becomes `["file:./style-index.css", "file:./style-script.css"]` with `"ignoreScripts": ["script"]` while `script.js` is SCSS-only.
+- Drop `viewScript` if the block has no frontend JS; add `"viewStyle": "file:./view.css"` only for frontend-only CSS imported by `view.js`.
 - Add `"providesContext"` / `"usesContext"` for parent-child relationships.
 - Add `"parent": ["chisel/parent-block"]` for child-only blocks.
 - For server-rendered blocks: add `"render": "file:./render.php"` and remove `save.js`.
@@ -116,7 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-## script.js (webpack entry — required to compile shared style-script.css)
+## script.js (optional on native blocks)
+
+Only needed when the shared CSS must also exist as `style-script.css`, or when the block needs JS running in the editor canvas. `index.js` already imports `style.scss` — the shipped `chisel/accordion` block ships no `script.js` at all.
 
 ```js
 import './style.scss';

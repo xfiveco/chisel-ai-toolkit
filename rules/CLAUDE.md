@@ -42,9 +42,10 @@ The autoloader checks `custom/app/` first, then `core/`. To override a core PHP 
 **Autoloader Custom-segment stripping** (load-bearing): the `Custom` namespace segment is a marker only — the autoloader strips it when resolving files in `custom/app/`. `Chisel\WP\Custom\Assets` → `custom/app/WP/Assets.php` (NOT `custom/app/WP/Custom/Assets.php`). Getting this wrong = silent autoloader failures.
 
 - **Never edit `core/`.** A PreToolUse hook refuses the write outright, and a pre-commit hook catches anything that gets past it. Move the change to `custom/app/` — see the autoloader override above.
-- **Gutenberg-first** for posts/pages/CPTs. ACF metaboxes only for WooCommerce products.
+- **Gutenberg-first** for posts/pages/CPTs: an entry's *content* goes in blocks, never an ACF metabox. A metabox is for *settings about* an entry — a display toggle, a layout option — the way the starter's own `Page Title` and `Slider Settings` groups work. Products are the exception where field-driven metaboxes are normal, since WooCommerce owns that screen.
 - **No hardcoded editable content in Twig.** Use Customizer (logo), nav menus, or ACF Options.
-- **No hooks in `custom/functions.php`** — it's a bootstrap list only. Put `add_filter`/`add_action` in a `custom/app/WP/{Feature}.php` class using the `HooksSingleton` trait, then `get_instance()` it in `functions.php`.
+- **No hooks in `custom/functions.php`** — it's a bootstrap list only. Put `add_filter`/`add_action` in a class using the `HooksSingleton` trait, then `get_instance()` it in `functions.php`.
+- **Theme features go in `custom/app/WP/{Feature}.php`; plugin code goes in `custom/app/Plugins/{Plugin}/{Class}.php`** (namespace `Chisel\Plugins\Custom\{Plugin}`). The test: would the class exist if the plugin were deactivated? If no, it's `Plugins/` — including classes about products, SEO output or forms, not just the integration class itself. → [file-locations.md](.claude/chisel/reference/file-locations.md#registrations-php)
 
 ## Build commands
 
@@ -131,7 +132,7 @@ When the decision ladder reaches a custom block, **default to ACF** (server-rend
 
 ### Before completing any task
 
-- **Run `npx chisel-verify`** — token references, preset classes, pattern four-way sync, SCSS conventions, untouched `core/`. Read-only. A non-zero exit must be fixed or explicitly justified, never ignored. What each check means: [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
+- **Run `npx chisel-verify`** — token references, undefined helpers, preset classes (patterns *and* Twig), hand-written markup colors, margin pairs, pattern four-way sync, ACF group keys, SCSS conventions, untouched `core/`. Read-only. An exit of `1` must be fixed or explicitly justified, never ignored; an exit of `2` means it never ran. It cannot read page content seeded through MCP — that lives in the database — so never report that as verified. What each check means: [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
 - **Ask the user to run `npm run build-scripts`** to verify SCSS compiles — don't invoke it yourself.
 
 ## Reference docs

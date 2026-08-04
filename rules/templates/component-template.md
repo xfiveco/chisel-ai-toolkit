@@ -45,25 +45,38 @@ Usage:
 
 ```js
 class ComponentName {
-  constructor(element) {
-    this.element = element;
+  constructor() {
     this.initSelectors();
     this.initElements();
+
+    if (!this.elements.root) {
+      return;
+    }
+
+    this.init();
   }
+
   initSelectors() {
     this.selectors = {
-      /* js-* */
+      root: '.js-{name}',
     };
   }
+
   initElements() {
     this.elements = {
-      /* cached */
+      root: document.querySelector(this.selectors.root),
     };
+  }
+
+  init() {
+    // bind events
   }
 }
 
 export default ComponentName;
 ```
+
+The constructor takes **no argument** and finds its own root — see `src/scripts/modules/main-nav.js`. The early return when the root is missing is what makes it safe for `app.js` to construct every module on every page.
 
 Import in `src/scripts/app.js`:
 
@@ -71,6 +84,8 @@ Import in `src/scripts/app.js`:
 import ComponentName from './modules/{name}';
 new ComponentName();
 ```
+
+Not every module is a class. `app.js` also calls plain function modules (`loaded()`, `scrollbarWidth()`, `Slider()`) — use a function when there's no per-instance state to hold.
 
 This layer is for global/site-wide behavior. A **block's** frontend JS never goes here — it lives in the block's own `view.js`: [blocks.md "Block JS/CSS keys"](.claude/chisel/reference/blocks.md#block-jscss-keys--what-each-file-is-for).
 

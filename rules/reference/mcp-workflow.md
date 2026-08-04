@@ -5,9 +5,10 @@ The `xfive-mcp-chisel` MCP server is the **only** supported path for creating or
 ## Hard rules
 
 1. **Every Gutenberg content write goes through MCP** — never PHP seeds, WP-CLI, manual paste, or direct `wp_posts` edits. → [What goes through MCP](#what-goes-through-mcp)
-2. **If the `xfive-mcp-chisel-*` tools aren't in your tool list, STOP and ask** — do not improvise a fallback. → [Prerequisites](#prerequisites)
+2. **If the MCP tools aren't in your tool list, STOP and ask** — do not improvise a fallback. → [Prerequisites](#prerequisites)
 3. **`post-update-content` replaces the entire `post_content` on every call** — always fetch current, concatenate onto the full markup, write the whole thing back. → [Workflow for inserting content](#workflow-for-inserting-content)
 4. **Call `block-schema` before hand-writing any block's markup** — wrong attributes are silently ignored. → [Traps](#traps)
+   And its ACF counterpart: **call `acf-field-schema` before writing any non-trivial ACF value** — repeaters, groups, flexible content and select choices all have shapes you cannot guess. `acf-field-get` reads values; `acf-field-schema` reads structure.
 5. **Verify after every write with `block-tree`, counting ALL top-level sections** — a tree taken after a destructive write looks clean. → [Workflow for inserting content](#workflow-for-inserting-content)
 6. **Never use these tools on `patterns/*.php`** — those are source templates, not posts. → [What goes through MCP](#what-goes-through-mcp)
 7. **Pass `post_status: "publish"` explicitly when creating pages** — the tool defaults to draft. → [Post creation defaults](#post-creation-defaults)
@@ -17,9 +18,10 @@ The `xfive-mcp-chisel` MCP server is the **only** supported path for creating or
 The MCP server is provided by the custom `xfive-mcp` WordPress plugin (Xfive-internal, not on wordpress.org). Before any tool call in this workflow:
 
 1. Confirm the plugin is installed at `wp-content/plugins/xfive-mcp/` and activated in WP admin.
-2. Confirm the `xfive-mcp-chisel` server is registered in your agent client's MCP config and the `xfive-mcp-chisel-*` tools appear in your available tool list.
+2. Confirm the `xfive-mcp-chisel` server is registered in your agent client's MCP config and its tools appear in your available tool list. Client-side they are named `mcp__xfive-mcp-chisel__xfive-{category}-{tool}` — e.g. `mcp__xfive-mcp-chisel__xfive-blocks-block-schema`. This doc writes them in the short `xfive-{category}-{tool}` form throughout.
+3. **The server needs authentication.** It is HTTP, and every request requires Basic auth with a WordPress **application password** for a user who can `edit_posts` — unless the site defines `MCP_OPEN`. A `401` means credentials, not a broken plugin.
 
-If either is missing: **stop**. Ask the user to install/activate the plugin and configure the MCP server, then restart the agent client. Do not improvise a fallback (PHP seeds, WP-CLI, manual paste are all forbidden — see "Do NOT" below).
+If any of these is missing: **stop**. Ask the user to install/activate the plugin, configure the MCP server and its credentials, then restart the agent client. Do not improvise a fallback (PHP seeds, WP-CLI, manual paste are all forbidden — see "Do NOT" below).
 
 ## What goes through MCP
 
@@ -39,16 +41,16 @@ Any Gutenberg content insertion goes through MCP:
 
 ## Available tools
 
-| Category             | Tools                                                                                                                   |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Posts                | `post-by-title`, `post-get-content`, `post-get-meta`, `post-create`, `post-update`, `post-update-content`, `post-trash` |
-| Blocks               | `block-tree` (read), `block-schema` (read)                                                                              |
-| Media                | `media-upload`, `media-migrate`                                                                                         |
-| Menus                | `nav-menu-list`, `nav-menu-create`                                                                                      |
-| ACF                  | `acf-field-get`, `acf-field-update`                                                                                     |
-| Terms                | `term-list`, `term-create`, `term-update`, `term-delete`                                                                |
-| Widgets              | `widgets-list`, `widget-add`, `widget-update`, `widget-remove`                                                          |
-| Options & theme mods | `options-update`                                                                                                        |
+**This doc does not carry the tool roster — the plugin ships new tools between releases and any list here goes stale.** Two sources, in order:
+
+1. **Your own tool list.** The MCP client enumerates every tool with its description and full input schema. That is ground truth, it costs nothing to read, and the descriptions say when to prefer one tool over a sibling.
+2. **`wp-content/plugins/xfive-mcp/inc/Trait/Config.php`** when the server isn't connected — the category → tool map. One tool's parameters live in `inc/Abilities/{ClassName}.php` (`post-update-content` → `PostUpdateContent.php`).
+
+Eight categories exist, as orientation only — **these are groupings, not a roster, and they have been renamed before**: `xfive-blocks`, `xfive-posts`, `xfive-media`, `xfive-menus`, `xfive-acf`, `xfive-terms`, `xfive-options`, `xfive-widgets`.
+
+Before reaching for a tool, scan your list for the category — there is often a read counterpart to the write you're about to make (`options-get` beside `options-update`, `acf-field-schema` beside `acf-field-update`, `post-list` for enumerating a CPT's entries), and reading first is nearly always the cheaper mistake.
+
+**A tool description can name a tool that doesn't exist.** Descriptions drift ahead of the registry — if one points you at a sibling you can't see in your tool list, it isn't there. Use what your list actually offers.
 
 ## Workflow for inserting content
 
@@ -64,7 +66,7 @@ Any Gutenberg content insertion goes through MCP:
 ## Post creation defaults
 
 - **Always pass `post_status: "publish"` explicitly** when creating pages — the tool defaults to `draft`, and the user should be able to preview immediately.
-- **Page title display** (ACF `page_title_display`): `hide` (hero contains its own H1), `hide-visually` (custom visual but H1 needed for SEO), `show` (default — design shows a page title heading).
+- **Page title display** (ACF `page_title_display`, set via `acf-field-update` with the numeric post ID): `hide` (hero contains its own H1), `hide-visually` (custom visual but H1 needed for SEO), `show` (default — design shows a page title heading).
 - **Set homepage** after creating Home page:
   ```
   xfive-options-options-update {
@@ -128,7 +130,7 @@ These cause "Block validation failed" or wrong markup the agent won't catch on i
 
 Run after every content write, before calling a section done.
 
-1. `block-schema` was called for every block type before its markup was written.
+1. `block-schema` was called for every block type before its markup was written, and `acf-field-schema` before any repeater / group / flexible-content / select value was written.
 2. Static blocks (`renderMode: "static"`) seeded as paired tags with rendered inner HTML; only dynamic blocks self-close.
 3. ACF blocks referenced as `chisel/{name}`, never `acf/{name}`.
 4. The full post markup was sent to `post-update-content` — fetched current, concatenated, wrote the whole thing back.

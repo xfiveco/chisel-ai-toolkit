@@ -12,13 +12,14 @@ Where every base-level style lives — buttons, typography, links, forms, spacin
 | What                                                    | File                                                 |
 | ------------------------------------------------------- | ---------------------------------------------------- |
 | Base mixin (padding, font, border, radius, transitions) | `src/design/tools/_buttons.scss` → `@mixin button()` |
-| Variant mixins (primary, secondary, outline)            | Same file                                            |
+| Variant mixins — `button-primary`, `button-primary-outline`, `button-secondary`, `button-secondary-outline`, each with `-hover` / `-focus` / `-icon` companions | Same file |
+| State mixins — `button-disabled()`, `button-loading()`  | Same file                                            |
 | Size variants                                           | Same file → `button-small()`, `button-large()`       |
 | Block styles registration                               | `src/scripts/editor/blocks-styles.js`                |
 | Block button SCSS                                       | `src/styles/blocks/_core-button.scss`                |
 | Component button SCSS                                   | `src/styles/components/_buttons.scss`                |
 
-**Before building any pattern that uses a button, open `src/design/tools/_buttons.scss` and compare every property of `@mixin button()` to the spec's button:** padding (horizontal/vertical), font-family, font-size, font-weight, line-height, border-width, border-radius, transition. Read the mixin's current values and update only what diverges. Same for the `button-small`/`button-large` size variants and the `button-primary`/`button-secondary`/`button-tertiary` color and border specifics.
+**Before building any pattern that uses a button, open `src/design/tools/_buttons.scss` and compare every property of `@mixin button()` to the spec's button:** padding (horizontal/vertical), font-family, font-size, font-weight, line-height, border-width, border-radius, transition. Read the mixin's current values and update only what diverges. Same for the `button-small`/`button-large` size variants and for each colour variant. **There are four variants, not three** — `primary`, `primary-outline`, `secondary`, `secondary-outline`; there is no `tertiary` in Chisel. Adapting one variant means its base mixin plus its `-hover`, `-focus` and `-icon` companions, so read the whole file before editing any of it.
 
 ## Per-block defaults
 
@@ -94,18 +95,20 @@ Check these **before** building a pattern that uses the block.
 
 The SCSS helper layer every other file `@use`s via `@use '~design' as *;`.
 
+**These lists are the shape, not the roster.** Open the file for the full set before using a helper — a `get-*()` that isn't defined there breaks the Sass build.
+
 | File | Provides |
 | --- | --- |
-| `_theme.scss` | `get-color`, `get-margin`, `get-padding`, `get-gap`, `get-font-size`, `get-box-shadow` and the rest of the token accessors |
-| `_buttons.scss` | `button()` and its variant/size mixins |
-| `_link.scss` | Link decoration and hover mixin |
-| `_breakpoints.scss` | `bp()`, `bp-down()` |
-| `_layout.scss`, `_width.scss` | Wrapper and width helpers |
-| `_media.scss` | `background-image()` — the only correct way to reference an asset URL |
-| `_icon.scss` | `icon-svg()` |
-| `_colors.scss` | Color manipulation helpers |
+| `_theme.scss` | 14 token accessors — `get-color`, `get-margin`, `get-padding`, `get-gap`, `get-font-size`, `get-font-family`, `get-layout-size`, `get-gradient`, `get-border-radius`, `get-border-width`, `get-box-shadow`, `get-letter-spacing`, `get-line-height`, `get-transition` |
+| `_buttons.scss` | `button()`, four variants each with `-hover`/`-focus`/`-icon`, `button-small()`, `button-large()`, `button-disabled()`, `button-loading()` |
+| `_link.scss` | `link()`, `link-reverse()` |
+| `_breakpoints.scss` | `bp()`, `bp-down()`, `bp-only()`, `bp-between()` |
+| `_layout.scss`, `_width.scss` | `get-flex-col-width()`, `alignfull()`, `alignwide()` |
+| `_media.scss` | `background-image()` — the only correct way to reference an asset URL — and `object-fit-cover()` |
+| `_icon.scss` | `icon-svg()`, `icon()` |
+| `_colors.scss` | `rgba-color()` |
 | `_px-to-rem.scss` | `px-rem()` — takes a **unitless** number |
-| `_screen-readers.scss` | Visually-hidden helper |
+| `_screen-readers.scss` | `sr-only()`, `sr-only-focusable()` |
 
 Settings (not tools) live in `src/design/settings/`: `_index.scss` holds `$static-icons`, `_icon-settings.scss` the icon sizing.
 

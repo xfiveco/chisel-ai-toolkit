@@ -17,13 +17,14 @@ Chisel provides an AJAX/REST system built on `WP_REST_Controller`. Owns the `chi
 
 ## How it works
 
-1. Routes defined in `AjaxController::set_properties()` as `[method, handler]` pairs
+1. Routes defined in `AjaxController::set_properties()` as `'{route-name}' => array( … )`. The value is an **associative** array with two optional keys — `methods` (default `array('POST')`) and `handler` (default `null`). The built-in route registers as `'load-more' => array()`, i.e. all-defaults
 2. Routes passed through `chisel_ajax_routes` filter
-3. For each route, Chisel auto-discovers the endpoint class:
-   - Route `load-more` → class `LoadMoreEndpoint`
+3. For each route, Chisel resolves the endpoint class:
+   - An explicit `handler` wins outright — it must be a **fully-qualified class name** (`class_exists()` runs on it), and it skips the name-based lookup below entirely
+   - Otherwise the route name becomes a class name: `load-more` → `LoadMoreEndpoint`
    - Looks first in `Chisel\Ajax\Custom\{Name}Endpoint`, then `Chisel\Ajax\{Name}Endpoint`
-4. Endpoint class implements `AjaxEndpointInterface` with `handle(WP_REST_Request $request)` method
-5. Permissions checked via `chisel_ajax_permissions_check` filter
+4. Endpoint class implements `AjaxEndpointInterface` — `handle( WP_REST_Request $request ): \WP_REST_Response`
+5. Permissions checked via `permissions_check()`: it verifies the request's `x_wp_nonce` header against the `wp_rest` action, then passes the result through the `chisel_ajax_permissions_check` filter (`$allowed`, the sanitized endpoint class name, `$request`)
 
 ## Creating a custom endpoint
 
@@ -36,16 +37,27 @@ Chisel provides an AJAX/REST system built on `WP_REST_Controller`. Owns the `chi
 namespace Chisel\Ajax\Custom;
 
 use Chisel\Interfaces\AjaxEndpointInterface;
-use WP_REST_Request;
+use Chisel\Traits\Rest;
 
 class SearchEndpoint implements AjaxEndpointInterface {
-    public function handle(WP_REST_Request $request): array {
-        $query = $request->get_param('query');
+    use Rest;
+
+    public function handle( \WP_REST_Request $request ): \WP_REST_Response {
+        $data  = $this->get_data( $request );
+        $query = isset( $data['query'] ) ? sanitize_text_field( $data['query'] ) : '';
+
+        if ( ! $query ) {
+            return $this->error( 'No query' );
+        }
+
         // ... search logic
-        return ['results' => $results];
+
+        return $this->success( array( 'results' => $results ) );
     }
 }
 ```
+
+**The return type is not negotiable** — the interface declares `\WP_REST_Response`, so returning a bare array is a fatal error. The `Rest` trait gives you the three pieces: `get_data()` (the POST body params), `success( $data )` and `error( $message )`. Both responses are HTTP 200 with an `error` flag of `0` / `1` in the payload.
 
 ```php
 // custom/app/WP/Ajax.php — register hooks here, not in custom/functions.php
@@ -54,32 +66,42 @@ public function filter_hooks(): void {
 }
 
 public function register_routes( array $routes ): array {
-    $routes['search'] = array( 'GET', 'search' );
+    $routes['search'] = array();
+
     return $routes;
 }
 ```
 
-Then bootstrap the class in `custom/functions.php` with `\Chisel\WP\Custom\Ajax::get_instance();`. See [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom).
+An empty array is the normal case: `methods` defaults to `POST` and the class is found from the route name. Override only when you need to — `array( 'methods' => array( 'GET' ), 'handler' => \Chisel\Ajax\Custom\SearchEndpoint::class )`. **`handler` takes a class name, not a route slug**, and the keys are named — a positional `array( 'GET', 'search' )` sets neither and silently gives you a POST route with no handler.
 
-Endpoint available at: `/wp-json/chisel/v2/ajax/search/?query=term`
+`custom/app/WP/Ajax.php` **already ships and is already bootstrapped** in `custom/functions.php` — add your filter to its existing `filter_hooks()`; don't recreate the file or the `get_instance()` line. See [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom).
+
+Endpoint available at: `/wp-json/chisel/v2/ajax/search/`
 
 ## Built-in endpoint
 
-**`load-more`** — pagination endpoint for loading additional posts. Used by `app.js` with localized REST URL (`chisel_ajax.rest_url`).
+**`load-more`** — pagination endpoint for loading additional posts, driven by `src/scripts/modules/load-more.js`. It returns compiled HTML, not JSON post data.
+
+**Trap: it only queries an allow-listed post type.** `chisel_load_more_allowed_post_types` defaults to `array( 'post', 'product' )`, and anything outside it comes back as `Invalid post type`. A project CPT must be filtered in before load-more works on its archive. `chisel_load_more_max_per_page` (default 24) caps the page size; `chisel_load_more_query_args`, `chisel_load_more_item_templates`, `chisel_load_more_item_context`, `chisel_load_more_no_results_template` and `chisel_load_more_response` shape the rest.
 
 ## Frontend usage
 
-REST URL localized to frontend script as `chisel_ajax.rest_url`:
+**Call `Utils.ajaxRequest()` — don't hand-roll `fetch`.** It lives in `src/scripts/modules/utils.js` and handles the parts that are easy to get wrong: the POST + `FormData` transport the endpoints read, the `X-WP-Nonce` header `permissions_check()` demands, nonce refresh from the response header, and a one-shot retry without the nonce when a full-page-cached document carries a stale one.
 
 ```js
-const response = await fetch(`${chiselAjax.rest_url}search/?query=${term}`);
-const data = await response.json();
+import Utils from './utils';
+
+const data = await Utils.ajaxRequest('search', { query: term });
 ```
+
+Signature: `ajaxRequest(action, ajaxData = {}, ajaxParams = {}, ajaxHeaders = {})`. `action` is the route name; `ajaxData` is an object (nested values are JSON-stringified) or a `FormData`; `ajaxParams` merges into the `fetch` init.
+
+The values it reads are localized onto the frontend bundle as **`chiselScripts.ajax.url`** and **`chiselScripts.ajax.nonce`** — `url` is `rest_url('chisel/v2/ajax')` without a trailing slash. Read them from `chiselScripts` if you ever need them directly.
 
 ## Related
 
 - Where endpoint and hook-registration files go → [file-locations.md](.claude/chisel/reference/file-locations.md)
 - The autoloader's `Custom`-segment stripping (why the path drops `Custom`) → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md#namespace--path-mapping)
 - Frontend JS conventions and where site-wide scripts live → [coding-conventions.md](.claude/chisel/reference/coding-conventions.md#javascript)
-- How `chisel_ajax.rest_url` gets localized onto `app.js` → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#default-assets)
+- How `chiselScripts.ajax` gets localized onto `app.js` → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md#default-assets)
 - Core vs custom, and why hooks never go in `custom/functions.php` → [CLAUDE.md "Architecture"](CLAUDE.md#architecture-core-vs-custom)

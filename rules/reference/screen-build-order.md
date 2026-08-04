@@ -1,38 +1,41 @@
 # Screen Build Order
 
-Per-screen pipeline — applies whether the spec comes from Figma, static assets, or a written prompt. Owns **the order work happens in** and the gate that must pass before a screen is called done. Does **not** own how to perform each step (the skill linked from each) or which block type a section becomes ([section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)). Phase numbers match [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md), which is why they start at 4.
+Per-screen pipeline — applies whether the spec comes from Figma, static assets, or a written prompt. Owns **the order work happens in** and the gate that must pass before a screen is called done. Does **not** own how to perform each step (the skill linked from each) or which block type a section becomes ([section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)).
 
-## Phase 4 — Build order (for one screen)
+**These are steps, not phases.** A *phase* is one row in a change's `PLAN.md` — that's what `/chisel-implement {NN} phase N` means. Turn the steps below into phases when planning; don't renumber them into a second, competing order.
 
-Each phase depends on previous. Execute in order:
+## Build order (for one screen)
 
-1. **Confirm theme.json** matches the spec's design tokens (Phase 0).
+Each step depends on the previous. Execute in order:
+
+1. **Confirm theme.json** matches the spec's design tokens.
 2. **Adapt base styles** to match the spec via [adapt-base-styles](.claude/skills/chisel-adapt-base-styles/SKILL.md). Do this BEFORE creating patterns — patterns should inherit correct defaults.
-3. **Register new CPTs / taxonomies** via [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md).
-4. **Create custom blocks** via [create-block](.claude/skills/chisel-create-block/SKILL.md) / [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md). Compile after.
-5. **Add block styles / mods** via [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md). Compile after.
-6. **Create patterns** via [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md). Each pattern has root wrapper `p-{slug}` class + matching `src/styles/patterns/_{slug}.scss` (filename unprefixed — the folder provides context; only the CSS class carries `p-`).
+3. **Adapt header and footer** via [adapt-header-footer](.claude/skills/chisel-adapt-header-footer/SKILL.md) — Twig templates and the nav menu, never patterns. Once per project, not per screen; on the second screen it is already done.
+4. **Register new CPTs / taxonomies** via [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md).
+5. **Create custom blocks** via [create-block](.claude/skills/chisel-create-block/SKILL.md) / [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md). Compile after.
+6. **Add block styles / mods** via [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md). Compile after.
+7. **Create patterns** via [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md). Each pattern has root wrapper `p-{slug}` class + matching `src/styles/patterns/_{slug}.scss` (filename unprefixed — the folder provides context; only the CSS class carries `p-`).
    - **Build sections in spec reading order — top to bottom.** The page assembles visually as you go, making review easier and matching the user's mental model. Do NOT order by complexity (simple-first), even though it feels safer — the cost of getting stuck on a hard section early is lower than the cost of an empty-looking page during review.
    - **Upload images for each section as part of the section build** (not deferred). Capture attachment IDs.
    - **Wire images into block markup** in the same step — no placeholder `src=""` left behind.
-7. **Assemble section into page via MCP** — see [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md). Each section fully reviewable before moving on.
-8. **Review & adjust SCSS** — run build, open page, fix spacing/color drift against the spec (Figma screenshot, mockup, or written description).
+8. **Assemble section into page via MCP** — see [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md). Each section fully reviewable before moving on.
+9. **Review & adjust SCSS** — run build, open page, fix spacing/color drift against the spec (Figma screenshot, mockup, or written description).
 
-## Phase 5 — Verification checklist
+## Verification checklist
 
-Before declaring a screen done:
+Before declaring a screen done. **Run the script first — don't hand-grep what it already covers.**
 
-- [ ] `npm run build-scripts` passes (no Sass errors)
-- [ ] Every `get-color('...')` in new SCSS refers to a slug that exists in theme.json
-- [ ] **Raw-value audit** — grep new/changed SCSS (`src/styles/patterns/`, `src/blocks*/`, touched components) for hex literals (`#[0-9a-fA-F]{3,8}`), `rgba(` with literal channels, and `px-rem(`: expect ~zero hits. Every survivor must be a genuine one-off (a `1px` border, a calc nudge) — never a recurring width/padding/color/shadow; those belong in `theme.json` as tokens
-- [ ] **Markup color audit** — grep `patterns/` and seeded page content for `customOverlayColor`, `background-color:#`, `color:#`: zero expected (cover overlays use `overlayColor` slugs; block colors use presets)
-- [ ] **Margin-pair audit** — every pattern root, every block immediately followed by a spacer, and every last child of a container carries BOTH `"disableBottomMargin":true` and `u-no-margin-bottom` — columns/media-text patterns included (no spacers ≠ exempt)
-- [ ] Every `has-*-color` / `has-*-background-color` class in patterns refers to an existing palette slug
-- [ ] Every `has-*-font-size` refers to an existing fontSize slug
-- [ ] **Slug sync (mechanical check)** — for every `patterns/{slug}.php`: the `Slug:` header is `chisel/{slug}`, the root wrapper class equals `p-{slug}`, and the SCSS scope is `.p-{slug}`; grep each file's root `className` against its filename. No two pattern files share a `p-*` class base
-- [ ] Pattern SCSS file `src/styles/patterns/_{slug}.scss` exists and is scoped under `.p-{slug}` (the build auto-regenerates `_index.scss` to forward it)
-- [ ] **ACF naming (mechanical)** — every new field-group JSON: key matches `group_[0-9a-f]{13}`, filename = key, every field/sub-field `name` carries the context prefix — run [acf-naming.md "Mechanical check"](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
-- [ ] Custom blocks compile and appear in "Chisel Blocks" inserter category
+- [ ] **`npx chisel-verify` is clean.** It owns the whole mechanical half: token slugs, undefined helpers, preset classes in patterns *and* Twig, hand-written markup colors (`customOverlayColor`, literal `color:#…`), the `"disableBottomMargin":true` + `u-no-margin-bottom` pair, pattern four-way slug sync, the `patterns` layer import in both `main.scss` and `editor.scss`, ACF group key = filename, and untouched `core/`. An exit of `2` means it never ran. What each failure means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
+- [ ] `npm run build-scripts` passes (no Sass errors) — ask the user; never invoke it yourself
+
+Then the part no script can settle:
+
+- [ ] **Raw-value warnings triaged.** `chisel-verify` warns on every hex and `rgba()` literal in pattern and block SCSS. Each survivor must be a genuine one-off (a `1px` border, a calc nudge) — never a recurring width/padding/color/shadow, which belongs in `theme.json` as a token
+- [ ] **Margin pairs in context.** The script catches a block carrying one half of the pair; it can't tell *which* blocks need it. Confirm every pattern root, every block immediately followed by a spacer, and every last child of a container has both — columns/media-text patterns included (no spacers ≠ exempt)
+- [ ] **Seeded page content audited by hand.** Content pushed into a page lives in the database, so the script never sees it — check it for `customOverlayColor`, literal hex, and preset classes that don't exist
+- [ ] **ACF field names** carry the context prefix — the script checks the group key and filename, not the field names → [acf-naming.md "Mechanical check"](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
+- [ ] No two pattern files share a `p-*` class base
+- [ ] Custom blocks compile and appear under the `chisel-blocks` inserter category — its visible label is "{Theme Name} Blocks" (core builds it from the theme name, so it is not literally "Chisel Blocks" on a renamed theme)
 - [ ] CPTs show up in admin menu with correct icon
 - [ ] Rendered page matches the spec at primary viewport
 - [ ] Page is published (not draft)

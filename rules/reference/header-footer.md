@@ -39,12 +39,19 @@ The theme **already registers** four footer-column widget areas plus one copyrig
 Empty columns are skipped, and `footer_sidebars.column_class` is computed from how many columns actually have widgets — so filling two areas instead of four lays out correctly with no template change.
 
 - Populate via MCP: `xfive-widgets-widgets-list` to inspect, `xfive-widgets-widget-add` / `widget-update` / `widget-remove` to fill each area.
-- Need a different column count? Filter `chisel_sidebars` in `custom/app/WP/Sidebars.php` (a custom override class) — never edit `core/`.
+- Need a different column count? Filter `chisel_sidebars` — never edit `core/`. **The starter ships no `custom/app/WP/Sidebars.php`**, so create it: a `Chisel\WP\Custom\Sidebars` class using the `HooksSingleton` trait, hooking the filter in its `filter_hooks()`, plus `\Chisel\WP\Custom\Sidebars::get_instance();` added to `custom/functions.php` alongside the eight classes already listed there.
 - **ACF Options is the fallback**, only for footer content a widget genuinely can't express (a structured link-group repeater with per-link custom fields, a social-icon picker bound to the icon system). When you reach for it, say why widgets don't fit, and add it alongside the widget areas rather than replacing them.
 
-### footer.twig blocks
+## Twig blocks in the chrome
 
-`footer_start` · `footer_columns` · `footer_copyright` · `footer_end`. Extend through `footer_start` / `footer_end` — overriding `footer_columns` or `footer_copyright` throws away the widget wiring.
+Both templates are block-structured. Edit **inside** a block; don't flatten the markup and lose it.
+
+| Template | Blocks |
+| --- | --- |
+| `views/components/header.twig` | `header_logo` · `header_nav` — each wraps a single `{% include %}` |
+| `views/components/footer.twig` | `footer_start` · `footer_columns` · `footer_copyright` · `footer_end` |
+
+Extend the footer through `footer_start` / `footer_end` — overriding `footer_columns` or `footer_copyright` throws away the widget wiring. The header has no spare blocks, so new chrome (a CTA, a search toggle, a language switcher) goes in the markup around the two existing ones, inside `c-header__inner`.
 
 ## Related
 

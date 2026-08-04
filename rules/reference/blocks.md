@@ -1,88 +1,111 @@
 # Blocks
 
-File structures, build-pipeline requirements, and existing styles/mods for the four block-ish things Chisel ships: native blocks, ACF blocks, patterns, and pattern categories. Owns the **what** — the file list for each type and the constraints that make it build. Does **not** own which type to pick ([section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)), ACF field-group naming ([acf-naming.md](.claude/chisel/reference/acf-naming.md)), or spacer sizing ([design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)). Step-by-step scaffolding lives in the skill linked from each section.
+Build-pipeline requirements, seeding shapes, and naming rules for the four block-ish things Chisel ships: native blocks, ACF blocks, patterns, and pattern categories. Owns the **rules that no single file states** — the constraints you only learn by reading three files and inferring, or by getting burned. Does **not** own which type to pick ([section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)), ACF field-group naming ([acf-naming.md](.claude/chisel/reference/acf-naming.md)), or spacer sizing ([design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)). Step-by-step scaffolding lives in the skill linked from each section.
+
+## Read these first
+
+**Read the source, don't copy from here.** This doc deliberately does not reproduce the lists below. They ship with Chisel or change per project, so a copy is stale the moment either moves — and a stale copy gives no sign it's stale. Each row is one targeted Read, not a search.
+
+| What you need | Read | Why it isn't written here |
+| --- | --- | --- |
+| Registered pattern categories | `core/WP/Blocks.php` → `set_properties()` → `$block_patterns_categories` | Ships with Chisel; changes on theme upgrade |
+| Registered block styles | `src/scripts/editor/blocks-styles.js` | Per project — half the time the variant you want exists |
+| Registered block mods | `src/scripts/editor/mods/`, imported by `blocks-mods.js` | Per project |
+| Native block file layout | `assets/example-blocks/blocks/example/` (client-rendered) and `blocks/example-server-side/` (server-rendered) | Ships with Chisel; the canonical reference |
+| ACF block file layout | `src/blocks-acf/slider/` — a real, working block. `assets/example-blocks/blocks-acf/example/` shows the maximal file set, but **its `renderCallback` is stale**; don't copy that key from it | Ships with Chisel |
+| Canonical `block.json` shape | native → `assets/example-blocks/blocks/example/block.json`; ACF → `src/blocks-acf/slider/block.json` | Same |
+| A block's actual `supports` | `xfive-blocks-block-schema` | Runtime truth, including core blocks |
 
 ## Hard rules
 
-Each one breaks silently — no error, wrong output. Detail in the linked section.
+Each one breaks silently — no error, wrong output. None of them is discoverable by reading a single file, which is why they are written down.
 
 1. **Every `.scss` is imported by a JS entry listed in `block.json`** — else webpack never compiles it and the block renders unstyled. → [File structures](#file-structures)
-2. **`script.js` exists on every block, even when it is one `import` line** — it is the SCSS entry; omit it and the styles never build. → [Block JS/CSS keys](#block-jscss-keys--what-each-file-is-for)
+2. **`style.scss` must be imported by an entry `block.json` lists — which entry differs by type.** ACF blocks: `script.js`, their only entry. Native blocks: `index.js` is enough, and `script.js` is optional. → [Block JS/CSS keys](#block-jscss-keys--what-each-file-is-for)
 3. **A block's frontend JS lives in its own `view.js` (`viewScript`)** — never `src/scripts/modules/`, never pushed to the editor via `script`. → [Block JS/CSS keys](#block-jscss-keys--what-each-file-is-for)
 4. **`ignoreScripts` means "this key has no JS to run"**, not "this file is CSS-only forever". → [Block JS/CSS keys](#block-jscss-keys--what-each-file-is-for)
-5. **ACF field-group naming**: hex-hash keys, filename = group key, namespace-prefixed field `name`s. → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
-6. **Every seeded ACF `data` field needs its `_{name}: "field_key"` partner** — without it `get_fields()` returns empty. → [ACF field data shape](#acf-field-data-shape)
-7. **A pattern category must be registered before use** — an unregistered slug is dropped and the pattern lands in "Uncategorized". → [Pattern categories](#pattern-categories)
-8. **Pattern slugs name the section's function, not the page it came from.** → [Pattern slug naming](#pattern-slug-naming-hard-rule)
-9. **Four-way sync**: `Slug:` header, filename, root class, SCSS file + scope all track the pattern slug. → [Root wrapper rule](#root-wrapper-rule)
-10. **Class only the root; target inner blocks by tag** — a BEM `__element` class on a text block only exists on the seeded instance. → [Root wrapper rule](#root-wrapper-rule)
-11. **When seeding a modded block, set the attr AND its companion class** — the attr alone renders nothing. → [Existing block mods](#existing-block-mods)
-12. **Default a `core/spacer` between sibling inner blocks**; never `blockGap`/CSS `gap` for vertical spacing. → [Spacing between sibling blocks](#spacing-between-sibling-blocks)
-13. **A property the block `supports` is set on the block** as attribute + preset class, never in SCSS. → [Setting block properties](#setting-block-properties-presets-over-scss-hard-rule)
-14. **Pattern source files ship no dead media** — no `src=""`, no install-specific attachment IDs. → [Pattern](#pattern-patternsslugphp)
+5. **`init.php` and `acf-json/` are read from `src/`, every other block file from `build/`.** → [Source vs build](#source-vs-build-hard-rule)
+6. **ACF field-group naming**: hex-hash keys, filename = group key, namespace-prefixed field `name`s. → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
+7. **Every seeded ACF `data` field needs its `_{name}: "field_key"` partner** — without it `get_fields()` returns empty. → [ACF field data shape](#acf-field-data-shape)
+8. **A pattern category must be registered before use** — an unregistered slug is dropped and the pattern lands in "Uncategorized". → [Pattern categories](#pattern-categories)
+9. **Pattern slugs name the section's function, not the page it came from.** → [Pattern slug naming](#pattern-slug-naming-hard-rule)
+10. **Four-way sync**: `Slug:` header, filename, root class, SCSS file + scope all track the pattern slug. → [Root wrapper rule](#root-wrapper-rule)
+11. **Class only the root; target inner blocks by tag** — a BEM `__element` class on a text block only exists on the seeded instance. → [Root wrapper rule](#root-wrapper-rule)
+12. **When seeding a modded block, set the attr AND its companion class** — the attr alone renders nothing. → [Existing block mods](#existing-block-mods)
+13. **Default a `core/spacer` between sibling inner blocks**; never `blockGap`/CSS `gap` for vertical spacing. → [Spacing between sibling blocks](#spacing-between-sibling-blocks)
+14. **A property the block `supports` is set on the block** as attribute + preset class, never in SCSS. → [Setting block properties](#setting-block-properties-presets-over-scss-hard-rule)
+15. **Pattern source files ship no dead media** — no `src=""`, no install-specific attachment IDs. → [Pattern](#pattern-patternsslugphp)
 
 ## File structures
 
-**Build-pipeline rule (applies to ALL blocks).** Every `.scss` file must be `import`ed by a JS entry (`index.js`, `script.js`, `view.js`, `edit.js`, etc.) listed in `block.json` — otherwise webpack does not compile it and the block renders unstyled. The example reference is `assets/example-blocks/`. Each `block.json` script key produces a matching `style-{handle}.css` (e.g. `script` → `style-script.css`, `viewScript` → `style-view.css`, `editorScript` → `style-index.css`), which must be listed in `style` / `viewStyle` / `editorStyle`.
+**Build-pipeline rule (applies to ALL blocks).** Every `.scss` file must be `import`ed by a JS entry (`index.js`, `script.js`, `view.js`, `edit.js`, etc.) listed in `block.json` — otherwise webpack does not compile it and the block renders unstyled. Each `block.json` script key produces a matching `style-{handle}.css` (e.g. `script` → `style-script.css`, `editorScript` → `style-index.css`, `viewScript` → `style-view.css`), which must be listed in `style` / `viewStyle` / `editorStyle`. When one `.scss` is imported by **two** entries, webpack emits **two** files and `style` must be an array naming both — that is why the shipped examples declare `"style": ["file:./style-index.css", "file:./style-script.css"]`.
 
-Set `"ignoreScripts": ["script"]` (or similar) only when that script is SCSS-only (no real frontend JS) — `ignoreScripts` suppresses script execution while still letting webpack build the CSS. If the script has real frontend JS, omit `ignoreScripts` so it loads.
+Set `"ignoreScripts": ["script"]` (or similar) only when that script is SCSS-only (no real frontend JS) — `ignoreScripts` suppresses script registration while still letting webpack build the CSS. If the script has real frontend JS, omit `ignoreScripts` so it loads. In Fast Refresh / dev mode the script is registered anyway, so changes stay watchable.
+
+**Critical CSS is inlined per block type, from different files.** For blocks used on the page, Chisel inlines the block's CSS and dequeues the rest: ACF blocks inline `style-script.css` (`core/WP/AcfBlocks.php`), native blocks inline `style-index.css` (`core/WP/Blocks.php`). Registered handles follow `block-{acf|wp}-{name}-{key}`. A block whose SCSS never reached the matching file gets no inlined CSS and no error.
+
+### Source vs build (HARD RULE)
+
+Chisel registers blocks by scanning `build/blocks/` and `build/blocks-acf/` — `src/` is not what WordPress reads, which is why a new block does not appear until the build runs. **Two exceptions read from `src/`:**
+
+- `src/blocks{-acf}/{name}/init.php` — included after registration (`core/Factories/RegisterBlocks.php`), for custom server-side logic such as child-block registration.
+- `src/blocks-acf/{name}/acf-json/` — the ACF load *and* save path (`core/WP/AcfBlocks.php`), so field groups edited in the ACF UI write straight back to source.
+
+Putting either under `build/` means it is silently never loaded, and the build wipes it.
 
 ### Block JS/CSS keys — what each file is for
 
 Registration is type-agnostic: native (`src/blocks/`) and ACF (`src/blocks-acf/`) blocks loop the **same** key set (`core/Factories/RegisterBlocks.php`). Both use this model.
 
-| `block.json` key   | File                                  | Context           | Purpose                                                                                                                                       |
-| ------------------ | ------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `editorScript`     | `index.js`                            | Editor only       | Block registration + (native) the `edit.js` component. Imports editor SCSS.                                                                   |
-| `editorStyle`      | `index.css`                           | Editor only       | Editor-only appearance.                                                                                                                       |
-| `script`           | `script.js`                           | Editor + frontend | **CSS entry** (`import './style.scss';`). Carries real JS only for a **native** block that needs the same behavior live in the editor canvas. |
-| `style`            | `style-script.css`, `style-index.css` | Editor + frontend | Shared CSS. **Array** when `style.scss` is imported by both `script.js` and `index.js` — webpack emits one file per entry, so list both.      |
-| `viewScript`       | `view.js`                             | **Frontend only** | **The block's own frontend behavior lives here** — scoped to the block, never shipped to the editor.                                          |
-| `viewStyle`        | `view.css`                            | Frontend only     | Frontend-only CSS (not loaded in editor).                                                                                                     |
-| `viewScriptModule` | `view.js` (ESM)                       | Frontend only     | Same as `viewScript` but registered as an ES module — use only when the block genuinely needs native ESM.                                     |
+| `block.json` key | File                                  | Context           | Purpose                                                                                                                                       |
+| ---------------- | ------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `editorScript`   | `index.js`                            | Editor only       | Block registration + (native) the `edit.js` component. Imports editor SCSS.                                                                   |
+| `editorStyle`    | `index.css`                           | Editor only       | Editor-only appearance.                                                                                                                       |
+| `script`         | `script.js`                           | Editor + frontend | **CSS entry** (`import './style.scss';`). Carries real JS only for a **native** block that needs the same behavior live in the editor canvas. |
+| `style`          | `style-script.css`, `style-index.css` | Editor + frontend | Shared CSS. **Array** when `style.scss` is imported by both `script.js` and `index.js` — webpack emits one file per entry, so list both.       |
+| `viewScript`     | `view.js`                             | **Frontend only** | **The block's own frontend behavior lives here** — scoped to the block, never shipped to the editor.                                          |
+| `viewStyle`      | `view.css`                            | Frontend only     | Frontend-only CSS (not loaded in editor).                                                                                                     |
+
+Those six are the whole set Chisel processes. **`viewScriptModule` is not among them** — the factory's module branch is unreachable, so an ESM view script gets no Chisel-managed handle, no `ignoreScripts` support, and no critical-CSS pairing. Use `viewScript`.
 
 **Rules (HARD):**
 
 1. **A block's frontend JS lives in the block as `view.js` (`viewScript`)** — not in `src/scripts/modules/`, not pushed into the editor via `script`. One block = one folder for its markup, styles, AND scripts.
 2. **`src/scripts/modules/` is the global/site-wide frontend layer** (nav, scroll, fades, utils — bootstrapped via `app.js`), most of it not block-related. Put code there only when it's genuinely site-global. Block behavior never goes here; a util shared by 2+ blocks is the rare exception, and even then it's a shared helper, not block code.
-3. **`script.js` is the SCSS entry** — it imports `style.scss` so webpack builds `style-script.css` (which feeds the critical-CSS inliner in `core/WP/AcfBlocks.php`). It stays even when the block has frontend JS; the behavior goes in `view.js`, not here.
+3. **`script.js` is the SCSS entry on an ACF block** — it imports `style.scss` so webpack builds `style-script.css`, which is also what the ACF critical-CSS inliner reads. It stays even when the block has frontend JS; the behavior goes in `view.js`, not here. **On a native block it is optional**: `index.js` already imports `style.scss` and emits `style-index.css`, which is what the native inliner reads. Add `script.js` to a native block only to put shared CSS in a `script`-keyed bundle as well — then `style` becomes an array of both outputs.
 4. **`ignoreScripts` = "this key has no JS to run"** (build the CSS, don't enqueue an empty handle). Set it for `script` on any block whose frontend JS is in `view.js` or which has none. It does NOT make `script.js` permanently CSS-only — it's about whether _that key_ carries runnable JS.
 
 **ACF vs native — the only divergence.** ACF blocks render ACF's **field form** in the editor, not the Twig output — so frontend behavior _always_ goes in `view.js`/`viewScript` (`script`-as-JS would load in an editor with nothing to bind to). Native blocks render the real block via `edit.js`, so they may use `script` (drop `ignoreScripts`) **only** when the identical behavior must run live in the editor canvas. Default for both: behavior → `view.js`.
 
 ### Custom WP Block (`src/blocks/{name}/`)
 
-Reference layout: `assets/example-blocks/blocks/example/`. Full file list:
+**Copy the layout from `assets/example-blocks/blocks/example/`** — client-rendered, with `save.js`. For a server-rendered block copy `blocks/example-server-side/` instead: it swaps `save.js` for `render.php` (declared as `"render": "file:./render.php"`) plus a `render.twig` the PHP renders through Timber.
 
-```
-block.json        # metadata, API v3, category: chisel-blocks. Lists every JS entry (editorScript, script, viewScript) and the matching style files.
-index.js          # editor registration — must `import './style.scss'` (or `editor.scss`) to compile editor CSS
-edit.js           # React editor component
-save.js           # React save component (omit if server-rendered via `render.php`)
-script.js         # editor + frontend webpack entry. Must `import './style.scss'` so webpack builds `style-script.css`. Add to `ignoreScripts: ["script"]` if SCSS-only.
-view.js           # frontend-only webpack entry. Must `import './view.scss'` if those styles exist.
-style.scss        # shared editor + frontend styles — imported by both index.js AND script.js, which produces TWO outputs (style-index.css + style-script.css); list both in "style" array
-view.scss         # frontend-only styles — imported by view.js
-editor.scss       # editor-only — imported by edit.js / index.js
-render.php        # optional — server-side render (use with `"render": "file:./render.php"` in block.json; replaces save.js)
-init.php          # optional — server-side registration (e.g. for child blocks needing REST/MCP validation)
-```
+Only the non-obvious files are listed here; the example folder is the file list.
 
-`script.js` is included even though it often just contains `import './style.scss';` — without it, webpack has no entry for the shared frontend styles. See `assets/example-blocks/blocks/example/script.js` for the canonical one-line example.
+| File | When | The part that isn't obvious |
+| --- | --- | --- |
+| `style.scss` | always | Imported by `index.js` → emits `style-index.css` → `"style": "file:./style-index.css"`. That single output is what the shipped `chisel/accordion` block uses. |
+| `script.js` | optional | Only to *also* bundle the shared CSS under the `script` key (or to run JS in the editor canvas). Then `style.scss` is imported by two entries, webpack emits two files, and `"style"` must be an array of both. A native block without it is normal — do not add it by reflex. |
+| `view.js` | interactive blocks | Frontend-only behavior, class-based vanilla ES6. Must `import './view.scss'` if those styles exist. |
+| `editor.scss` | editor-only look | Imported by `edit.js` / `index.js`. |
+| `render.php` + `render.twig` | server-rendered | Replaces `save.js`. |
+| `init.php` | optional | Server-side logic, e.g. registering child blocks so REST/MCP validates them. **Read from `src/`** — see [Source vs build](#source-vs-build-hard-rule). |
 
 ### ACF Block (`src/blocks-acf/{name}/`)
 
-```
-block.json              # metadata with "acf" key + renderCallback; set "script": "file:./script.js", "style": ["file:./style-script.css"]. Add "ignoreScripts": ["script"] ONLY when script.js is SCSS-only.
-{name}.twig             # Twig template
-style.scss              # styles — must be `import`ed by script.js so webpack builds style-script.css
-script.js               # REQUIRED — webpack entry. Even if only `import './style.scss';`. Omit and SCSS never compiles → block renders unstyled.
-view.js                 # frontend-only JS (viewScript) — the block's own interactivity lives HERE, not src/scripts/modules/. Add only when the block is interactive.
-view.scss               # frontend-only CSS (viewStyle) — imported by view.js. Optional.
-acf-json/*.json         # ACF field group — auto-loads from this folder, no registration needed
-```
+**Copy from `src/blocks-acf/slider/`** — a real, working block, and the **minimum that works**: `block.json`, `{name}.twig`, `script.js`, `style.scss`. `assets/example-blocks/blocks-acf/example/` shows the maximal set (adding `index.js`/`editorScript`, `editor.scss`, `critical.scss`, `init.php`) but its `renderCallback` value is out of date — take that key from the slider block or from the table below.
 
-See [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) for the full procedure and required block.json keys — always load it before scaffolding a new ACF block. For custom WP blocks see [create-block](.claude/skills/chisel-create-block/SKILL.md).
+| File | When | The part that isn't obvious |
+| --- | --- | --- |
+| `block.json` | always | Needs the `"acf"` key with `"renderCallback": "\\Chisel\\Helpers\\BlocksHelpers::acf_block_render"` — **identical on every ACF block**. Add `"ignoreScripts": ["script"]` only while `script.js` is SCSS-only. |
+| `{name}.twig` | always | The frontend render. ACF shows the **field form** in the editor, not this. |
+| `script.js` | **always** | Webpack entry for `style.scss` → `style-script.css`, which is also what the ACF critical-CSS inliner reads. Omit it and the block renders unstyled. |
+| `view.js` | interactive blocks | The block's own behavior — never `src/scripts/modules/`. Sliders are the exception: including `components/slider.twig` gets you the whole Swiper wiring, so a slider block usually needs no `view.js` at all ([assets-and-scripts.md "Swiper"](.claude/chisel/reference/assets-and-scripts.md#swiper)). |
+| `acf-json/*.json` | always | Auto-loads, no registration. **Read from and saved back to `src/`** — see [Source vs build](#source-vs-build-hard-rule). |
+| `index.js` / `editor.scss` | editor-only styling | Present in the example; skip unless the block needs editor-specific appearance. |
+
+See [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) for the full procedure — always load it before scaffolding a new ACF block. For custom WP blocks see [create-block](.claude/skills/chisel-create-block/SKILL.md).
 
 **ACF field group naming (HARD RULE).** Keys must be hex hashes, filename = group key, field `name`s must be namespace-prefixed (block initials → `bp_heading`), `label`s stay human. Full spec, prefix-derivation cases, per-context prefix sources, and example: **[acf-naming.md](.claude/chisel/reference/acf-naming.md)** — the canonical, all-context rule. Read it before authoring any field group JSON.
 
@@ -137,13 +160,13 @@ Pattern classes are `p-{slug}` — see [Root wrapper rule](#root-wrapper-rule). 
 
 ## Pattern categories
 
-Built-in (registered by core): `hero`, `features`, `cta`, `testimonials`, `team`, `pricing`, `text`, `gallery`, `faq`, `stats`, `logos`. A pattern's `Categories:` header uses the namespaced form `chisel-patterns/{slug}`.
+**Read the registered list from `core/WP/Blocks.php` → `set_properties()` → `$block_patterns_categories`** (the theme ships a set covering the usual section types). A pattern's `Categories:` header uses the namespaced form `chisel-patterns/{slug}`, while the PHP array is keyed by the **unprefixed** slug — core prepends the namespace and a `[Theme Name]` label.
 
-**A category must be registered before use — an unregistered slug is silently dropped and the pattern falls into "Uncategorized".** Prefer a built-in; only add a new one when none fit.
+**A category must be registered before use — an unregistered slug is silently dropped and the pattern falls into "Uncategorized".** Prefer a shipped category; only add a new one when none fit.
 
 ### Registering a custom category (project layer)
 
-Never edit core's list in `core/WP/Blocks.php` — core exposes the **`chisel_block_patterns_categories`** filter. Add categories via `block_patterns_categories()` in `custom/app/WP/Blocks.php` (the `Chisel\WP\Custom\Blocks` class — create it with `HooksSingleton` and `get_instance()` it in `custom/functions.php` if absent; register the filter in `filter_hooks()`). Key by **unprefixed** slug; core prepends the `chisel-patterns/` namespace and `[Theme Name]` label.
+Never edit core's list in `core/WP/Blocks.php` — core exposes the **`chisel_block_patterns_categories`** filter. Add categories via `block_patterns_categories()` in `custom/app/WP/Blocks.php` (the `Chisel\WP\Custom\Blocks` class — create it with `HooksSingleton` and `get_instance()` it in `custom/functions.php` if absent; register the filter in `filter_hooks()`). Key by unprefixed slug.
 
 ```php
 // custom/app/WP/Blocks.php — inside block_patterns_categories()
@@ -192,21 +215,31 @@ Section band padding is the load-bearing case of this rule — see [Root wrapper
 
 ## Existing block styles
 
-Registered in `src/scripts/editor/blocks-styles.js` — **read that file for the current list** (the project may have added/removed variants since these docs were written). Each top-level `register*Styles()` method holds one block's variants:
+**Read `src/scripts/editor/blocks-styles.js` for the current list** — one `register*Styles()` method per block, each called from `registerBlockStyles()`. The registered set differs per project and half the time the variant you need already exists.
 
-- `registerButtonsStyles()` → `core/button` variants (typically primary / secondary / tertiary, each with an `-outline` companion)
-- `registerSpacerStyles()` → `core/spacer` size variants used by `is-style-{name}` (e.g. `tiny`, `small`, `medium`, `large`, `xlarge`, `big`)
+Two things about it that reading the list alone won't tell you:
+
+- **Core's own `core/button` styles are unregistered at startup** (`unregisterBlockStyle('core/button', [...])`). Seeding a core style name that Chisel removed produces a class that matches no CSS, with no error. Only names in `blocks-styles.js` are real.
+- **The rendered class is always `is-style-{name}`** — the `name` property, never the `label`. A style whose SCSS targets a different class registers fine and does nothing.
+
+Adding one: [extend-core-block](.claude/skills/chisel-extend-core-block/SKILL.md).
 
 ## Existing block mods
 
-In `src/scripts/editor/mods/` (registered via `blocks-mods.js`). Several add custom attributes or force values — **when seeding, set the attr AND its companion class together**, or the editor desyncs / the style doesn't render:
+**Read `src/scripts/editor/mods/` (imported by `blocks-mods.js`) for the current set.** Mods add custom attributes or force values, and the rule that matters is the same for all of them:
 
-- **core.js**: adds a `disableBottomMargin` attr (toggle) to every `core/*` + `chisel/*` block. **The attr alone renders nothing** — the bottom-margin removal is done by the `u-no-margin-bottom` utility class. When seeding, set BOTH `"disableBottomMargin":true` AND `"className":"… u-no-margin-bottom"` (and include `u-no-margin-bottom` in the rendered class list). Needed on any block immediately followed by a spacer or the last child of a container (else base margin + spacer = double gap).
-- **core-button.js**: adds `buttonSize`, `buttonIcon`, `buttonIconPosition` attrs to `core/button`, kept in sync with classes `is-size-{size}`, `has-icon has-icon-{name}`, `has-icon-left`. **When seeding a button icon/size, set the attr AND the class:** e.g. `{"buttonIcon":"arrow-right","className":"… has-icon has-icon-arrow-right"}`. Class-only works visually but the editor control shows empty and a later edit can wipe it. Icon `{name}` must be in `$static-icons`.
-- **blocks-alignment.js**: on select, force-sets a default `align` per block from the PHP-provided `chiselEditorScripts.blocksDefaultAlignment` map. A seeded `align` on those blocks may be overwritten when the user selects the block — check the map (or just rely on it) rather than fighting it.
-- **core-spacer.js**: forces every `core/spacer` to `height:"auto"` in the editor — spacer size comes ONLY from the `is-style-{size}` padding, never the `height` attr. Always seed `{"height":"auto","className":"is-style-{size}"}` — the style class is mandatory on every spacer, even for the default size (no bare spacers). See [design-tokens.md "Picking the spacer style"](.claude/chisel/reference/design-tokens.md#picking-the-spacer-style).
+**When seeding a modded block, set the attr AND its companion class together** — or the editor desyncs and the style doesn't render. The attribute is what the editor control reads; the class is what the CSS matches. Neither implies the other.
 
-Editor-only UI helpers (not seed-affecting): `components/BlockEditSelector.js` (an "Edit {block}" button), `components/RenderAppender.js` (custom InnerBlocks inserter), `blocks.js` (adds `e-block-sidebar--{block}` class to the inspector), `utils.js` (icon choices for the button mod).
+The pairings in the shipped mods:
+
+| Mod | Attribute | Companion class | Why you need it |
+| --- | --- | --- | --- |
+| `core.js` | `disableBottomMargin: true` | `u-no-margin-bottom` | On any block immediately followed by a spacer, and every last child of a container — else base margin + spacer = double gap. **The attr alone renders nothing**; the utility class does the work. |
+| `core-button.js` | `buttonSize`, `buttonIcon`, `buttonIconPosition` | `is-size-{size}`, `has-icon has-icon-{name}`, `has-icon-left` | Class-only works visually, but the editor control shows empty and a later edit wipes it. Icon `{name}` must be in `$static-icons`. |
+| `core-spacer.js` | `height: "auto"` (forced in editor) | `is-style-{size}` | Spacer size comes ONLY from the style class's padding, never `height`. Seed `{"height":"auto","className":"is-style-{size}"}` — the class is mandatory on every spacer, even the default size. No bare spacers. Sizing: [design-tokens.md](.claude/chisel/reference/design-tokens.md#picking-the-spacer-style). |
+| `blocks-alignment.js` | `align` | — | Force-sets a default `align` per block on select, from the PHP-provided `chiselEditorScripts.blocksDefaultAlignment` map. A seeded `align` on those blocks may be overwritten when the user selects the block — rely on the map rather than fighting it. See [Default block alignment](#default-block-alignment). |
+
+`src/scripts/editor/` also holds editor-only UI helpers that don't affect seeding — an "Edit {block}" button, a custom InnerBlocks inserter, inspector classes, and icon choices for the button mod.
 
 ## Default block alignment
 
@@ -240,19 +273,21 @@ Composition rule (the spacer _sizing_ math — px→style mapping, margin-sync, 
 Run before finishing any block or pattern.
 
 1. Every `.scss` in the block folder is `import`ed by a JS entry that `block.json` lists.
-2. Every `block.json` script key has its matching `style-{handle}.css` in `style` / `viewStyle` / `editorStyle`.
+2. Every `block.json` script key has its matching `style-{handle}.css` in `style` / `viewStyle` / `editorStyle` — as an **array** when one `.scss` feeds two entries.
 3. Block's frontend JS is in `view.js` (`viewScript`) — nothing block-specific added to `src/scripts/modules/`.
 4. ACF block markup uses `wp:chisel/{name}`, never `wp:acf/{name}`.
 5. Every seeded ACF `data` field has its `_{name}: "field_key"` partner; repeaters also have `items: N` + `_items` + every sub-field per row.
 6. Field-group JSON passes [acf-naming.md "Mechanical check"](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group).
-7. Four-way sync per pattern: `Slug:` header, filename, root `p-{slug}` class, `src/styles/patterns/_{slug}.scss` scoped under `.p-{slug}`.
-8. No two pattern files share a `p-*` class base; no pattern slug is page-named.
-9. No BEM `__element` class on a leaf/text block — structural blocks only, and only when tag targeting can't single them out.
-10. Every `core/spacer` carries `height:"auto"` AND an explicit `is-style-*` class.
-11. Every seeded modded attr carries its companion class (`disableBottomMargin` + `u-no-margin-bottom`, `buttonIcon` + `has-icon-*`).
-12. Each pattern's `Categories:` slug is registered (built-in, or added via `chisel_block_patterns_categories`).
-13. No color, font-size, gap or padding in SCSS that the block's `supports` could carry as a preset.
-14. No `src=""`, empty `<figure>`, or attachment `id` in any `patterns/*.php`.
+7. `init.php` and `acf-json/` are under `src/`, not `build/`.
+8. Four-way sync per pattern: `Slug:` header, filename, root `p-{slug}` class, `src/styles/patterns/_{slug}.scss` scoped under `.p-{slug}`.
+9. No two pattern files share a `p-*` class base; no pattern slug is page-named.
+10. No BEM `__element` class on a leaf/text block — structural blocks only, and only when tag targeting can't single them out.
+11. Every `core/spacer` carries `height:"auto"` AND an explicit `is-style-*` class.
+12. Every seeded modded attr carries its companion class (`disableBottomMargin` + `u-no-margin-bottom`, `buttonIcon` + `has-icon-*`).
+13. Every `is-style-*` you seeded exists in `blocks-styles.js` — core's removed styles are not available.
+14. Each pattern's `Categories:` slug is registered (shipped, or added via `chisel_block_patterns_categories`).
+15. No color, font-size, gap or padding in SCSS that the block's `supports` could carry as a preset.
+16. No `src=""`, empty `<figure>`, or attachment `id` in any `patterns/*.php`.
 
 ## Related
 
@@ -260,6 +295,7 @@ Run before finishing any block or pattern.
 - ACF field group naming (all contexts) → [acf-naming.md](.claude/chisel/reference/acf-naming.md)
 - Per-field WPML translation preferences → [acf-wpml-translation.md](.claude/chisel/reference/acf-wpml-translation.md)
 - Spacer sizing, margin sync, flex double-gap trap → [design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)
+- Swiper `data-*` API, icons, asset registration → [assets-and-scripts.md](.claude/chisel/reference/assets-and-scripts.md)
 - Where block/pattern files live → [file-locations.md](.claude/chisel/reference/file-locations.md)
 - Seeding blocks into a page (silent-failure traps) → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
 - Pattern markup, file header and SCSS stub → [pattern-markup.md](.claude/chisel/templates/pattern-markup.md)

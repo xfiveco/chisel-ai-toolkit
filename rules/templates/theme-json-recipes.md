@@ -50,7 +50,9 @@ Place WOFF2 files in `assets/fonts/`. Download from `https://gwfh.mranftl.com/fo
 }
 ```
 
-Fluid scales between 480px (min) and 1200px (max) viewports. Generates `var(--wp--preset--font-size--{slug})`. Keep the min/max ratio at or below 2×.
+Generates `var(--wp--preset--font-size--{slug})`. Keep the min/max ratio at or below 2×.
+
+**`fluid` is optional and the small steps omit it.** In the shipped scale only `medium` and up are fluid — `tiny`, `small` and `normal` are a flat `size` with no `fluid` key. Match the neighbours of the step you're adding rather than always including the block.
 
 ## Spacing size
 

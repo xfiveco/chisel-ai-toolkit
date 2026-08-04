@@ -40,10 +40,14 @@ Match every token by its **resolved value** (px / hex / weight), never by its na
 
 ## Typography
 
-- **body**: Roboto 300/700 — `var(--wp--preset--font-family--body)`
-- **headings**: Manrope 700/800 — `var(--wp--preset--font-family--headings)`
+- **body**: Roboto 300/400/700 — `var(--wp--preset--font-family--body)`
+- **headings**: Manrope 400/700 — `var(--wp--preset--font-family--headings)`
 
-Font sizes (9-step, fluid) — slugs: `tiny`, `small`, `normal`, `medium`, `large`, `extra-large`, `very-large`, `big`, `huge`. Read `theme.json` for current rem values + fluid ranges.
+Only those weights have a `fontFace`. A spec asking for a weight that isn't registered needs the WOFF2 added and declared, not a nearest-weight guess — check `fontFace` before mapping.
+
+Font sizes — 9 slugs: `tiny`, `small`, `normal`, `medium`, `large`, `extra-large`, `very-large`, `big`, `huge`. **Only `medium` and up carry a `fluid` range**; `tiny`, `small` and `normal` are fixed. Read `theme.json` for current rem values.
+
+`defaultFontSizes` and `defaultSpacingSizes` are both `false` — WordPress's own presets are off, so the declared set is the whole set. Nothing is inherited.
 
 Heading defaults live in `theme.json` `styles.elements.h1..h6` — read the file for current size/line-height bindings.
 
@@ -57,11 +61,17 @@ Named alias slugs (protected — never rename): `tiny`, `little`, `small`, `norm
 
 SCSS: `get-margin('medium')`, `get-padding('large')`, `get-gap('normal')`.
 
+**The editor's spacing controls are switched off.** `settings.spacing.blockGap`, `margin` and `padding` are all `false`, and `settings.blocks.core/spacer.spacing.spacingSizes` is `[]`. That last one is why a spacer's size can only come from its `is-style-*` class — there are no size presets left to pick. Serialized `style.spacing.*` on a block is still the house style regardless (Chisel's own `patterns/comments.php` seeds one).
+
 ## Border radius
 
 Slugs: `tiny`, `little`, `small`, `normal`, `medium`, `large`, `full`. Read `theme.json` `settings.custom.border-radius` for current values — the project may have flattened the scale to `0` for a sharp-corner design.
 
 SCSS: `get-border-radius('small')`.
+
+## Border width
+
+Slugs: `tiny`, `small`, `medium`, `large`. Read `theme.json` `settings.custom.border-width` for current values. SCSS: `get-border-width('small')`.
 
 ## Box shadows
 

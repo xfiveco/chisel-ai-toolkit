@@ -50,13 +50,22 @@ For a header CTA, social links, or footer content that genuinely can't be a widg
 
 ### 4. Edit the Twig template
 
-Edit `views/components/header.twig` directly, pulling content from its assigned source. Footer columns and copyright are already wired to widgets in `footer.twig` — leave those blocks alone unless you're restructuring the layout.
+Edit `views/components/header.twig` directly, pulling content from its assigned source. **Both templates are block-structured — read the file first and add inside the existing blocks, never flatten them.** `header.twig` wraps its two includes in `header_logo` and `header_nav`; `footer.twig` has four blocks and its columns and copyright are already wired to widgets. Full map: [header-footer.md "Twig blocks in the chrome"](.claude/chisel/reference/header-footer.md#twig-blocks-in-the-chrome).
+
+Adding a header CTA means adding markup *around* the existing blocks, inside `c-header__inner`:
 
 ```twig
 <header id="header" class="c-header o-wrapper">
   <div class="c-header__inner o-wrapper__inner">
-    {% include 'components/logo.twig' %}
-    {% include 'components/main-nav.twig' %}
+    {% block header_logo %}
+      {% include 'components/logo.twig' %}
+    {% endblock %}
+
+    {% block header_nav %}
+      {% include 'components/main-nav.twig' %}
+    {% endblock %}
+
+    {# new — the two blocks above are untouched #}
     <div class="c-header__actions">
       {% if options.header_cta_text and options.header_cta_url %}
         <a href="{{ options.header_cta_url }}" class="c-btn c-btn--primary">
@@ -87,8 +96,8 @@ xfive-options-options-update { type: "theme_mod", entries: { "custom_logo": <id>
 
 - ❌ **Hardcoding phone numbers, emails, CTAs, social URLs or copyright text in Twig.** Every one has a source — [header-footer.md "Content source rule"](.claude/chisel/reference/header-footer.md#content-source-rule).
 - ❌ **Building footer columns or copyright as an ACF repeater.** Four footer-column widget areas and a copyright area already exist and are already wired into `footer.twig`. ACF is the fallback, and only with a stated reason.
-- ❌ **Overwriting `footer.twig`'s existing `footer_columns` / `footer_copyright` blocks.**
-- ❌ **Editing `core/WP/Sidebars.php`** to change the column count — filter `chisel_sidebars` from `custom/app/WP/Sidebars.php` instead.
+- ❌ **Flattening the Twig blocks.** `footer_columns` / `footer_copyright` carry the widget wiring; `header_logo` / `header_nav` are equally real. Add around them, don't replace them.
+- ❌ **Editing `core/WP/Sidebars.php`** to change the column count — filter `chisel_sidebars` instead. The starter ships no `custom/app/WP/Sidebars.php`, so create the class and bootstrap it in `custom/functions.php`.
 - ❌ Rebuilding the header as a pattern or block.
 - ❌ Creating a new nav menu without checking whether one already exists at that location.
 

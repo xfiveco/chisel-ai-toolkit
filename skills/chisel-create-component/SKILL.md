@@ -27,7 +27,7 @@ Then check it belongs here at all:
 
 - **Editor content?** Use [create-pattern](.claude/skills/chisel-create-pattern/SKILL.md), [create-block](.claude/skills/chisel-create-block/SKILL.md), or [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md) instead.
 - **Header, footer, nav or logo?** They already exist — adapt them with [adapt-header-footer](.claude/skills/chisel-adapt-header-footer/SKILL.md) rather than creating new ones.
-- **Component or object?** A component (`c-`, `views/components/`) is a named piece of UI: a card, a pagination bar. An object (`o-`, `views/objects/`) is an atomic primitive with no domain meaning: an icon wrapper, a badge. When it could be either, it's a component.
+- **Component, object or partial?** A component (`c-`, `views/components/`) is a named piece of UI: a card, a pagination bar. An object (`o-`, `views/objects/`) is an atomic primitive with no domain meaning: an icon wrapper, a badge. A partial (`views/partials/`) is a markup fragment with no class namespace of its own, included for reuse rather than styled as a unit — `block-edit-button.twig`, `icons-preview.twig`. When it could be either of the first two, it's a component.
 
 ## Procedure
 
@@ -39,7 +39,7 @@ Objects follow the same three steps under `views/objects/` and `src/styles/objec
 
 ## Traps
 
-- ❌ **Editing `_index.scss` by hand.** Its header says "auto generated — do not edit directly"; the build overwrites it.
+- ❌ **Editing `_index.scss` by hand.** Its header says `// This file is auto generated. Do not edit directly.`; the build overwrites it.
 - ❌ **Putting block behavior in `src/scripts/modules/`.** That layer is global/site-wide only — a block's JS lives in its own `view.js`. See [blocks.md "Block JS/CSS keys"](.claude/chisel/reference/blocks.md#block-jscss-keys--what-each-file-is-for).
 - ❌ **Selecting on the styling class in JS.** Use a `js-{name}` hook so the CSS class stays free to change.
 - ❌ **Creating `views/` templates under `custom/views/`.** That directory is legacy and unused — `custom/` is for PHP overrides only.

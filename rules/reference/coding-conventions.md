@@ -19,14 +19,14 @@ PHP, JavaScript, SCSS and Twig style rules for code you write in this theme, plu
 - Use `HooksSingleton` trait for classes with hooks
 - Implement `action_hooks()` and `filter_hooks()` methods
 - Factory classes for registration (CPTs, taxonomies, blocks)
-- WordPress Coding Standards — **`phpcs.xml` at the theme root is the source of truth; adhere to it for all PHP you write.** Run `npm run build` (includes phpcs) or `composer phpcs` to check. It deviates from stock WPCS (e.g. Yoda conditions disabled → variable on the left; short ternary allowed) — read the ruleset rather than assuming stock WPCS, and don't fight its choices. Match the ruleset on lines you write or edit; don't reflow untouched legacy code that predates a rule.
+- WordPress Coding Standards — **`phpcs.xml` at the theme root is the source of truth; adhere to it for all PHP you write.** Check with `npm run phpcs` (or `npm run build`, which chains it); `npm run phpcbf` auto-fixes. There is no `composer phpcs` — `composer.json` defines no scripts. It deviates from stock WPCS (e.g. Yoda conditions disabled → variable on the left; short ternary allowed) — read the ruleset rather than assuming stock WPCS, and don't fight its choices. Match the ruleset on lines you write or edit; don't reflow untouched legacy code that predates a rule.
 
 ### Boot order (`functions.php` → custom singletons)
 
 1. Composer autoload.
 2. Chisel autoloader registers both `core/` and `custom/app/`.
 3. Timber initializes.
-4. Core singletons boot (AJAX controller, blocks, ACF, ACF blocks, assets, comments, site, sidebars, theme, CPTs, taxonomies, Twig, plugin integrations, Timber cache).
+4. Core singletons boot (AJAX controller, blocks, ACF, ACF blocks, assets, comments, site, sidebars, theme, CPTs, taxonomies, search, Twig, plugin integrations, Timber cache). The exact list and order is the `get_instance()` block in `functions.php` — read it there.
 5. `custom/functions.php` boots project-specific singletons from `custom/app/WP/` via `get_instance()` calls.
 
 ### Namespace ↔ path mapping
@@ -53,6 +53,8 @@ Helper classes in `core/Helpers/` — most have static methods. Read them before
 | `DataHelpers`         | Array/string sanitization, structured-data utilities          |
 | `CacheHelpers`        | Timber cache expiry resolution                                |
 | `AjaxHelpers`         | REST/AJAX response shaping                                    |
+| `LoadMoreHelpers`     | `get_context()` — the load-more template context              |
+| `SearchHelpers`       | `get_searchable_post_types()` — search query scope            |
 | `CommentsHelpers`     | Comment list rendering                                        |
 | `YoastHelpers`        | `breadcrumbs()` and Yoast availability checks                 |
 | `WoocommerceHelpers`  | WC product / category helpers                                 |
@@ -75,7 +77,7 @@ JS helpers: `src/scripts/modules/utils.js` for shared frontend utilities (DOM, t
 
 ## SCSS / CSS
 
-- **ITCSS**: generic → elements → objects → components → blocks → widgets → utilities
+- **ITCSS**: generic → elements → vendor → objects → components → blocks → widgets → utilities — the cascade order is the `@use` list in `src/styles/main.scss`
 - **BEM**: `.c-component`, `.c-component--modifier`, `.c-component__element`
 - **Prefixes**: `c-` components, `o-` objects, `u-` utilities, `b-` blocks, `p-` patterns, `is-`/`has-` state
 - Modern Sass: `@use` and `@forward` (not `@import`)
@@ -95,27 +97,37 @@ This applies theme-wide, not just to patterns.
 
 ### Design tool helpers
 
+**These are the shape, not the roster.** `src/design/tools/_theme.scss` defines fourteen accessors and `_breakpoints.scss` four breakpoint mixins — read those two files before assuming a helper is missing, and add a new one there rather than reaching for a raw `var(--wp--*)`.
+
 ```scss
 get-color('primary')        // var(--wp--preset--color--primary)
+get-gradient('primary-secondary')
 get-font-family('headings') // var(--wp--preset--font-family--headings)
 get-font-size('large')      // var(--wp--preset--font-size--large)
 get-gap('normal')           // var(--wp--custom--gap--normal)
 get-margin('large')
 get-padding('small')
 get-border-radius('small')
+get-border-width('tiny')
 get-line-height('medium')
 get-box-shadow('3')
 get-letter-spacing('loose')
 get-transition()            // default 'normal'
+get-layout-size('content')  // var(--wp--style--global--content-size)
 rgba-color('primary', 50%)  // semi-transparent
-px-rem(24)                  // one-off px → rem; argument is a UNITLESS number — px-rem(24), never px-rem(24px)
+px-rem(24)                  // one-off px → rem
 
 @include bp('large') {
-} // min-width breakpoint
-@include bp-down('medium'); // max-width breakpoint
+} // min-width
+@include bp-down('medium') {
+} // max-width
+@include bp-only('medium') {
+} // that breakpoint only
+@include bp-between('small', 'large') {
+} // a range
 ```
 
-Full tool list: `src/design/tools/`.
+`px-rem()` strips a unit off its argument, so `px-rem(24px)` compiles fine — but write it unitless (`px-rem(24)`) to match the rest of the codebase. Don't "fix" an existing `px-rem(24px)`; it isn't broken.
 
 ### Nest breakpoints inside the rule (HARD RULE)
 
@@ -135,7 +147,7 @@ Duplicating the selector in a trailing media block splits one element's styles a
 
 ### Asset URLs in SCSS (build trap)
 
-Asset URLs go through the `background-image()` mixin (in `src/design/tools/_media.scss`) — **never write raw `url('../../assets/...')` in pattern/block SCSS.** Webpack resolves `url()` from the bundle entry, not from the partial, so relative paths from a partial silently break the build. Drop the SVG/PNG flat into `assets/images/` and call `@include background-image('name')` (default extension `.svg`). **From inside an ACF/custom block** (`src/blocks*/{name}/style.scss`), pass `$is-block: true` — block SCSS lives one level deeper than pattern SCSS, and the mixin uses that flag to add the extra `../`.
+Asset URLs go through the `background-image()` mixin (in `src/design/tools/_media.scss`) — **never write raw `url('../../assets/...')` in pattern/block SCSS.** Webpack resolves `url()` from the bundle entry, not from the partial, so relative paths from a partial silently break the build. Drop the SVG/PNG flat into `assets/images/` and call `@include background-image('name')` (default extension `.svg`). **From inside an ACF/custom block** (`src/blocks*/{name}/style.scss`), pass `$is-block: true` — block SCSS lives one level deeper than pattern SCSS, and the mixin uses that flag to add the extra `../`. A fourth flag, `$is-icon: true`, points the same mixin at `assets/icons/` instead of `assets/images/`.
 
 ### Tokenize repeated values
 
@@ -157,8 +169,10 @@ Never use raw PHP in Twig. Use one of:
 
 1. Timber built-in: `{{ theme.link }}`, `{{ site.url }}`, `{{ post.link }}`
 2. `function()` bridge: `{{ function('wp_head') }}`, `{{ function('get_stylesheet_directory_uri') }}`
-3. Registered Twig function: `{{ get_responsive_image() }}`, `{{ get_icon() }}`, `{{ bem() }}`
+3. Registered Twig function: `{{ get_responsive_image() }}`, `{{ get_icon() }}`, `{{ bem() }}` — the full roster is `register_functions()` in `core/WP/Twig.php`
 4. Custom Twig function via `chisel_twig_register_functions`
+
+Twig style is linted separately: `npm run twigcs` (config `twig_cs.php`), also chained into `npm run build`.
 
 ## Related
 

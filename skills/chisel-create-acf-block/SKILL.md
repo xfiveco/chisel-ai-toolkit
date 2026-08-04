@@ -30,12 +30,12 @@ For free-form composition use [create-pattern](.claude/skills/chisel-create-patt
 
 ## Procedure
 
-1. **Create the files** at `src/blocks-acf/{block-name}/` — contents in [templates/acf-block-template.md](.claude/chisel/templates/acf-block-template.md): `block.json`, the Twig template, `style.scss`, `script.js` (CSS entry), `view.js` (frontend behavior, only if interactive), and the ACF field group JSON. File list and `block.json` script/style key requirements: [reference/blocks.md "ACF Block"](.claude/chisel/reference/blocks.md#acf-block-srcblocks-acfname).
+1. **Create the files** at `src/blocks-acf/{block-name}/` — contents in [templates/acf-block-template.md](.claude/chisel/templates/acf-block-template.md). The minimum that works is `block.json`, `{name}.twig`, `style.scss`, `script.js` (CSS entry); add `view.js` only when the block is interactive, and `index.js` + `editor.scss` only when it needs editor-specific styling. The ACF field group goes in `acf-json/` — **which ACF both loads from and saves back to, in `src/`, not `build/`.** File list and `block.json` script/style key requirements: [reference/blocks.md "ACF Block"](.claude/chisel/reference/blocks.md#acf-block-srcblocks-acfname).
 2. **Populate any preset ACF option fields** immediately via `xfive-acf-acf-field-update` — see [mcp-workflow.md "ACF fields"](.claude/chisel/reference/mcp-workflow.md#acf-fields).
 3. **Run `npm run dev` or `build-scripts` to compile** — Chisel registers blocks from `build/blocks-acf/`, NOT `src/blocks-acf/`. Until the build runs, the block won't appear and the editor will show "your site doesn't include {block-name} block" on existing posts referencing it.
-4. **Verify** in editor under "Chisel Blocks", then `xfive-blocks-block-schema` to confirm registration.
+4. **Verify** — `xfive-blocks-block-schema` to confirm registration. In the editor the block sits under the `chisel-blocks` category, whose visible label is "{Theme Name} Blocks" (core builds it from the theme name, so it is not literally "Chisel Blocks" on a renamed theme).
 
-Need the block to open at full width by default? [reference/blocks.md "Default block alignment"](.claude/chisel/reference/blocks.md#default-block-alignment). Building a slider? Chisel initializes Swiper from `data-*` attributes on `.swiper.js-slider` — never hand-instantiate it in `view.js`: [assets-and-scripts.md "Swiper"](.claude/chisel/reference/assets-and-scripts.md#swiper).
+Need the block to open at full width by default? [reference/blocks.md "Default block alignment"](.claude/chisel/reference/blocks.md#default-block-alignment). Building a slider? Don't write the swiper markup — `{% include 'components/slider.twig' with { slides_html, params: {…} } %}` and let Chisel emit the wrapper, the `data-*` attributes and the Swiper instance: [assets-and-scripts.md "Swiper"](.claude/chisel/reference/assets-and-scripts.md#swiper).
 
 ## Traps
 
