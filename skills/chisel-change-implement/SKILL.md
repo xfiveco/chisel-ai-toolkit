@@ -1,6 +1,6 @@
 ---
-name: chisel-implement
-description: Build an approved Chisel plan one phase at a time, behind three stops per phase — plan gate, verify and summary, then wait. Reads context/changes/{NN}-{slug}/PLAN.md, keeps its status current, and closes out every session so the next one resumes cold. Use when the user says "implement", "build it", "go", "next phase", or names a planned change. Do NOT use to scope or plan new work (that's /chisel-new).
+name: chisel-change-implement
+description: Build an approved Chisel plan one phase at a time, behind three stops per phase — plan gate, verify and summary, then wait. Reads context/changes/{NN}-{slug}/PLAN.md, keeps its status current, and closes out every session so the next one resumes cold. Use when the user says "implement", "build it", "go", "next phase", or names a planned change. Do NOT use to scope or plan new work (that's /chisel-change-new).
 argument-hint: "[NN-slug] [phase N]"
 allowed-tools:
   - Read
@@ -21,14 +21,14 @@ One phase, three stops. Never two phases in one go unless the user explicitly sa
 
 ## 0. Resolve the change
 
-- **Argument given** (`/chisel-implement 03-about-page`, or bare `03`, or a path) → match it
+- **Argument given** (`/chisel-change-implement 03-about-page`, or bare `03`, or a path) → match it
   against `context/changes/`. No match: say so, list what's under `## Active` in
   `context/INDEX.md`, stop.
 - **No argument, one change Active** → use it.
 - **No argument, several Active** → list them with their one-phrase states and ask which. Don't guess.
-- **Nothing Active** → point at `/chisel-new` and stop.
+- **Nothing Active** → point at `/chisel-change-new` and stop.
 - **`PLAN.md` `**Status:**` is `scoping`** → the plan was never approved. Say so and hand back to
-  `/chisel-new`.
+  `/chisel-change-new`.
 
 ## 1. Load state
 
@@ -99,14 +99,14 @@ Why it matters: {consequence}
 
 Then ask with `AskUserQuestion`: **adapt and continue** (adjust to reality, explain the adaptation)
 · **skip this part** (not needed after all) · **stop and re-plan** (too big to absorb — back to
-`/chisel-new`).
+`/chisel-change-new`).
 
 **Blocked outright?** Flip the phase row to `[!]`, write what's blocked and what unblocks it under
 the phase file's `Notes / blockers`, and stop there. Don't half-build around it.
 
 **New work appears mid-flight?** Insert `Phase 2a` between 2 and 3 — a new row plus a new
 `phase-02a-{slug}.md` (same zero-padded number as the phase it follows, plus the letter). Never
-renumber. A whole new *goal* is not a phase: that's a new change folder via `/chisel-new`.
+renumber. A whole new *goal* is not a phase: that's a new change folder via `/chisel-change-new`.
 
 Notice a bug or oddity along the way, even unrelated? One line in `context/FINDINGS.md`, then keep going:
 
@@ -202,7 +202,7 @@ final message, not after. A session that ends without it loses its trail.
 Then print how to pick it up:
 
 ```text
-→ /chisel-resume 03-about-page
+→ /chisel-change-resume 03-about-page
 ```
 
 ## Hard rules
@@ -248,8 +248,8 @@ Then print how to pick it up:
 
 ## Related
 
-- Scoping and planning a change → [chisel-new](.claude/skills/chisel-new/SKILL.md)
-- Picking up an active change cold → [chisel-resume](.claude/skills/chisel-resume/SKILL.md)
+- Scoping and planning a change → [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md)
+- Picking up an active change cold → [chisel-change-resume](.claude/skills/chisel-change-resume/SKILL.md)
 - Feedback on built work, no plan needed → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
 - Building a Figma-mode phase → [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md)

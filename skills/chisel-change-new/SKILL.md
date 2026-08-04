@@ -1,6 +1,6 @@
 ---
-name: chisel-new
-description: Start a new Chisel change — scope it with the user, then plan it in phases behind two review stops. Writes context/changes/{NN}-{slug}/ with a PLAN.md and one file per phase, then hands off to /chisel-implement. Use whenever the user asks for something to be built, added, changed or fixed in a Chisel theme — a section, block, pattern, CPT, style change, or Figma import. Do NOT use for questions about existing code, explanations, or read-only investigation.
+name: chisel-change-new
+description: Start a new Chisel change — scope it with the user, then plan it in phases behind two review stops. Writes context/changes/{NN}-{slug}/ with a PLAN.md and one file per phase, then hands off to /chisel-change-implement. Use whenever the user asks for something to be built, added, changed or fixed in a Chisel theme — a section, block, pattern, CPT, style change, or Figma import. Do NOT use for questions about existing code, explanations, or read-only investigation.
 argument-hint: "[what you want built]"
 allowed-tools:
   - Read
@@ -16,7 +16,7 @@ allowed-tools:
 
 Theme root: `{{THEME_ROOT}}`. All paths below are relative to it.
 
-Two stops, then hand off. You scope it and pause. You plan it and pause. `/chisel-implement` builds it.
+Two stops, then hand off. You scope it and pause. You plan it and pause. `/chisel-change-implement` builds it.
 
 **Write no code in this skill. Not one line.**
 
@@ -25,7 +25,7 @@ Two stops, then hand off. You scope it and pause. You plan it and pause. `/chise
 Read `context/INDEX.md`.
 
 - **Something under `## Active`** → this is probably a resume, not a new change. Hand off to
-  `/chisel-resume` (naming the change if more than one is active) and stop. Only continue if the
+  `/chisel-change-resume` (naming the change if more than one is active) and stop. Only continue if the
   user confirms this is genuinely separate work.
 - **Feedback on already-built work** — QA notes, a code-review comment, a bug report on something
   that exists → check `/chisel-quick-fix` first. What qualifies there skips this skill entirely.
@@ -341,7 +341,7 @@ Set `PLAN.md` `**Status:** planned`. **Pause for approval.**
 ✓ context/INDEX.md              — moved to Active
 
 Next:
-  → /chisel-implement {NN}-{slug}
+  → /chisel-change-implement {NN}-{slug}
 ```
 
 Stop. Don't start Phase 1 because the plan looks approved.
@@ -380,8 +380,8 @@ Stop. Don't start Phase 1 because the plan looks approved.
 
 ## Related
 
-- Building the plan → [chisel-implement](.claude/skills/chisel-implement/SKILL.md)
-- Picking up an active change → [chisel-resume](.claude/skills/chisel-resume/SKILL.md)
+- Building the plan → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
+- Picking up an active change → [chisel-change-resume](.claude/skills/chisel-change-resume/SKILL.md)
 - Feedback on built work, no plan needed → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - Figma import orchestration → [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md)
 - Which block type a section becomes → [section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)

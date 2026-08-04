@@ -1,6 +1,6 @@
 ---
 name: chisel-quick-fix
-description: Apply feedback to already-built Chisel work — QA notes, code-review comments, visual nits, small bug reports — without the planning ceremony. No change folder, no phases, no plan-review gate. Triages every item first and kicks anything that is really new scope back to /chisel-new. Use when the user pastes a list of fixes, reports something broken in built work, or says "quick fix", "small change", "just fix". Do NOT use to build something new.
+description: Apply feedback to already-built Chisel work — QA notes, code-review comments, visual nits, small bug reports — without the planning ceremony. No change folder, no phases, no plan-review gate. Triages every item first and kicks anything that is really new scope back to /chisel-change-new. Use when the user pastes a list of fixes, reports something broken in built work, or says "quick fix", "small change", "just fix". Do NOT use to build something new.
 argument-hint: "[the feedback, or a list of items]"
 allowed-tools:
   - Read
@@ -37,7 +37,7 @@ One line — *"treating this as a quick fix (6 items)"* — so the user can over
 ### 2. Triage every item
 
 - **Passes all three** → fix-now list.
-- **Fails any** → **escalate.** Name the item and which criterion it failed (new artifact / decision needed / new scope), and handle it through [chisel-new](.claude/skills/chisel-new/SKILL.md) — a new `context/changes/{NN}-{slug}/` folder, or a new phase on the related change, with its plan-review gate.
+- **Fails any** → **escalate.** Name the item and which criterion it failed (new artifact / decision needed / new scope), and handle it through [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md) — a new `context/changes/{NN}-{slug}/` folder, or a new phase on the related change, with its plan-review gate.
 - **Mixed batch** → fix the passing items now; the escalated ones wait for their plan. Say clearly which is which before you start.
 
 Never quietly demote an escalation back into the batch because it turned out to be small.
@@ -74,7 +74,7 @@ Still no change folder, no phase file, no `INDEX.md` row. One line in `FIXES.md`
 
 ### 6. Commit
 
-Same rules as [chisel-implement](.claude/skills/chisel-implement/SKILL.md), and for the same reason — a fix nobody can find later isn't finished.
+Same rules as [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md), and for the same reason — a fix nobody can find later isn't finished.
 
 1. Stage the files you touched, **explicitly by path**, plus `context/FIXES.md`. Never `git add -A`.
 2. Look for a ticket key — a `**Ticket:**` line in the related `PLAN.md`, the branch name, the conversation. If none turns up, ask once. Never invent one.
@@ -90,7 +90,7 @@ Summarize: items fixed, items escalated (with why), files touched, and anything 
 
 ## Anti-patterns
 
-- ❌ Creating a new block/pattern/component "while I'm here". (That's `/chisel-new` — escalate.)
+- ❌ Creating a new block/pattern/component "while I'm here". (That's `/chisel-change-new` — escalate.)
 - ❌ Skipping the escalation because the new work looked small once you started it.
 - ❌ Batching unrelated feature requests into the "feedback" list to dodge the plan-review gate.
 - ❌ Creating a `context/changes/{NN}-{slug}/` folder for a quick-fix batch. (The `FIXES.md` line is the only trail.)
@@ -104,6 +104,6 @@ Summarize: items fixed, items escalated (with why), files touched, and anything 
 
 ## Related
 
-- Escalating an item into a planned change → [chisel-new](.claude/skills/chisel-new/SKILL.md)
-- Building an approved plan → [chisel-implement](.claude/skills/chisel-implement/SKILL.md)
+- Escalating an item into a planned change → [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md)
+- Building an approved plan → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)

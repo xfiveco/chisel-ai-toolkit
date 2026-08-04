@@ -2,7 +2,7 @@
 
 Per-screen pipeline — applies whether the spec comes from Figma, static assets, or a written prompt. Owns **the order work happens in** and the gate that must pass before a screen is called done. Does **not** own how to perform each step (the skill linked from each) or which block type a section becomes ([section-mapping-decisions.md](.claude/chisel/reference/section-mapping-decisions.md)).
 
-**These are steps, not phases.** A *phase* is one row in a change's `PLAN.md` — that's what `/chisel-implement {NN} phase N` means. Turn the steps below into phases when planning; don't renumber them into a second, competing order.
+**These are steps, not phases.** A *phase* is one row in a change's `PLAN.md` — that's what `/chisel-change-implement {NN} phase N` means. Turn the steps below into phases when planning; don't renumber them into a second, competing order.
 
 ## Build order (for one screen)
 
@@ -48,5 +48,5 @@ Then the part no script can settle:
 - Token inventory, spacer sizing, margin sync → [design-tokens.md](.claude/chisel/reference/design-tokens.md)
 - Seeding sections into a page → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)
 - Field-group naming check → [acf-naming.md](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
-- Phase files for multi-screen work → [chisel-new](.claude/skills/chisel-new/SKILL.md)
+- Phase files for multi-screen work → [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md)
 - Skills: [figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md) (orchestrator) · [verify](.claude/skills/chisel-verify/SKILL.md) (what each automated check means)

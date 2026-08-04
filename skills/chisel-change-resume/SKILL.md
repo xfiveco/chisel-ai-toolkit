@@ -1,6 +1,6 @@
 ---
-name: chisel-resume
-description: Pick up an in-flight Chisel change in a fresh session — read the context files, state where the work stands, and open the next phase. Use when the user says "resume", "continue", "what's next", "where were we", or names a change folder. Do NOT use to start new work (that's /chisel-new) or to answer questions about existing code.
+name: chisel-change-resume
+description: Pick up an in-flight Chisel change in a fresh session — read the context files, state where the work stands, and open the next phase. Use when the user says "resume", "continue", "what's next", "where were we", or names a change folder. Do NOT use to start new work (that's /chisel-change-new) or to answer questions about existing code.
 argument-hint: "[NN-slug]"
 allowed-tools:
   - Read
@@ -22,14 +22,14 @@ layout exists so you *don't* load everything.
 
 Read `context/INDEX.md`.
 
-- **Argument given** (`/chisel-resume 03-about-page`) — use that folder. Accept a bare number
+- **Argument given** (`/chisel-change-resume 03-about-page`) — use that folder. Accept a bare number
   (`03`), the full folder name, or a path; match against `changes/`. No match → say so, list what
   is under `## Active`, stop.
 - **No argument, one change Active** — use it.
 - **No argument, several Active** — list them with their one-phrase states and ask which. Don't
   guess.
 - **Nothing Active** — say so, mention the most recent `## Done` change in case they meant that, and
-  point at `/chisel-new`.
+  point at `/chisel-change-new`.
 
 ## 2. Reload state
 
@@ -66,7 +66,7 @@ Give the user, in a few lines:
 - Open items: `[!]` blocked phases, unresolved notes, anything in `## Deferred`.
 
 Then ask whether to start that phase. **Stop.** Starting it means stop 1 of
-[`/chisel-implement`](.claude/skills/chisel-implement/SKILL.md) — flip the row to `[~]`, fill in the
+[`/chisel-change-implement`](.claude/skills/chisel-change-implement/SKILL.md) — flip the row to `[~]`, fill in the
 steps against the code as it now stands, pause again. Don't skip ahead to code because the plan was
 already written.
 
@@ -79,7 +79,7 @@ leaves, that has to survive — do this **before** your final message:
   Touches corrected against the code. Phase 4 next.`
 - Refresh the change's line in `context/INDEX.md` if its state moved.
 - Leave `**Status:**` and the phase row alone unless the phase actually started — flipping to `[~]`
-  belongs to [`/chisel-implement`](.claude/skills/chisel-implement/SKILL.md)'s stop 1, not here.
+  belongs to [`/chisel-change-implement`](.claude/skills/chisel-change-implement/SKILL.md)'s stop 1, not here.
 
 Full rule → [CLAUDE.md "Change tracking"](CLAUDE.md#change-tracking).
 
@@ -90,11 +90,11 @@ Full rule → [CLAUDE.md "Change tracking"](CLAUDE.md#change-tracking).
 - Findings triage isn't part of resuming. If `FINDINGS.md` has open lines relevant to the next
   phase, mention them in one line; don't work them.
 - If the files and your recollection disagree, the files win. Full procedure:
-  [`/chisel-implement`](.claude/skills/chisel-implement/SKILL.md).
+  [`/chisel-change-implement`](.claude/skills/chisel-change-implement/SKILL.md).
 
 ## Related
 
-- Building the phase you just opened → [chisel-implement](.claude/skills/chisel-implement/SKILL.md)
-- Scoping work that has no change folder yet → [chisel-new](.claude/skills/chisel-new/SKILL.md)
+- Building the phase you just opened → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
+- Scoping work that has no change folder yet → [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md)
 - Feedback on built work, no plan needed → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)

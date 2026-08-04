@@ -24,7 +24,7 @@ Pick the mode that fits the input; the same skills and rules apply in all of the
 - **Prompt mode** — a feature described in chat. Pick the matching skill; no orchestrator.
 - **Quick-fix mode** — feedback on already-built work (QA, review, bug report). Skips the `context/` files and the plan-review gate — **only planning is waived; all other hard rules apply.** Owned by `/chisel-quick-fix`; read it before entering.
 
-Run `/chisel-new` to scope and plan new work, `/chisel-implement` to build an approved plan, or `/chisel-resume` to pick up an active change cold.
+Run `/chisel-change-new` to scope and plan new work, `/chisel-change-implement` to build an approved plan, or `/chisel-change-resume` to pick up an active change cold.
 
 ## Architecture: Core vs Custom
 
@@ -77,7 +77,7 @@ Load-bearing rules that cut across skills — breaking them causes silent failur
 
 ### Change tracking
 
-**Scope and plan before building** — `/chisel-new` writes the files under `{{THEME_ROOT}}/context/`, and they get committed: they survive `/compact`, new sessions, and handoffs. Exceptions: the user says to skip, or quick-fix mode. Each change is a folder: `context/changes/{NN}-{slug}/` holds its `PLAN.md` plus one `phase-NN-{slug}.md` per phase (single-phase work folds into `PLAN.md`); `context/INDEX.md` (Planned/Active/Done router), `context/FINDINGS.md`, and `context/FIXES.md` (one line per quick-fix batch) sit at the root. **Templates are owned by `/chisel-new`, the phase loop by `/chisel-implement`.** New sessions read `context/INDEX.md` first.
+**Scope and plan before building** — `/chisel-change-new` writes the files under `{{THEME_ROOT}}/context/`, and they get committed: they survive `/compact`, new sessions, and handoffs. Exceptions: the user says to skip, or quick-fix mode. Each change is a folder: `context/changes/{NN}-{slug}/` holds its `PLAN.md` plus one `phase-NN-{slug}.md` per phase (single-phase work folds into `PLAN.md`); `context/INDEX.md` (Planned/Active/Done router), `context/FINDINGS.md`, and `context/FIXES.md` (one line per quick-fix batch) sit at the root. **Templates are owned by `/chisel-change-new`, the phase loop by `/chisel-change-implement`.** New sessions read `context/INDEX.md` first.
 
 **Write decisions down, not just plans (HARD RULE).** Anything settled in conversation — why this block type, what the client wants, which mapping was chosen — goes in `PLAN.md`'s `## Decisions` table before you build. A future session can re-derive every mechanical detail from the code; it can never re-derive the discussion. Phase files are written **up front**, all of them, while that context is fresh — goal, touches, decisions, done-when. The step list is not: it's a guess until the code exists.
 
@@ -89,9 +89,9 @@ Load-bearing rules that cut across skills — breaking them causes silent failur
 
 **Log incidental findings (HARD RULE).** Notice a bug, oddity, or cleanup candidate mid-implementation — especially one unrelated to the change — add one line to `context/FINDINGS.md` (`- [ ] date · type · what · where · from {change}`) and keep going. Append-only: the only edit to an existing line is flipping its box and appending the outcome. Don't derail the phase to chase it; don't bury it in a phase file.
 
-**Close every session (HARD RULE).** Before your final message whenever work stops: the phase row's status + one-line outcome on `[x]`, the `PLAN.md` `**Status:**` line (`scoping`/`planned`/`building`/`done`), a `## Log` line biased toward what's next, a refreshed INDEX state, and any new decisions appended. Then print the resume command (`/chisel-resume {NN}-{slug}`).
+**Close every session (HARD RULE).** Before your final message whenever work stops: the phase row's status + one-line outcome on `[x]`, the `PLAN.md` `**Status:**` line (`scoping`/`planned`/`building`/`done`), a `## Log` line biased toward what's next, a refreshed INDEX state, and any new decisions appended. Then print the resume command (`/chisel-change-resume {NN}-{slug}`).
 
-**Commits are offered, never taken (HARD RULE).** Stage the files the phase touched, explicitly by path — never `git add -A`. Propose a one-line message and ask before committing. **Never add a `Co-Authored-By:` or "Generated with…" trailer.** Never `--no-verify`, never `--amend`. Full procedure → [chisel-implement](.claude/skills/chisel-implement/SKILL.md).
+**Commits are offered, never taken (HARD RULE).** Stage the files the phase touched, explicitly by path — never `git add -A`. Propose a one-line message and ask before committing. **Never add a `Co-Authored-By:` or "Generated with…" trailer.** Never `--no-verify`, never `--amend`. Full procedure → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md).
 
 ### Reuse before building (HARD RULE)
 

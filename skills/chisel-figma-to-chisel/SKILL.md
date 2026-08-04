@@ -1,6 +1,6 @@
 ---
 name: chisel-figma-to-chisel
-description: End-to-end Figma → Chisel import, orchestrating the other skills — theme.json bootstrap, base-style adaptation, pattern and block creation, image upload, page assembly. Walks sections top to bottom, one at a time, stopping for review after each. Use when the user provides a Figma URL to import a screen. Do NOT use for a single section (call the matching skill directly), for a non-Figma spec, or to plan the work — that's /chisel-new.
+description: End-to-end Figma → Chisel import, orchestrating the other skills — theme.json bootstrap, base-style adaptation, pattern and block creation, image upload, page assembly. Walks sections top to bottom, one at a time, stopping for review after each. Use when the user provides a Figma URL to import a screen. Do NOT use for a single section (call the matching skill directly), for a non-Figma spec, or to plan the work — that's /chisel-change-new.
 argument-hint: "[Figma URL]"
 allowed-tools:
   - Read
@@ -28,11 +28,11 @@ This skill calls other skills — don't reinvent their work.
 1. Load the `figma:figma-use` skill before any `mcp__plugin_figma_figma__*` call.
 2. Read [reference/screen-build-order.md](.claude/chisel/reference/screen-build-order.md) — it owns the build order and the done gate; the stages below are how this skill walks it.
 
-**The stages below are not phases.** A *phase* is one row in the import's `PLAN.md`, and that's what `/chisel-implement {NN} phase N` refers to. Don't cross the two numbering schemes.
+**The stages below are not phases.** A *phase* is one row in the import's `PLAN.md`, and that's what `/chisel-change-implement {NN} phase N` refers to. Don't cross the two numbering schemes.
 
 ### Load-bearing rules for Figma mode
 
-- **The `context/` files are the source of truth across sessions.** This import lives in its own folder, `context/changes/{NN}-{slug}/`. Update its `PLAN.md` + the active phase file after every section (patterns, blocks, CPTs, phase steps) and append a `## Log` line with an absolute date. Incidental bugs/oddities → one line in `context/FINDINGS.md`. They survive `/compact` and new sessions; your in-context memory does not. Files and templates owned by [chisel-new](.claude/skills/chisel-new/SKILL.md); the phase loop by [chisel-implement](.claude/skills/chisel-implement/SKILL.md).
+- **The `context/` files are the source of truth across sessions.** This import lives in its own folder, `context/changes/{NN}-{slug}/`. Update its `PLAN.md` + the active phase file after every section (patterns, blocks, CPTs, phase steps) and append a `## Log` line with an absolute date. Incidental bugs/oddities → one line in `context/FINDINGS.md`. They survive `/compact` and new sessions; your in-context memory does not. Files and templates owned by [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md); the phase loop by [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md).
 - **Sections are processed top-to-bottom, one at a time, end-to-end.** End-to-end means: CPT (if needed) + block/pattern + SCSS + images + page wiring + progress file update — all for one section before moving to the next. No cross-section batching.
 - **Stop for user review after each section.** Don't chain sections silently.
 - **Don't batch `get_design_context`.** One section at a time — batching overflows context.
@@ -62,7 +62,7 @@ If `theme.json` still has example palette (`#dd2424` primary, `#22dbdb` secondar
 ### The change folder
 
 Read `context/INDEX.md`, then this import's `changes/{NN}-{slug}/PLAN.md`. If missing, the import
-hasn't been scoped — hand off to [chisel-new](.claude/skills/chisel-new/SKILL.md) (Figma mode → a
+hasn't been scoped — hand off to [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md) (Figma mode → a
 per-import `changes/{NN}-{slug}/` folder holding `PLAN.md` + one phase file per section, plus an
 INDEX row under `## Active`) and come back once the plan is approved.
 
