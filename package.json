@@ -1,6 +1,6 @@
 {
   "name": "@xfive/chisel-ai-toolkit",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Chisel AI toolkit — skills, rules and reference docs for AI coding agents working on Chisel WordPress themes",
   "license": "MIT",
   "type": "commonjs",
