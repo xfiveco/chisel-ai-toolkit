@@ -4,8 +4,6 @@ Skills, rules and reference docs for AI coding agents working on [Chisel](https:
 WordPress themes. Installing the package drops everything into the right place for Claude Code and
 writes an `AGENTS.md` pointer for other agents.
 
-> Building this? See [PLAN.md](PLAN.md).
-
 ## Install
 
 ```bash
@@ -25,6 +23,75 @@ A `postinstall` step runs the installer. Re-run it any time with `npx chisel-ai-
 | `rules/AGENTS.md` | spliced into the project's `AGENTS.md` |
 | `hooks/` | `.claude/chisel/hooks/` + one entry in `.claude/settings.json` |
 | (manifest) | `.claude/.chisel-ai-toolkit.json` |
+
+## Using it
+
+Seventeen skills ship, but you don't pick from a menu. **Describe the work and the toolkit routes
+it** — you type four of them, at most; the rest are opened by whatever phase needs them.
+
+### The one you start with
+
+```text
+/chisel-change-new  <a Figma URL · screenshots · or just describe it>
+```
+
+It reads the input, picks the mode, and does two things — scope it with you, then plan it in
+phases — pausing at each. No code is written here.
+
+### What happens next
+
+```text
+/chisel-change-new  ────►  /chisel-change-implement  ────►  /chisel-verify
+scope, then plan            builds one phase at a time,      mechanical checks
+in phases                   three stops on every phase       before a phase closes
+      │                              ▲
+      │    a fresh session picks     │
+      └───  it up cold with  ────────┘
+            /chisel-change-resume
+```
+
+The plan lands in `context/changes/{NN}-{slug}/` — a `PLAN.md` plus one file per phase — and gets
+committed, so the work survives `/compact`, a closed laptop, or a handoff to someone else. Every
+phase stops three times: plan review before building, summary after, then wait for "next".
+
+### What the phases reach for
+
+You don't invoke these. `/chisel-change-implement` opens whichever one the phase it's building
+needs, and in Figma mode hands the whole section loop to `/chisel-figma-to-chisel`.
+
+**Project setup — phases 1–3 of the first change only, in this order:**
+
+```text
+tokens from the design spec ............. /chisel-setup-theme-json
+buttons, typography, forms, spacing ..... /chisel-adapt-base-styles
+header, footer, nav, logo ............... /chisel-adapt-header-footer
+```
+
+Order is load-bearing: tokens first so everything downstream references presets, base styles next
+so patterns inherit correct defaults instead of overriding them. On the second screen they're
+already done and get skipped.
+
+**Then, per section — cheapest option that works, top of the list down:**
+
+```text
+a page section from core blocks ......... /chisel-create-pattern      ← default
+field-driven repeating content .......... /chisel-create-acf-block    ← default custom block
+editor-canvas interactivity ............. /chisel-create-block        ← last resort, asks first
+shared UI rendered from PHP ............. /chisel-create-component
+many entries of one content shape ....... /chisel-create-cpt
+a site-wide editable value .............. /chisel-create-acf-options
+a variant of a core block ............... /chisel-extend-core-block
+one token added or changed .............. /chisel-theme-json
+```
+
+Frontend interactivity — a slider, tabs, an accordion — is not a reason to reach for a React
+block. That's an ACF block plus `view.js`.
+
+### The way around the spine
+
+**`/chisel-quick-fix`** — QA notes, review comments, visual nits on work that already exists. No
+change folder, no phases, no plan gate: it triages, fixes, reports. Anything that turns out to be
+real scope gets handed back to `/chisel-change-new`.
 
 ## The `core/` guard
 

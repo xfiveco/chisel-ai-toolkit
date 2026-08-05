@@ -8,7 +8,7 @@ Per-screen pipeline — applies whether the spec comes from Figma, static assets
 
 Each step depends on the previous. Execute in order:
 
-1. **Confirm theme.json** matches the spec's design tokens.
+1. **Confirm theme.json** matches the spec's design tokens. Still on the starter palette (`#dd2424` primary, `#22dbdb` secondary)? Bootstrap it from the spec via [setup-theme-json](.claude/skills/chisel-setup-theme-json/SKILL.md) — once per project. Already bootstrapped and a token is missing or wrong: [theme-json](.claude/skills/chisel-theme-json/SKILL.md).
 2. **Adapt base styles** to match the spec via [adapt-base-styles](.claude/skills/chisel-adapt-base-styles/SKILL.md). Do this BEFORE creating patterns — patterns should inherit correct defaults.
 3. **Adapt header and footer** via [adapt-header-footer](.claude/skills/chisel-adapt-header-footer/SKILL.md) — Twig templates and the nav menu, never patterns. Once per project, not per screen; on the second screen it is already done.
 4. **Register new CPTs / taxonomies** via [create-cpt](.claude/skills/chisel-create-cpt/SKILL.md).
