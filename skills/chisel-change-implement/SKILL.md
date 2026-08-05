@@ -116,6 +116,11 @@ Notice a bug or oddity along the way, even unrelated? One line in `context/FINDI
 
 Don't derail the phase to chase it.
 
+**But first ask which kind it is.** A rough edge in what *this phase just built* is not a finding —
+it's unfinished work. Fix it now, or make it a `Phase Na`. `FINDINGS.md` is only for what you
+*discovered* while working, not for what you *caused*. Logging your own loose end there ships the
+phase with a known defect and buys a line nobody scheduled.
+
 ### Stop 2 — verify and summarize
 
 1. Run `npx chisel-verify`. It's the mechanical checklist — token references, undefined helpers,
@@ -185,8 +190,31 @@ for several phases in one run, skip this question — but keep every other stop.
 - Set `PLAN.md` `**Status:** done`.
 - Move the change's line in `context/INDEX.md` from `## Active` to `## Done` with the date.
   **Leave the folder where it is** — moving it breaks every link pointing into it.
-- Final summary: what was built, what's deferred (from `## Deferred`), and any open lines in
-  `FINDINGS.md` that came out of this work.
+- **Triage the findings from this change** — see below.
+- Final summary: what was built, what's deferred (from `## Deferred`), and the findings triage
+  result.
+
+### Findings triage
+
+Read every open `[ ]` line in `context/FINDINGS.md` whose `from` is this change. Each one gets
+exactly one of three outcomes:
+
+| Outcome | When | What you do |
+| --- | --- | --- |
+| **Fix now** | This change caused it, or leaving it makes the change incomplete | Fix it *before* `Status: done`, flip the box, append the outcome. It was never a finding. |
+| **Leave open** | Real, but a separate piece of work | Nothing. Say the count in the summary. |
+| **Won't fix** | Not worth doing | `[-]` plus a one-line reason. |
+
+**Only the first bucket gets fixed here, and only because the change isn't finished without it.**
+Everything else stays open on purpose — it was logged precisely because it was out of scope, and
+sweeping it up now puts unrelated edits in this change's commits where no one will review them.
+
+Findings from *other* changes are not yours to triage. Leave them alone.
+
+The leftovers get worked when the user asks, through the paths that already exist: small and
+mechanical → [`/chisel-quick-fix`](.claude/skills/chisel-quick-fix/SKILL.md) on a batch; big, or
+several related ones → its own change via
+[`/chisel-change-new`](.claude/skills/chisel-change-new/SKILL.md).
 
 ## Close every session
 
@@ -243,6 +271,9 @@ Then print how to pick it up:
 - ❌ A multi-line commit body listing the files. (The diff already says that.)
 - ❌ Guessing a ticket key from the branch or folder name. Ask, or go without.
 - ❌ Fixing an unrelated bug you noticed mid-phase. (One line in `FINDINGS.md`, keep going.)
+- ❌ Logging a defect in what you just built as a finding. (You caused it — fix it or phase it.)
+- ❌ Clearing the whole `FINDINGS.md` backlog at close-out. (Only what this change caused.)
+- ❌ Marking a change `done` without triaging its own findings.
 - ❌ Ending a session without the log line and the resume command.
 - ❌ Moving a finished change folder into an archive path. (Mark it Done in `INDEX.md`.)
 

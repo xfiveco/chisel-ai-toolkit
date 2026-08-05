@@ -87,8 +87,9 @@ Full rule → [CLAUDE.md "Change tracking"](CLAUDE.md#change-tracking).
 
 - Blocked (`[!]`) phase and the user wants to move? Offer the next unblocked phase rather than
   forcing order — then note the reorder in `PLAN.md`'s `## Log`.
-- Findings triage isn't part of resuming. If `FINDINGS.md` has open lines relevant to the next
-  phase, mention them in one line; don't work them.
+- Findings triage isn't part of resuming — it happens at the change's last phase, in
+  [`/chisel-change-implement`](.claude/skills/chisel-change-implement/SKILL.md). If `FINDINGS.md`
+  has open lines relevant to the next phase, mention them in one line; don't work them.
 - If the files and your recollection disagree, the files win. Full procedure:
   [`/chisel-change-implement`](.claude/skills/chisel-change-implement/SKILL.md).
 

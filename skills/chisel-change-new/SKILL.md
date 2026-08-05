@@ -29,6 +29,10 @@ Read `context/INDEX.md`.
   user confirms this is genuinely separate work.
 - **Feedback on already-built work** — QA notes, a code-review comment, a bug report on something
   that exists → check `/chisel-quick-fix` first. What qualifies there skips this skill entirely.
+- **Open findings** → count the `[ ]` lines in `context/FINDINGS.md` and say the number in one line
+  (*"7 open findings"*), naming any that overlap what's being asked for now. This is the one moment
+  the count can change a decision — the user may want a cleanup change instead of, or before, this
+  one. Say it and move on; don't triage them, don't offer to fix them.
 - **No `context/` folder** → this is the project's first change. You create it in step 4; nothing
   else is needed now.
 
@@ -324,7 +328,8 @@ even for small work: it's the only part of the conversation that survives.
 
 <!-- Incidental bugs, oddities, cleanup candidates noticed during any change — including ones
      unrelated to the active work. One line, then keep going; don't derail the phase.
-     Append-only; newest at bottom. `[ ]` open · `[x]` resolved · `[-]` won't fix. -->
+     Append-only; newest at bottom. `[ ]` open · `[x]` resolved · `[-]` won't fix.
+     Discovered, not caused: a rough edge in what you just built belongs in its phase, not here. -->
 
 - [ ] 2026-07-21 · bug · Mobile nav traps focus when submenu open · views/components/nav.twig · from 03-hero
 ```
