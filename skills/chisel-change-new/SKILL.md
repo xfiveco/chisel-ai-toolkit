@@ -269,12 +269,18 @@ Write **all of them now**, while the scoping answers are fresh.
   and why. Cross-cutting ones live in PLAN.md's `## Decisions`; this is what's specific here.}
 - **Done when:**
   - _Automated:_ `npx chisel-verify` clean · `npm run build-scripts` passes (ask the user to run it)
-  - _Manual:_ {what a human has to look at — rendered section vs the Figma crop, editor behaviour,
-    responsive breakpoints}
+  - _Rendered:_ {which URL to open · console clean · screenshot vs the spec crop at which viewports}
+  - _Manual:_ {what a human has to look at — editor behaviour, copy, anything the agent's own
+    screenshot can't settle}
 - **Artifacts produced:** {pattern slugs, block names, CPTs, theme.json deltas}
 - **Steps:** _filled at this phase's gate, not now._
 - **Notes / blockers:** {only if non-empty}
 ```
+
+**Three done-when layers, not two.** _Rendered_ is what the agent checks in the browser;
+_Manual_ is what only the user can settle. Keeping them apart is what stops a screenshot the agent
+took from being reported as the user's sign-off.
+→ [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 
 **Done-when now, steps at the gate.** Done-when is an *outcome* — it's what the user is approving,
 and it doesn't depend on code that doesn't exist yet. Steps are a *guess* until the code is real,
@@ -295,7 +301,8 @@ small change reads the same way as a big one.
 - **Touches:** {files, blocks, patterns, tokens, MCP tools}
 - **Done when:**
   - _Automated:_ `npx chisel-verify` clean · `npm run build-scripts` passes (ask the user to run it)
-  - _Manual:_ {what a human has to look at}
+  - _Rendered:_ {which URL to open · console clean · screenshot vs the spec}
+  - _Manual:_ {what only the user can settle}
 - **Artifacts produced:** {pattern slugs, block names, CPTs, theme.json deltas}
 - **Steps:** _filled at the gate, not now._
 - **Notes / blockers:** {only if non-empty}
@@ -311,6 +318,8 @@ even for small work: it's the only part of the conversation that survives.
 
 <!-- Router. Read this first every session. One line per change.
      Things noticed in passing → FINDINGS.md. Project rules → ../CLAUDE.md -->
+
+**Site URL:** {http://project.test}
 
 ## Planned
 
@@ -336,6 +345,11 @@ even for small work: it's the only part of the conversation that survives.
 
 Each line: `date · type · what · where · from {origin change}`, plus an outcome once it closes.
 Type tags are loose (`bug`, `note`, `cleanup`, `perf`, `a11y`, `security`).
+
+**The `**Site URL:**` line is the only thing you have to ask for here** — nothing in the theme
+records where the site is served, and every later phase needs it to open the page it just built.
+Ask once while creating `INDEX.md`, write it down, and never ask again.
+→ [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 
 Set `PLAN.md` `**Status:** planned`. **Pause for approval.**
 

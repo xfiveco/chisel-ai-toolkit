@@ -132,11 +132,20 @@ phase with a known defect and buys a line nobody scheduled.
    [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
 2. **Ask the user to run `npm run build-scripts`** to confirm the SCSS compiles. Never invoke it
    yourself. Tick that done-when item once they report it passed.
-3. Tick the phase file's **Done when · Automated** items that now pass.
-4. Summarize: what changed, which files, what drifted from the plan, and — separately — **what the
-   user needs to check with their own eyes**, taken from **Done when · Manual**.
+3. **Open the page.** Playwright MCP, at the URL this phase actually touched — console messages
+   first, then a screenshot at the spec's viewport and at mobile against the spec crop, then the
+   accessibility snapshot. It's the only pass that sees seeded content, dead asset URLs and JS that
+   throws. **Optional:** if the tools aren't in your list, say so once, ask the user for a
+   screenshot, and report the render as *not checked* — never stop the phase over it. Procedure and
+   the site-URL lookup → [browser-verification.md](.claude/chisel/reference/browser-verification.md).
+4. Tick the phase file's **Done when · Automated** items that now pass.
+5. Summarize: what changed, which files, what drifted from the plan, the render result on its own
+   line, and — separately — **what the user needs to check with their own eyes**, taken from
+   **Done when · Manual**.
 
-**Do not tick manual items yourself.** They stay `[ ]` until the user confirms.
+**Do not tick manual items yourself.** They stay `[ ]` until the user confirms. **A screenshot you
+took is not a confirmation** — it's what lets you catch drift before the handoff, not a substitute
+for the user looking.
 
 **Stop.** Wait for the user to confirm the manual checks.
 
@@ -242,7 +251,8 @@ Then print how to pick it up:
    files disagree with what you recall, the files win.
 3. **The phase row is the only status surface.** One row per phase, one `**Status:**` per change.
    No parallel checklists.
-4. **Manual checks are the user's.** Never tick them, never assume them, never fold them into "verified".
+4. **Manual checks are the user's.** Never tick them, never assume them, never fold them into
+   "verified" — and a screenshot you took yourself doesn't tick one either.
 5. **`npx chisel-verify` before every summary.** A non-zero exit is fixed or explicitly justified,
    never ignored.
 6. **Never commit without asking.** One line, no trailers, no `Co-Authored-By:`. Prefix with the
@@ -262,7 +272,10 @@ Then print how to pick it up:
 - ❌ Hand-building a Figma section instead of routing the phase through the orchestrator. (You lose
   the asset download and the visual diff, and the section won't match.)
 - ❌ Reporting "verify clean" for content seeded into a page. (That lives in the database, not a
-  file — the script never sees it.)
+  file — the script never sees it. Open the page.)
+- ❌ Summarizing a phase without opening the page when the browser tools were available.
+- ❌ Stopping a phase because Playwright MCP isn't installed. (It's optional — say "not checked".)
+- ❌ Reporting the render as passed when it was never opened.
 - ❌ Seeding content with a PHP script or WP-CLI because the MCP call was fiddly.
 - ❌ Hiding unwanted content with `display: none` instead of removing it at the source.
 - ❌ `git add -A`. (Sweeps in whatever else was dirty.)
@@ -283,6 +296,7 @@ Then print how to pick it up:
 - Picking up an active change cold → [chisel-change-resume](.claude/skills/chisel-change-resume/SKILL.md)
 - Feedback on built work, no plan needed → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
+- Opening the rendered page → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 - Building a Figma-mode phase → [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md)
 - Per-screen build order and the done gate → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)
 - WordPress state writes and seeding traps → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)

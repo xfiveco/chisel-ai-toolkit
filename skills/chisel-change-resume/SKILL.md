@@ -20,7 +20,9 @@ layout exists so you *don't* load everything.
 
 ## 1. Find the change
 
-Read `context/INDEX.md`.
+Read `context/INDEX.md`. Note its `**Site URL:**` line while you're there — that's where the browser
+pass opens the page later, and asking again is a question the file already answered. Missing line:
+ask once and add it. → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 
 - **Argument given** (`/chisel-change-resume 03-about-page`) — use that folder. Accept a bare number
   (`03`), the full folder name, or a path; match against `changes/`. No match → say so, list what

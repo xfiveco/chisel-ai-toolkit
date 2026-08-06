@@ -94,7 +94,11 @@ For each section from top to bottom:
 5. Upload section images via `xfive-media-media-upload`
 6. Push section to page via `xfive-posts-post-update-content` (full page markup; for partial updates fetch with `post-get-content`/`block-tree`, modify the markup string, write the whole thing back)
 7. Update the `context/` files with what was built (phase file steps + the `PLAN.md` row outcome)
-8. **Visual diff (mandatory before the next section):** call `get_screenshot(fileKey, sectionNodeId)` and compare against the rendered section in the browser — take a browser screenshot if you have the tooling, otherwise ask the user for one. Check spacing steps, colors, font sizes, and alignment against the Figma crop; fix drift now, not in a later QA round.
+8. **Visual diff (mandatory before the next section):** call `get_screenshot(fileKey, sectionNodeId)` for the Figma crop, then get the rendered side:
+   - **With Playwright MCP:** `browser_navigate` to the page (site URL from `context/INDEX.md`), `browser_console_messages` — a `view.js` that throws leaves the section half-built and reads as a CSS bug — then `browser_take_screenshot` at the spec's viewport and again after `browser_resize` to mobile.
+   - **Without it:** ask the user for a screenshot, and say the render is unchecked rather than passed.
+
+   Check spacing steps, colors, font sizes, and alignment against the Figma crop; fix drift now, not in a later QA round. Full procedure → [browser-verification.md](.claude/chisel/reference/browser-verification.md).
 
 Header/footer: use `adapt-header-footer` skill, not patterns.
 
@@ -114,7 +118,7 @@ Run the checklist in [reference/screen-build-order.md "Verification checklist"](
 
 ### Iteration
 
-When refining: fresh screenshot → compare rendered → adjust tokens first, then pattern SCSS, then block code.
+When refining: fresh Figma screenshot → fresh browser screenshot → compare → adjust tokens first, then pattern SCSS, then block code.
 
 ### Close out the context/ files
 

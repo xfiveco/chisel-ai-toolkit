@@ -86,6 +86,12 @@ bad preset class in a page a section was pushed into is invisible to it. Nor `bl
 outside `patterns/` beyond the `core/` git check. A change confined to those comes back clean
 because nothing was read — say so rather than reporting it as a pass.
 
+**Nothing rendered.** It reads files; it never opens a page. Seeded content, an image that 404s, a
+`view.js` that throws on load, spacing that drifted from the spec — all clean here, all obvious in
+the browser. That's the other half of the gate, not a nice-to-have:
+[browser-verification.md](.claude/chisel/reference/browser-verification.md). A clean run of this
+script alone is never "verified".
+
 **A missing `theme.json` group silently disables its own check.** The token check only runs where
 the group exists and is non-empty, so if `settings.custom.boxShadow` was never added, every
 `get-box-shadow('…')` passes. Likewise every helper if `src/design/tools/` is missing. A clean run
@@ -97,6 +103,7 @@ been reused, a mapping that's technically valid but wrong for the design. Those 
 
 ## Related
 
+- The rendered half of the gate → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 - Where these checks sit in a phase → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
 - Running them after a fix batch → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - The per-screen done gate they feed → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)

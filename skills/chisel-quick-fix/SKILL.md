@@ -54,7 +54,11 @@ Content problems go through MCP tools, never CSS hiding.
 
 Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
 
-**It can't see seeded content.** SCSS, patterns, Twig and ACF groups are all read — but content pushed into a page through MCP lives in the database, and a fix batch is often exactly that. A clean run says nothing about it. Say so, and list what still needs a human eye.
+**It can't see seeded content.** SCSS, patterns, Twig and ACF groups are all read — but content pushed into a page through MCP lives in the database, and a fix batch is often exactly that. A clean run says nothing about it.
+
+So **open the page** — Playwright MCP at the URL the batch touched (site URL from `context/INDEX.md`): console messages, a screenshot against the spec, the accessibility snapshot. Quick-fix mode is where this matters most, because most of these items *came from* someone looking at the rendered page, and the render is the only place the fix is visible. If the tools aren't available, say the render is unchecked and ask the user to look. → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
+
+Then list what still needs a human eye. Your own screenshot isn't that.
 
 ### 5. Leave a trail
 
@@ -97,7 +101,8 @@ Summarize: items fixed, items escalated (with why), files touched, and anything 
 - ❌ Hiding a reviewed-out element with `display: none`. (Content vs CSS hard rule still applies.)
 - ❌ Editing a shared partial, component, or token without checking who else depends on it.
 - ❌ Skipping `npx chisel-verify` because the fixes were small.
-- ❌ Reporting a clean `chisel-verify` as proof a content fix landed. (It can't read the database.)
+- ❌ Reporting a clean `chisel-verify` as proof a content fix landed. (It can't read the database — open the page.)
+- ❌ Closing a batch of visual fixes without ever looking at the rendered page.
 - ❌ Running `npm run build-scripts` yourself instead of asking the user.
 - ❌ Fixing the escalated items anyway, at the end, quietly.
 - ❌ A batch that leaves no line in `FIXES.md`.
@@ -107,3 +112,4 @@ Summarize: items fixed, items escalated (with why), files touched, and anything 
 - Escalating an item into a planned change → [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md)
 - Building an approved plan → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
+- Opening the rendered page → [browser-verification.md](.claude/chisel/reference/browser-verification.md)

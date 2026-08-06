@@ -93,6 +93,27 @@ block. That's an ACF block plus `view.js`.
 change folder, no phases, no plan gate: it triages, fixes, reports. Anything that turns out to be
 real scope gets handed back to `/chisel-change-new`.
 
+## Verification
+
+No test framework ships and none is added — Chisel has no Jest, PHPUnit or spec files, and the
+toolkit doesn't scaffold any. What the theme produces is markup and SCSS driven by a design spec,
+and "the hero renders a heading" passes while the section looks wrong. Verification is three layers
+instead:
+
+```text
+automated ... npx chisel-verify + npm run build-scripts   reads files, never renders
+rendered .... Playwright MCP: console, screenshots, a11y  the only pass that sees seeded
+                                                          content, dead images, JS that throws
+manual ...... the user's eyes                             editor behaviour, copy, sign-off
+```
+
+**Playwright MCP is optional** — unlike `xfive-mcp-chisel`, which is required. Without it the agent
+asks you for a screenshot and reports the render as *not checked* rather than passed. With it, the
+agent catches its own drift before handing the work over instead of after. Either way a screenshot
+the agent took never ticks a manual item.
+
+The site URL lives on a `**Site URL:**` line in `context/INDEX.md` — asked once, on the first change.
+
 ## The `core/` guard
 
 `core/` is upstream Chisel — anything you change there is overwritten by the next Chisel update.

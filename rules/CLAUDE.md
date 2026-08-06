@@ -85,7 +85,7 @@ Load-bearing rules that cut across skills — breaking them causes silent failur
 
 **Files beat memory; code beats files (HARD RULE).** When the `context/` files disagree with what you recall, the files win. When a phase file disagrees with the code in front of you, the code wins — correct the file and say what drifted. Never build to a stale plan just because it's written down.
 
-**Manual checks are the user's (HARD RULE).** A phase's `Done when · Manual` items stay `[ ]` until the user confirms them by eye. Never tick them yourself, and never fold them into "verified" because the automated checks passed.
+**Manual checks are the user's (HARD RULE).** A phase's `Done when · Manual` items stay `[ ]` until the user confirms them by eye. Never tick them yourself, and never fold them into "verified" because the automated checks passed — **and a screenshot you took yourself is not a confirmation either.** Browser verification is evidence for you, not a substitute for the user's sign-off. → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 
 **Log incidental findings (HARD RULE).** Notice a bug, oddity, or cleanup candidate mid-implementation — especially one unrelated to the change — add one line to `context/FINDINGS.md` (`- [ ] date · type · what · where · from {change}`) and keep going. Append-only: the only edit to an existing line is flipping its box and appending the outcome. Don't derail the phase to chase it; don't bury it in a phase file. **Discovered, not caused** — a rough edge in what you just built is unfinished work, not a finding: fix it in the phase or insert a `Phase Na`. At the change's last phase, `/chisel-change-implement` triages this change's own findings into fix-now / leave-open / won't-fix; leftovers are worked later via `/chisel-quick-fix` or their own change, never swept into unrelated work.
 
@@ -100,6 +100,12 @@ Load-bearing rules that cut across skills — breaking them causes silent failur
 ### MCP (xfive-mcp-chisel) — required for all WP state writes
 
 For any content insert/edit, image upload, ACF field, theme mod, option, nav menu, or post creation — use the `xfive-mcp-chisel` MCP tools. Never PHP seeds, WP-CLI, manual paste, or direct DB edits. If the tools aren't in your tool list, **stop** and ask the user to install the plugin + register the MCP server — don't improvise. Tool list, payloads, defaults, and the **block-seeding silent-failure traps** (read before hand-writing block markup) → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md).
+
+### MCP (Playwright) — optional, for looking at the rendered page
+
+Use Playwright MCP to open what you built before handing it to the user: console errors, a screenshot at the spec's viewport plus mobile, and the accessibility snapshot. **Unlike `xfive-mcp-chisel` this is optional** — if the tools aren't in your list, say so once, ask the user for a screenshot instead, and report the render as *not checked* rather than *passed*. Never stop a phase over it. The site URL is recorded as a `**Site URL:**` line in `context/INDEX.md` — ask once, then read it from there. Procedure, what it catches, and what it does **not** authorize you to tick → [browser-verification.md](.claude/chisel/reference/browser-verification.md).
+
+**No test framework.** Chisel ships none and the toolkit adds none — no Jest, no PHPUnit, no Playwright spec files, no `npm test`. Verification is `chisel-verify` (static) + the build + the browser pass + the user's eyes. Don't scaffold a test suite unless the user asks for one.
 
 ### SCSS
 
@@ -134,6 +140,7 @@ When the decision ladder reaches a custom block, **default to ACF** (server-rend
 
 - **Run `npx chisel-verify`** — token references, undefined helpers, preset classes (patterns *and* Twig), hand-written markup colors, margin pairs, pattern four-way sync, ACF group keys, SCSS conventions, untouched `core/`. Read-only. An exit of `1` must be fixed or explicitly justified, never ignored; an exit of `2` means it never ran. It cannot read page content seeded through MCP — that lives in the database — so never report that as verified. What each check means: [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
 - **Ask the user to run `npm run build-scripts`** to verify SCSS compiles — don't invoke it yourself.
+- **Open the page** with Playwright MCP if it's available — console errors, a screenshot at the spec's viewport plus mobile against the spec crop, and the accessibility snapshot. This is the only check that sees seeded page content, broken asset URLs, and JS that throws. Skip it cleanly if the tools aren't there. → [browser-verification.md](.claude/chisel/reference/browser-verification.md).
 
 ## Reference docs
 
@@ -150,6 +157,7 @@ Load the matching doc before its skill (see "Scaffolding"):
 - [base-styles](.claude/chisel/reference/base-styles.md) — where every base style lives + the icon system
 - [screen-build-order](.claude/chisel/reference/screen-build-order.md) — phase order + verification checklist
 - [mcp-workflow](.claude/chisel/reference/mcp-workflow.md) — MCP tool usage (posts, blocks, media, ACF, terms, menus, options, widgets)
+- [browser-verification](.claude/chisel/reference/browser-verification.md) — the rendered half of verification (Playwright MCP, optional)
 - [coding-conventions](.claude/chisel/reference/coding-conventions.md) — PHP/JS/SCSS/Twig conventions
 - [twig-templating](.claude/chisel/reference/twig-templating.md) — Timber context, functions, hierarchy
 - [assets-and-scripts](.claude/chisel/reference/assets-and-scripts.md) — asset registration, icons, Chisel hooks
