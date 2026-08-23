@@ -39,6 +39,8 @@ The filename is unprefixed — the `patterns/` folder already provides the conte
 
 ## Root wrappers
 
+`"align":"full"` bleeds the section to the screen edge; **`constrained` then puts its inner blocks back on the page rail, while `flex` and `default` stretch them to the gutter unless the section has a background** — pick accordingly for a section whose text must line up with the rest of the page. Full rule: [blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width).
+
 **Group (constrained, no bg):**
 
 ```html

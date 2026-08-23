@@ -50,6 +50,7 @@ const TOKEN_SOURCES = {
   "get-font-size": (t) => slugs(t.settings?.typography?.fontSizes),
   "get-margin": (t) => customKeys(t, "margin"),
   "get-padding": (t) => customKeys(t, "padding"),
+  "get-spacer": (t) => customKeys(t, "spacer"),
   "get-gap": (t) => customKeys(t, "gap"),
   "get-border-radius": (t) => customKeys(t, "border-radius"),
   "get-box-shadow": (t) => customKeys(t, "box-shadow"),

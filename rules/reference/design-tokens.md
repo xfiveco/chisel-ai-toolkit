@@ -61,6 +61,8 @@ Named alias slugs (protected — never rename): `tiny`, `little`, `small`, `norm
 
 SCSS: `get-margin('medium')`, `get-padding('large')`, `get-gap('normal')`.
 
+**`core/spacer` has its own scale.** `settings.custom.spacer.{alias}` — same protected alias names, but **fluid `clamp()` values, not references to the numeric scale**. It is separate from `margin`/`padding`/`gap`: a spacer is a section-scale gap that shrinks on a phone, while component gaps stay constant. SCSS: `get-spacer('medium')`. Sizing procedure: [Picking the spacer style](#picking-the-spacer-style).
+
 **The editor's spacing controls are switched off.** `settings.spacing.blockGap`, `margin` and `padding` are all `false`, and `settings.blocks.core/spacer.spacing.spacingSizes` is `[]`. That last one is why a spacer's size can only come from its `is-style-*` class — there are no size presets left to pick. Serialized `style.spacing.*` on a block is still the house style regardless (Chisel's own `patterns/comments.php` seeds one).
 
 ## Border radius
@@ -89,6 +91,7 @@ Slugs: `none`, `tight`, `loose`, `looser`. Read `theme.json` `settings.custom.le
 
 - Content width: `settings.layout.contentSize` (read `theme.json`) — narrowest, used by `core/group` default and most text-heavy patterns. SCSS: `get-layout-size('content')`.
 - Wide width: `settings.layout.wideSize` (read `theme.json`) — used by `alignwide` and broader patterns. SCSS: `get-layout-size('wide')`.
+- **Both feed the page rail**, the CSS custom properties that decide where every block's left and right edges sit. Change `contentSize`/`wideSize` and the whole rail follows — front end and editor. Never restate either width in pattern SCSS. How the rail behaves per alignment: [blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width).
 - Other named widths (frame, container, narrow…): add `settings.custom.layout.{name}` in `theme.json` **and, in the same change, a matching accessor in `src/design/tools/_theme.scss`**. Example: `settings.custom.layout.frame-width: "67rem"` + a new accessor **you define** following the `get-{category}` convention — `get-layout($name)` returning `var(--wp--custom--layout--#{$name})` — then `max-width: get-layout('frame-width')`. **Never call a `get-*` helper that isn't defined in `src/design/tools/`** — undefined functions fail the build. Procedure: [coding-conventions.md "Tokenize repeated values"](.claude/chisel/reference/coding-conventions.md#tokenize-repeated-values).
 
 ### Width-token decision ladder
@@ -123,25 +126,29 @@ This section owns the other half — **what size each spacer is**, and the margi
 For each spacer, derive the slug from `theme.json` instead of hardcoding. This is the "match VALUES, never names" rule above, applied to spacers — the Figma gap's **resolved px** drives the choice, never the Figma token's name:
 
 1. Get the Figma spacing's **resolved value** via `get_variable_defs` (e.g. `48`), not the token name (Figma `large` and Chisel `large` may resolve to different px — see the HARD RULE above).
-2. Compute the **rendered height of each spacer style**: each `is-style-{alias}` in `src/styles/blocks/_core-spacer.scss` sets `padding: get-margin('{alias}') 0`, so rendered height = **2× that margin alias's current value in `theme.json`** (if `small` resolves to 12px, the spacer renders 24px). The base `.wp-block-spacer` (no style class) uses `get-margin('normal')`. Always compute from the **current** `theme.json` `settings.custom.margin` values — never from remembered numbers; the scale is rewritten at project setup.
+2. Read the **rendered height of each spacer style** from `theme.json` `settings.custom.spacer`: each `is-style-{alias}` in `src/styles/blocks/_core-spacer.scss` sets `min-height: get-spacer('{alias}')`, so rendered height **is that value, 1:1**. The base `.wp-block-spacer` (no style class) uses `get-spacer('normal')`. Always read the **current** `settings.custom.spacer` values — never remembered numbers; the scale is rewritten at project setup.
 3. Pick the `is-style-{alias}` whose **rendered height** matches the Figma px (closest if no exact). Seed `"className": "is-style-{alias}"`. **Every spacer carries an explicit `is-style-*` class — even when the default size is the right one.** A bare `wp-block-spacer` silently falls back to the base size and reads as an unmade decision, not a chosen one.
 
-**Trap — the `height` attribute is IGNORED; always seed `height:"auto"`.** `src/scripts/editor/mods/core-spacer.js` runs an `editor.BlockEdit` filter that force-sets every `core/spacer` to `height: "auto"` on load. So an inline `height:"32px"` is silently overwritten and the rendered size comes **only** from the `is-style-*` padding. Seeding a px height is dead markup that misleads — write `{"height":"auto","className":"is-style-{alias}"}` with `style="height:auto"` (matches [templates/pattern-markup.md](.claude/chisel/templates/pattern-markup.md)).
+**The values are fluid, so match against the range.** Each alias is a `clamp(min, …, max)` interpolating between the same two viewport anchors as fluid typography (`settings.typography.fluid.minViewportWidth` / `maxViewportWidth`). A Figma gap measured on the desktop frame compares against the **max**; a mobile frame against the **min**. Don't average them, and don't add a new alias just because the desktop number sits between two maxes — check the mobile end before minting a slug.
 
-If no alias's rendered height is close enough, extend the scale in `theme.json` (add a margin alias + matching spacer `is-style` in `_core-spacer.scss` + `registerSpacerStyles()`) rather than picking a misfit — never rename an existing alias to match Figma, and never rely on the `height` attr.
+**Trap — the `height` attribute is IGNORED; always seed `height:"auto"`.** `src/scripts/editor/mods/core-spacer.js` runs an `editor.BlockEdit` filter that force-sets every `core/spacer` to `height: "auto"` on load. So an inline `height:"32px"` is silently overwritten and the rendered size comes **only** from the `is-style-*` `min-height`. Seeding a px height is dead markup that misleads — write `{"height":"auto","className":"is-style-{alias}"}` with `style="height:auto"` (matches [templates/pattern-markup.md](.claude/chisel/templates/pattern-markup.md)).
+
+**Size a spacer with `min-height`, never `height` or `padding`.** That same forced inline `height: auto` beats a stylesheet `height`; `min-height` doesn't conflict with it.
+
+If no alias's rendered range is close enough, extend the scale in `theme.json` (add a `settings.custom.spacer` alias + matching `is-style` in `_core-spacer.scss`'s `$_spacer-sizes` list + `registerSpacerStyles()`) rather than picking a misfit — never rename an existing alias to match Figma, and never rely on the `height` attr. Adding an alias to `settings.custom.margin` does **not** give you a spacer size; the two scales are separate.
 
 ### Margin sync at project start
 
 Chisel auto-adds block margins from **two sources** — sync BOTH, or they stack against spacers and cause double-gap:
 
-- **`src/styles/blocks/_core.scss`** — `.c-block--{name}` rules: text blocks get `margin: 0 0 get-margin('{alias}')`, media/container blocks get `margin: 0 auto get-margin('{alias}')`.
+- **`src/styles/blocks/_core.scss`** — `.c-block--{name}` rules: text blocks get `margin: 0 0 get-margin('{alias}')`, media/container blocks get `margin-block: 0 get-margin('{alias}')`. **Bottom margin only — never a horizontal value.** Horizontal placement belongs to the page rail ([blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width)).
 - **`theme.json` `styles.blocks`** — `core/group`, `core/columns`, `core/image`, `core/gallery`, `core/cover`, `core/buttons` get top AND bottom `margin` from a `--wp--custom--margin--*` alias. These apply even where `_core.scss` doesn't.
 
 Procedure:
 
 1. Read Figma `text/*/paragraph-spacing` and `heading/*/paragraph-spacing` variables.
 2. Compare to the current values in **both** sources above (also `styles.elements.heading` `spacing.margin.bottom` in `theme.json`).
-3. Update each divergent margin to the matching alias — `_core.scss` rules keep their `0 0` / `0 auto` shorthand shape; `theme.json` entries change the alias only.
+3. Update each divergent margin to the matching alias — `_core.scss` rules keep their `margin: 0 0` / `margin-block: 0` shape (change the alias, never add a horizontal value); `theme.json` entries change the alias only.
 
 ### Suppressing auto-margins in patterns
 
@@ -176,7 +183,7 @@ Run before finishing any token work.
 4. Any new `settings.custom.{category}` token has its matching accessor in `src/design/tools/_theme.scss`, added in the same change.
 5. No hardcoded `max-width: px-rem(N)` for a width that recurs — two patterns sharing a width means the token should exist.
 6. Every `core/spacer` seeded with `height:"auto"` AND an explicit `is-style-{alias}` class — no bare spacers.
-7. Spacer alias picked from **rendered height** (2× the margin alias's current `theme.json` value), not remembered numbers.
+7. Spacer alias picked from `settings.custom.spacer.{alias}`'s current clamp, matched at the right viewport end — not remembered numbers.
 8. Margin sync applied to **both** `src/styles/blocks/_core.scss` and `theme.json` `styles.blocks`.
 9. Any pattern using spacers is `layout: constrained`, never `flex`.
 10. `disableBottomMargin` + `u-no-margin-bottom` set together on the root wrapper, every block before a spacer, and every last child of a container.

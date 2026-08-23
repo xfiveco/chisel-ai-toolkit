@@ -31,7 +31,7 @@ Check these **before** building a pattern that uses the block.
 | Block margins, second source (group, columns, image, gallery, cover, buttons)                           | `theme.json` → `styles.blocks`            | Top+bottom `margin` aliases per core block — sync alongside `_core.scss` (see [design-tokens.md "Margin sync"](.claude/chisel/reference/design-tokens.md#margin-sync-at-project-start)) |
 | `core/group`                                                                                            | `src/styles/blocks/_core-group.scss`      | Group wrapper styles                                                  |
 | `core/button`                                                                                           | `src/styles/blocks/_core-button.scss`     | Button block defaults                                                 |
-| `core/spacer`                                                                                           | `src/styles/blocks/_core-spacer.scss`     | Spacer `is-style-*` padding values                                    |
+| `core/spacer`                                                                                           | `src/styles/blocks/_core-spacer.scss`     | Spacer `is-style-*` `min-height`, from `settings.custom.spacer`       |
 | `core/media-text`                                                                                       | `src/styles/blocks/_core-media-text.scss` | Media+text layout                                                     |
 | `core/gallery`                                                                                          | `src/styles/blocks/_core-gallery.scss`    | Gallery grid defaults                                                 |
 | `core/details`                                                                                          | `src/styles/blocks/_core-details.scss`    | Expand/collapse details                                               |
@@ -75,11 +75,13 @@ Check these **before** building a pattern that uses the block.
 
 ## Spacing
 
-| What               | File                                                |
-| ------------------ | --------------------------------------------------- |
-| Scale tokens       | `theme.json` → `settings.spacing.spacingSizes`      |
-| Named aliases      | `theme.json` → `settings.custom.margin/padding/gap` |
-| Content/wide width | `theme.json` → `settings.layout`                    |
+| What                                  | File                                                                                                                                 |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Scale tokens                          | `theme.json` → `settings.spacing.spacingSizes`                                                                                       |
+| Named aliases                         | `theme.json` → `settings.custom.margin/padding/gap`                                                                                  |
+| Spacer sizes                          | `theme.json` → `settings.custom.spacer` — fluid clamps, its own scale                                                                |
+| Content/wide width                    | `theme.json` → `settings.layout`                                                                                                     |
+| Page rail (where wide/full edges sit) | `src/design/tools/_width.scss` → `rail-vars()`, emitted in `src/styles/objects/_wrapper.scss` and `src/styles/wp-editor/_editor.scss` |
 
 ## Colors, radius, shadows
 
@@ -99,11 +101,12 @@ The SCSS helper layer every other file `@use`s via `@use '~design' as *;`.
 
 | File | Provides |
 | --- | --- |
-| `_theme.scss` | 14 token accessors — `get-color`, `get-margin`, `get-padding`, `get-gap`, `get-font-size`, `get-font-family`, `get-layout-size`, `get-gradient`, `get-border-radius`, `get-border-width`, `get-box-shadow`, `get-letter-spacing`, `get-line-height`, `get-transition` |
+| `_theme.scss` | 15 token accessors — `get-color`, `get-margin`, `get-padding`, `get-spacer`, `get-gap`, `get-font-size`, `get-font-family`, `get-layout-size`, `get-gradient`, `get-border-radius`, `get-border-width`, `get-box-shadow`, `get-letter-spacing`, `get-line-height`, `get-transition` |
 | `_buttons.scss` | `button()`, four variants each with `-hover`/`-focus`/`-icon`, `button-small()`, `button-large()`, `button-disabled()`, `button-loading()` |
 | `_link.scss` | `link()`, `link-reverse()` |
 | `_breakpoints.scss` | `bp()`, `bp-down()`, `bp-only()`, `bp-between()` |
-| `_layout.scss`, `_width.scss` | `get-flex-col-width()`, `alignfull()`, `alignwide()` |
+| `_layout.scss` | `get-flex-col-width()` |
+| `_width.scss` | `rail-vars()` (emits the page-rail custom properties), `rail-children()` (lays a container's direct children out on the rail). Alignment behaviour: [blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width) |
 | `_media.scss` | `background-image()` — the only correct way to reference an asset URL — and `object-fit-cover()` |
 | `_icon.scss` | `icon-svg()`, `icon()` |
 | `_colors.scss` | `rgba-color()` |

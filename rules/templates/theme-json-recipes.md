@@ -62,13 +62,26 @@ Generates `var(--wp--preset--font-size--{slug})`. Keep the min/max ratio at or b
 { "size": "{value}rem", "slug": "{number}", "name": "{display-number}" }
 ```
 
-Then add matching aliases in `settings.custom.margin` / `padding` / `gap` if needed — `core/spacer`'s `is-style-*` sizes map 1:1 to those aliases.
+Then add matching aliases in `settings.custom.margin` / `padding` / `gap` if needed.
+
+## Spacer size
+
+`settings.custom.spacer.{alias}` — `core/spacer`'s `is-style-{alias}` sizes, 1:1. A **separate, fluid scale**; it does not reference `spacingSizes` or the margin aliases:
+
+```json
+"spacer": {
+  "tiny": "0.5rem",
+  "normal": "clamp({mobile-min}, {intercept} + {slope}vw, {desktop-max})"
+}
+```
+
+Interpolate between the same two anchors as fluid typography (`settings.typography.fluid.minViewportWidth` / `maxViewportWidth`): `slope = (max - min) / (toRem - fromRem)`, `intercept = min - slope * fromRem`. Small steps may stay a flat rem — fluid below `1rem` is noise. Every alias here needs a matching entry in `$_spacer-sizes` in `src/styles/blocks/_core-spacer.scss` and in `registerSpacerStyles()`.
 
 ## Custom property
 
 `settings.custom.{category}.{name}` — generates `var(--wp--custom--{category}--{name})`.
 
-Existing categories: `margin`, `padding`, `gap`, `border-radius`, `border-width`, `box-shadow`, `letter-spacing`, `line-height`, `transition`.
+Existing categories: `margin`, `padding`, `spacer`, `gap`, `border-radius`, `border-width`, `box-shadow`, `letter-spacing`, `line-height`, `transition`.
 
 Adding a category or a new value means adding the matching accessor in `src/design/tools/_theme.scss` in the same change — a `get-*()` with no token, or a token with no accessor, fails the build.
 

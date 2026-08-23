@@ -35,6 +35,7 @@ Each one breaks silently — no error, wrong output. None of them is discoverabl
 13. **Default a `core/spacer` between sibling inner blocks**; never `blockGap`/CSS `gap` for vertical spacing. → [Spacing between sibling blocks](#spacing-between-sibling-blocks)
 14. **A property the block `supports` is set on the block** as attribute + preset class, never in SCSS. → [Setting block properties](#setting-block-properties-presets-over-scss-hard-rule)
 15. **Pattern source files ship no dead media** — no `src=""`, no install-specific attachment IDs. → [Pattern](#pattern-patternsslugphp)
+16. **Alignment is never re-implemented in SCSS** — the page rail places every block's edges; a second implementation double-pads or overflows. → [Wide and full width](#wide-and-full-width)
 
 ## File structures
 
@@ -203,6 +204,22 @@ Pattern SCSS: `src/styles/patterns/_{slug}.scss`, scoped under `.p-{slug}`. File
 
 **Class only the root; target inner blocks by tag (HARD RULE).** Only the root group carries `p-{slug}`. **Never** add a BEM `__element` class to leaf/text blocks (paragraph, heading, list, image) — style them by tag from the root: `.p-{slug} h2`, `.p-{slug} p`, or by the block's own class `.p-{slug} .wp-block-media-text`. A `p-{slug}__heading` class lives only on the seeded instance, so a paragraph an editor adds later inherits nothing. Add a `p-{slug}__{name}` class to a **structural** block (inner group, columns, media-text) **only when** tag/descendant targeting can't single it out (e.g. two sibling inner groups needing different styles) — never to text elements.
 
+## Wide and full width
+
+Alignment is expressed as **width**. A set of page-rail custom properties derived from `settings.layout` places every block's edges — **read `rail-vars()` in `src/design/tools/_width.scss` for the current set.** They are emitted on `:root` in `src/styles/objects/_wrapper.scss` and again in `src/styles/wp-editor/_editor.scss`, so the editor matches the front end. `.c-content.has-sidebar` collapses the rail to the column width through the same variables.
+
+**Never re-implement alignment in pattern or block SCSS (HARD RULE).** No `100vw` widths, no negative margins, no content width + `auto` margins on a block the rail already places — a second implementation double-pads or overflows. Vertical spacing is yours; horizontal placement is not. `is-layout-flow` / `is-layout-constrained` are load-bearing: never strip them from rendered markup, never fight them in SCSS.
+
+**Where a full-width section's content lands depends on its layout type and whether it paints a background:**
+
+- `constrained` → children go back on the content rail; nested wide/full keeps working.
+- `flex` / `grid` / `cover` **with** a background → the box is inset, so the background bleeds and the content still lines up.
+- `flex` / `grid` / `default` **without** a background → children stretch to the page gutter.
+
+So **a full-width section whose text must line up with the rest of the page needs `layout: constrained`** (or a background). `.alignwide` splits the same way against the wide track.
+
+Core prints its layout CSS in `wp_footer`, **after** `main.css` — specificity decides, not source order. Its rules are `0,1,0`, so a second class in the selector beats them; never add `!important` to win a layout fight.
+
 ## Setting block properties: presets over SCSS (HARD RULE)
 
 **If a block's `supports` exposes a property and theme.json has a matching preset, set it on the block — not in SCSS.** Color background/text, font-size, font-family, alignment, block gap, border, spacing padding/margin: each goes on as a block attribute **plus** its preset class — `{"backgroundColor":"primary"}` → `class="… has-primary-background-color has-background"`, `{"textColor":"secondary"}` → `has-secondary-color has-text-color`, `{"fontSize":"extra-large"}` → `has-extra-large-font-size`, `is-style-primary`. Editors then see and change it in the block UI, and it stays token-backed.
@@ -236,7 +253,7 @@ The pairings in the shipped mods:
 | --- | --- | --- | --- |
 | `core.js` | `disableBottomMargin: true` | `u-no-margin-bottom` | On any block immediately followed by a spacer, and every last child of a container — else base margin + spacer = double gap. **The attr alone renders nothing**; the utility class does the work. |
 | `core-button.js` | `buttonSize`, `buttonIcon`, `buttonIconPosition` | `is-size-{size}`, `has-icon has-icon-{name}`, `has-icon-left` | Class-only works visually, but the editor control shows empty and a later edit wipes it. Icon `{name}` must be in `$static-icons`. |
-| `core-spacer.js` | `height: "auto"` (forced in editor) | `is-style-{size}` | Spacer size comes ONLY from the style class's padding, never `height`. Seed `{"height":"auto","className":"is-style-{size}"}` — the class is mandatory on every spacer, even the default size. No bare spacers. Sizing: [design-tokens.md](.claude/chisel/reference/design-tokens.md#picking-the-spacer-style). |
+| `core-spacer.js` | `height: "auto"` (forced in editor) | `is-style-{size}` | Spacer size comes ONLY from the style class's `min-height`, never `height`. Seed `{"height":"auto","className":"is-style-{size}"}` — the class is mandatory on every spacer, even the default size. No bare spacers. Sizing: [design-tokens.md](.claude/chisel/reference/design-tokens.md#picking-the-spacer-style). |
 | `blocks-alignment.js` | `align` | — | Force-sets a default `align` per block on select, from the PHP-provided `chiselEditorScripts.blocksDefaultAlignment` map. A seeded `align` on those blocks may be overwritten when the user selects the block — rely on the map rather than fighting it. See [Default block alignment](#default-block-alignment). |
 
 `src/scripts/editor/` also holds editor-only UI helpers that don't affect seeding — an "Edit {block}" button, a custom InnerBlocks inserter, inspector classes, and icon choices for the button mod.
@@ -287,7 +304,8 @@ Run before finishing any block or pattern.
 13. Every `is-style-*` you seeded exists in `blocks-styles.js` — core's removed styles are not available.
 14. Each pattern's `Categories:` slug is registered (shipped, or added via `chisel_block_patterns_categories`).
 15. No color, font-size, gap or padding in SCSS that the block's `supports` could carry as a preset.
-16. No `src=""`, empty `<figure>`, or attachment `id` in any `patterns/*.php`.
+16. No alignment re-implemented in SCSS (`100vw`, negative margins, content width + `auto` margins) and no `!important` added to beat a core layout rule.
+17. No `src=""`, empty `<figure>`, or attachment `id` in any `patterns/*.php`.
 
 ## Related
 
