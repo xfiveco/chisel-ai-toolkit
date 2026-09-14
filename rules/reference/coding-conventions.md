@@ -12,6 +12,8 @@ PHP, JavaScript, SCSS and Twig style rules for code you write in this theme, plu
 6. **Asset URLs go through the `background-image()` mixin** — a raw `url('../../assets/…')` silently breaks the webpack build. → [Asset URLs in SCSS](#asset-urls-in-scss-build-trap)
 7. **Never hand-edit `_index.scss` barrels** — the build generates them; drop the partial in and it is picked up. → [Tokenize repeated values](#tokenize-repeated-values)
 8. **Never use raw PHP in Twig** — use a Timber built-in, the `function()` bridge, or a registered Twig function. → [Twig rules](#twig-rules)
+9. **Front-end JS strings come from `chiselScripts.i18n`**, never `@wordpress/i18n` — that package is editor-only. → [JavaScript](#javascript)
+10. **A custom Twig function that returns HTML is registered `is_safe`** — otherwise autoescape renders its tags as text. → [Twig rules](#twig-rules)
 
 ## PHP
 
@@ -46,7 +48,7 @@ Helper classes in `core/Helpers/` — most have static methods. Read them before
 | Helper                | Purpose                                                       |
 | --------------------- | ------------------------------------------------------------- |
 | `ThemeHelpers`        | Theme.json color palette access, post thumbnails registration |
-| `AssetsHelpers`       | Asset registration / enqueueing / dependency resolution       |
+| `AssetsHelpers`       | Asset enqueueing / dependency resolution, `get_font_url()`    |
 | `ImageHelpers`        | Responsive images, srcset, `ChiselImage` helpers              |
 | `BlocksHelpers`       | ACF block render callback, block inline CSS                   |
 | `AcfHelpers`          | ACF field group helpers                                       |
@@ -72,7 +74,9 @@ JS helpers: `src/scripts/modules/utils.js` for shared frontend utilities (DOM, t
 | App entry (`src/scripts/app.js`)                     | Import and instantiate the global modules                                                                               |
 
 - Frontend: `js-*` prefixed selectors (not CSS classes), `DOMContentLoaded` bootstrap
-- Editor: `useBlockProps()`, `InspectorControls` for sidebar, `InnerBlocks` for nested content
+- Frontend strings: `chiselScripts.i18n.{key}`, never `@wordpress/i18n` — [assets-and-scripts.md "Default assets"](.claude/chisel/reference/assets-and-scripts.md#default-assets)
+- Frontend motion: under `prefers-reduced-motion` cut durations to `1ms`, not `0` — `transitionend` / `onfinish` callbacks that commit state must still fire (the shipped accordion and slider do this)
+- Editor: `useBlockProps()`, `InspectorControls` for sidebar, `InnerBlocks` for nested content; `@wordpress/i18n` is fine here
 - No TypeScript — pure ES6+
 
 ## SCSS / CSS
@@ -82,6 +86,9 @@ JS helpers: `src/scripts/modules/utils.js` for shared frontend utilities (DOM, t
 - **Prefixes**: `c-` components, `o-` objects, `u-` utilities, `b-` blocks, `p-` patterns, `is-`/`has-` state
 - Modern Sass: `@use` and `@forward` (not `@import`)
 - **Always** `@use '~design' as *;` at top of every SCSS file — use helper functions, never raw CSS vars
+- **Block partials that can contain other blocks target direct children (`>`)**, not descendants — `_core-details.scss` uses `> *:not(summary)` because `*:not(summary)` indented every block nested inside. (Pattern SCSS is different: a pattern owns its whole tree, so `.p-{slug} h2` is right — [blocks.md "Root wrapper rule"](.claude/chisel/reference/blocks.md#root-wrapper-rule).)
+- **Anything that can be wider than the viewport scrolls inside itself** — `overflow-x: auto` on the element, never on the page. Chisel already does this for `core/table` (`u-table-responsive`, added by `Blocks::render_block()`, styled in `utilities/_table.scss`), `core/code` and `core/preformatted`; give a wide embed, chart or custom block the same treatment
+- Zero-specificity defaults go in `:where()` (`_core-group.scss`, `rail-children()`) so a block's own preset or inline style wins without `!important`; to beat a core layout rule, add a second class — [blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width)
 
 ### Don't duplicate global styles (HARD RULE)
 
@@ -170,7 +177,7 @@ Never use raw PHP in Twig. Use one of:
 1. Timber built-in: `{{ theme.link }}`, `{{ site.url }}`, `{{ post.link }}`
 2. `function()` bridge: `{{ function('wp_head') }}`, `{{ function('get_stylesheet_directory_uri') }}`
 3. Registered Twig function: `{{ get_responsive_image() }}`, `{{ get_icon() }}`, `{{ bem() }}` — the full roster is `register_functions()` in `core/WP/Twig.php`
-4. Custom Twig function via `chisel_twig_register_functions`
+4. Custom Twig function via `chisel_twig_register_functions` — one that returns HTML is registered `is_safe`: [twig-templating.md "Autoescaping"](.claude/chisel/reference/twig-templating.md#autoescaping)
 
 Twig style is linted separately: `npm run twigcs` (config `twig_cs.php`), also chained into `npm run build`.
 

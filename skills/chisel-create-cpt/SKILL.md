@@ -48,7 +48,7 @@ When the CPT has to appear on the homepage or another page (latest N, or a curat
 ## Traps
 
 - ❌ **Omitting `editor` from `supports`,** or setting `show_in_rest: false` — either one drops the CPT into the classic editor.
-- ❌ **Omitting `plural` on a post type, or `post_types` on a taxonomy.** Both factories read those keys unguarded — a missing `plural` is a PHP warning, a missing `post_types` attaches the taxonomy to nothing. The other options all have defaults; these two don't.
+- ❌ **Omitting `singular`/`plural`, or `post_types` on a taxonomy.** Neither fails loudly: a missing name ships the factory's `Item` / `Items` labels into the admin, and a missing `post_types` registers a taxonomy attached to nothing. Always set all three.
 - ❌ **An ACF repeater instead of a CPT-driven block.** The same entry then exists twice and the copies drift.
 - ❌ **A CPT's content in an ACF metabox.** Content goes in blocks. A metabox on a CPT is only for settings *about* the entry — a display toggle, a layout option — like the starter's own `Page Title` and `Slider Settings` groups.
 - ❌ **Creating a CPT for a WooCommerce product.** Use the built-in product type.
@@ -69,5 +69,5 @@ When the CPT has to appear on the homepage or another page (latest N, or a curat
 - Registration, taxonomy and block-data filter code → [cpt-template.md](.claude/chisel/templates/cpt-template.md)
 - The block that displays the entries → [create-acf-block](.claude/skills/chisel-create-acf-block/SKILL.md)
 - `single-{slug}.twig` / `archive-{slug}.twig` → [twig-templating.md](.claude/chisel/reference/twig-templating.md#template-hierarchy)
-- Load-more pagination on the archive (built-in endpoint, no code) → [rest-api.md](.claude/chisel/reference/rest-api.md#built-in-endpoint)
+- Load-more pagination on the archive — built-in, but the CPT must be added to `chisel_load_more_allowed_post_types`, and an `archive-{slug}.php` you add must set `$context['load_more'] = LoadMoreHelpers::get_context()` → [rest-api.md](.claude/chisel/reference/rest-api.md#built-in-endpoint)
 - Seeding entries and images → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md)

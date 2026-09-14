@@ -173,6 +173,8 @@ In practice: nearly every non-spacer block inside patterns. Why both are require
 
 Google Fonts: download WOFF2 from `https://gwfh.mranftl.com/fonts`, save to `assets/fonts/`, register `fontFace` in theme.json. Never fabricate font files — flag as follow-up if missing.
 
+A swapped body font must also be re-pointed in `chisel_preload_fonts` — [assets-and-scripts.md "Default assets"](.claude/chisel/reference/assets-and-scripts.md#default-assets).
+
 ## Mechanical check
 
 Run before finishing any token work.

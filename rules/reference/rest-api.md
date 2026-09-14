@@ -84,6 +84,8 @@ Endpoint available at: `/wp-json/chisel/v2/ajax/search/`
 
 **Trap: it only queries an allow-listed post type.** `chisel_load_more_allowed_post_types` defaults to `array( 'post', 'product' )`, and anything outside it comes back as `Invalid post type`. A project CPT must be filtered in before load-more works on its archive. `chisel_load_more_max_per_page` (default 24) caps the page size; `chisel_load_more_query_args`, `chisel_load_more_item_templates`, `chisel_load_more_item_context`, `chisel_load_more_no_results_template` and `chisel_load_more_response` shape the rest.
 
+**The template side is a contract, not just a `type`.** `components/pagination.twig` renders the button only when `type == 'load-more'` **and** `load_more.post_type` **and** `load_more.per_page` are set — otherwise it silently falls back to page links. The controller supplies that array with `$context['load_more'] = LoadMoreHelpers::get_context();` (every shipped controller does; a project `archive-{slug}.php` must too). `get_context()` also fills `load_more.query` — the author, term or date the archive is scoped to — which the template forwards as `data-query` and the endpoint validates key by key. Extend it via `chisel_load_more_context`. The page links stay in the markup as `c-pagination--crawlable` (hidden) so the paginated URLs remain discoverable; don't remove them.
+
 ## Frontend usage
 
 **Call `Utils.ajaxRequest()` — don't hand-roll `fetch`.** It lives in `src/scripts/modules/utils.js` and handles the parts that are easy to get wrong: the POST + `FormData` transport the endpoints read, the `X-WP-Nonce` header `permissions_check()` demands, nonce refresh from the response header, and a one-shot retry without the nonce when a full-page-cached document carries a stale one.
@@ -96,7 +98,7 @@ const data = await Utils.ajaxRequest('search', { query: term });
 
 Signature: `ajaxRequest(action, ajaxData = {}, ajaxParams = {}, ajaxHeaders = {})`. `action` is the route name; `ajaxData` is an object (nested values are JSON-stringified) or a `FormData`; `ajaxParams` merges into the `fetch` init.
 
-The values it reads are localized onto the frontend bundle as **`chiselScripts.ajax.url`** and **`chiselScripts.ajax.nonce`** — `url` is `rest_url('chisel/v2/ajax')` without a trailing slash. Read them from `chiselScripts` if you ever need them directly.
+The values it reads are localized onto the frontend bundle as **`chiselScripts.ajax.url`** and **`chiselScripts.ajax.nonce`** — `url` is `rest_url('chisel/v2/ajax')` without a trailing slash. Read them from `chiselScripts` if you ever need them directly. The same object carries **`chiselScripts.i18n`** — the translated strings for front-end JS (`chisel_frontend_strings`): [assets-and-scripts.md "Default assets"](.claude/chisel/reference/assets-and-scripts.md#default-assets).
 
 ## Related
 

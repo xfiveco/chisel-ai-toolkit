@@ -40,6 +40,8 @@ Follow `src/blocks-acf/slider/block.json`:
 
 `script.js` is the webpack entry that imports `style.scss` (which produces `style-script.css`). It is **CSS-only** — keep `ignoreScripts: ["script"]` so the empty JS handle isn't enqueued. Frontend behavior does NOT go here.
 
+At full width the page rail pads the block's content back in line with the page; media that must touch the screen edge goes in an inner `<div class="b-{name}__inner alignfull">`, like the shipped slider: [blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width).
+
 **With real frontend JS** (carousel init, animation, toggles, etc.) — add a `view.js` (`viewScript`); leave `script.js` as the CSS entry with `ignoreScripts` in place:
 
 ```json

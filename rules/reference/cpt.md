@@ -14,7 +14,7 @@ What a Chisel CPT is made of — the supported options, the defaults the factory
 
 | Option | Default |
 | --- | --- |
-| `singular`, `plural` | `Item` / `Items` **in the label set only** — the factory also passes `plural` straight through as `label` without a guard, so omitting it is a PHP warning. Always set both |
+| `singular`, `plural` | `Item` / `Items` — `label` is taken from the generated `labels['name']`, so omitting `plural` silently ships "Items" as the menu label. Always set both |
 | `supports` | merged onto the defaults below |
 | `public` | `true` |
 | `hierarchical` | `false` |
@@ -53,7 +53,7 @@ Same **custom** file (`custom/app/WP/CustomPostTypes.php`, method `register_cust
 | Option | Default |
 | --- | --- |
 | `singular`, `plural` | `Item` / `Items` in the label set. Unlike post types, `label` is not passed through, so only the labels are affected |
-| `post_types` | **Required** — read unguarded as `register_taxonomy()`'s object type. Omitting it silently attaches the taxonomy to nothing |
+| `post_types` | **Required** — defaults to an empty array, so omitting it registers a taxonomy attached to nothing, with no warning |
 | `public` | `true` |
 | `hierarchical` | `false` — set `true` for a category-like taxonomy |
 | `publicly_queryable`, `show_ui`, `show_in_nav_menus`, `show_admin_column` | follow `public` |

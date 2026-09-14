@@ -38,17 +38,23 @@ Per-asset control: `chisel_enqueue_{context}_style/script` — return `false` to
 - `chisel_async_scripts` — handles to load async
 - `chisel_defer_scripts` — handles to load deferred
 - `chisel_preload_style` — modify style tag for preloading
+- `chisel_preload_fonts` — font files under `assets/fonts/` to preload (see [Default assets](#default-assets))
+- `chisel_frontend_strings` — translated strings localized as `chiselScripts.i18n` (see [Default assets](#default-assets))
 
 ### Default assets
 
-| Context  | Styles       | Scripts                               |
-| -------- | ------------ | ------------------------------------- |
-| Frontend | `main.css`   | `app.js` (with REST API localization) |
-| Admin    | `admin.css`  | `admin.js` (with ACF color palette)   |
-| Editor   | `editor.css` | `editor.js` (with icon labels)        |
-| Login    | `login.css`  | `login.js` (with logo data)           |
+| Context  | Styles                                            | Scripts                                                           |
+| -------- | ------------------------------------------------- | ----------------------------------------------------------------- |
+| Frontend | `main.css`                                        | `app.js` — localizes `chiselScripts` (`ajax` + `i18n`, see below) |
+| Admin    | `admin.css`                                       | `admin.js` (with ACF color palette)                               |
+| Editor   | `editor.css`                                      | `editor.js` (with icon labels)                                    |
+| Login    | `login.css` (logo painted by inline CSS from PHP) | `login.js` — empty entry for project login-page behaviour         |
 
 Handles prefixed with `chisel-`. Build outputs to `build/scripts/` and `build/styles/`. Webpack generates `.asset.php` files for automatic deps + cache-busting.
+
+**Front-end strings do not use `@wordpress/i18n`** — `app.js` has no `wp-i18n` dependency, and importing it from `src/scripts/modules/*` or a `view.js` pulls the whole bundle onto every page. Add the string to the `chisel_frontend_strings` filter in `custom/app/WP/Assets.php` and read it as `chiselScripts?.i18n?.myKey ?? 'My text'`, the way `slider.js` and `load-more.js` do. Editor scripts keep `@wordpress/i18n`.
+
+**Font preload.** `chisel_preload_fonts` lists the `assets/fonts/` files to preload — default `roboto-regular.woff2`. A file that doesn't exist is **silently skipped**, so after a font swap re-point it at the new body face; keep the list to above-the-fold faces.
 
 ### HMR / Fast Refresh
 

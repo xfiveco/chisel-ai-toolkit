@@ -251,7 +251,7 @@ Full hero section with overlay color, top/bottom spacers, centered headline, lea
 
 ### Media + text (image on the left or right)
 
-Use `core/media-text` for image-beside-content sections (feature rows). Image left is default; add `"mediaPosition":"right"` to flip. `mediaId` is the attachment ID returned by `xfive-media-media-upload`.
+Use `core/media-text` for image-beside-content sections (feature rows). Image left is default; add `"mediaPosition":"right"` to flip. `mediaId` is the attachment ID returned by `xfive-media-media-upload`. Set `"align":"full"` on the media-text itself for a half-bleed row: the image runs to the screen edge while the text column stays on the page rail — no SCSS needed ([blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width)).
 
 **Image left:**
 

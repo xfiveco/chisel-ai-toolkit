@@ -35,7 +35,7 @@ For free-form composition use [create-pattern](.claude/skills/chisel-create-patt
 3. **Run `npm run dev` or `build-scripts` to compile** — Chisel registers blocks from `build/blocks-acf/`, NOT `src/blocks-acf/`. Until the build runs, the block won't appear and the editor will show "your site doesn't include {block-name} block" on existing posts referencing it.
 4. **Verify** — `xfive-blocks-block-schema` to confirm registration. In the editor the block sits under the `chisel-blocks` category, whose visible label is "{Theme Name} Blocks" (core builds it from the theme name, so it is not literally "Chisel Blocks" on a renamed theme).
 
-Need the block to open at full width by default? [reference/blocks.md "Default block alignment"](.claude/chisel/reference/blocks.md#default-block-alignment). Building a slider? Don't write the swiper markup — `{% include 'components/slider.twig' with { slides_html, params: {…} } %}` and let Chisel emit the wrapper, the `data-*` attributes and the Swiper instance: [assets-and-scripts.md "Swiper"](.claude/chisel/reference/assets-and-scripts.md#swiper).
+Need the block to open at full width by default? [reference/blocks.md "Default block alignment"](.claude/chisel/reference/blocks.md#default-block-alignment). Need its media to bleed to the screen edge at full width? [reference/blocks.md "Wide and full width"](.claude/chisel/reference/blocks.md#wide-and-full-width). Building a slider? Don't write the swiper markup — `{% include 'components/slider.twig' with { slides_html, params: {…} } %}` and let Chisel emit the wrapper, the `data-*` attributes and the Swiper instance: [assets-and-scripts.md "Swiper"](.claude/chisel/reference/assets-and-scripts.md#swiper).
 
 ## Traps
 

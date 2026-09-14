@@ -27,6 +27,8 @@ All templates extend `views/base.twig` (html, head, header, main, footer).
 
 **CPTs need no templates by default.** WordPress falls back to `single.php` / `archive.php`, which is usually sufficient. Add `views/single-{slug}.twig` / `views/archive-{slug}.twig` (plus `single-{slug}.php` / `archive-{slug}.php` in the theme root) only when a CPT genuinely needs its own layout.
 
+An `archive-{slug}.php` you add must set `$context['load_more'] = LoadMoreHelpers::get_context();` like the shipped controllers do, or the "Load more" button silently becomes page links: [rest-api.md "Built-in endpoint"](.claude/chisel/reference/rest-api.md#built-in-endpoint).
+
 Also in `views/` but outside the route table: `single-password.twig`, `page-plugin.twig`, `sidebar-blog.twig`, `sidebar-woocommerce.twig`.
 
 ## Base layout
@@ -58,6 +60,16 @@ To inject markup without overriding a block, hook `chisel_after_wp_head` or `chi
 
 Custom Twig functions that return HTML — `get_icon`, `get_responsive_image`, `breadcrumbs`, `comments_template` — are registered with `is_safe => html` and need no `|raw`. Forgetting it elsewhere fails silently: the tags render as visible text.
 
+**A project function that returns HTML must be registered the same way.** `register_function()` takes the Twig options as its fourth argument; without `is_safe` every call site needs `|raw`, and the one that forgets prints tags:
+
+```php
+add_action( 'chisel_twig_register_functions', function ( $twig, $twig_instance ) {
+    $twig_instance->register_function( $twig, 'my_card', array( MyClass::class, 'render_card' ), array( 'is_safe' => array( 'html' ) ) );
+}, 10, 2 );
+```
+
+Functions that return plain text (a class string, a count) stay unmarked so they keep being escaped.
+
 ## Global context (from `core/WP/Site.php`)
 
 | Variable          | Type          | Source                                                               |
@@ -85,7 +97,7 @@ Custom Twig functions that return HTML — `get_icon`, `get_responsive_image`, `
 | `slider_prepare_params(params)`         | Prepare ACF slider data                                                                                                                                     |
 | `timber_set_product(post)`              | Set the global WooCommerce `$product` from a Timber post                                                                                                    |
 
-Extend via `chisel_twig_register_functions` / `chisel_twig_register_filters` / `chisel_twig_register_tests` hooks in `custom/app/WP/Twig.php`.
+Extend via `chisel_twig_register_functions` / `chisel_twig_register_filters` / `chisel_twig_register_tests` hooks in `custom/app/WP/Twig.php`. A function that returns markup is registered with `is_safe` — see [Autoescaping](#autoescaping).
 
 ## Common patterns
 
