@@ -111,6 +111,19 @@ for (const dir of [SKILLS_DIR, RULES_DIR]) {
   }
 }
 
+/**
+ * rules/README.md is installed into the theme as .claude/chisel/README.md and
+ * must read the same as the "Using it" and "Verification" sections of the root
+ * README. Everything after its header is expected verbatim in the root file.
+ */
+{
+  const usage = fs.readFileSync(path.join(RULES_DIR, "README.md"), "utf8");
+  const shared = usage.slice(usage.indexOf("## Using it")).trim();
+  if (!fs.readFileSync(path.join(ROOT, "README.md"), "utf8").includes(shared)) {
+    errors.push("rules/README.md: out of sync with README.md — its body must appear verbatim in the root README");
+  }
+}
+
 if (errors.length) {
   console.error("validation failed:\n" + errors.map((e) => `  - ${e}`).join("\n"));
   process.exit(1);
