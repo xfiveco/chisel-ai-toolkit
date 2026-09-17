@@ -82,8 +82,9 @@ Flip a step's `[ ]` → `[x]` in the phase file as you finish it. Don't batch th
 Two rules that bite hardest here, both from `CLAUDE.md`:
 
 - **WordPress state goes through MCP.** Content, images, ACF values, theme mods, options, menus,
-  post creation — `xfive-mcp-chisel` tools only. Never a PHP seed, WP-CLI, or a manual paste. Read
-  the [block-seeding traps](.claude/chisel/reference/mcp-workflow.md) before hand-writing block markup.
+  post creation — `xfive-mcp-chisel` tools. Never a PHP seed or a manual paste; WP-CLI only after
+  the user declined the plugin and explicitly granted it. Read the
+  [block-seeding traps](.claude/chisel/reference/mcp-workflow.md) before hand-writing block markup.
 - **Never edit `core/`.** A PreToolUse hook refuses the write. Mirror the file into `custom/app/`.
   The hook only sees file-editing tools — a shell redirect into `core/` walks straight past it, so
   this one is on you when you're in `Bash`.
@@ -276,7 +277,8 @@ Then print how to pick it up:
 - ❌ Summarizing a phase without opening the page when the browser tools were available.
 - ❌ Stopping a phase because Playwright MCP isn't installed. (It's optional — say "not checked".)
 - ❌ Reporting the render as passed when it was never opened.
-- ❌ Seeding content with a PHP script or WP-CLI because the MCP call was fiddly.
+- ❌ Seeding content with a PHP script or WP-CLI because the MCP call was fiddly. (WP-CLI needs the
+  user's explicit no on the plugin, then an explicit yes — a failed call is neither.)
 - ❌ Hiding unwanted content with `display: none` instead of removing it at the source.
 - ❌ `git add -A`. (Sweeps in whatever else was dirty.)
 - ❌ Committing unprompted, or amending to "fix" a message.

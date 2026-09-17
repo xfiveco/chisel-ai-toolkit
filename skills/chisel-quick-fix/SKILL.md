@@ -16,7 +16,7 @@ allowed-tools:
 
 Theme root: `{{THEME_ROOT}}`. All paths below are relative to it.
 
-For corrections to work that already exists: QA notes, code-review comments, visual-review nits, bug reports. **Only the planning is waived — nothing else is.** Every rule in `CLAUDE.md` still applies, especially anything marked `(HARD RULE)`: reuse-before-building, MCP for WP state writes, SCSS/token rules, don't-duplicate-globals, content-vs-CSS. And `npx chisel-verify` still runs before you're done.
+For corrections to work that already exists: QA notes, code-review comments, visual-review nits, bug reports. **Only the planning is waived — nothing else is.** Every rule in `CLAUDE.md` still applies, especially anything marked `(HARD RULE)`: reuse-before-building, MCP (or explicitly permitted WP-CLI) for WP state writes, SCSS/token rules, don't-duplicate-globals, content-vs-CSS. And `npx chisel-verify` still runs before you're done.
 
 ## Entry criteria (all three must hold, per item)
 

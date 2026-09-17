@@ -95,9 +95,10 @@ rendered .... Playwright MCP: console, screenshots, a11y  the only pass that see
 manual ...... the user's eyes                             editor behaviour, copy, sign-off
 ```
 
-**Playwright MCP is optional** — unlike `xfive-mcp-chisel`, which is required. Without it the agent
-asks you for a screenshot and reports the render as *not checked* rather than passed. With it, the
-agent catches its own drift before handing the work over instead of after. Either way a screenshot
-the agent took never ticks a manual item.
+**Playwright MCP is optional** — unlike `xfive-mcp-chisel`, which is the default and falls back to
+WP-CLI only with your explicit permission. Without Playwright the agent asks you for a screenshot
+and reports the render as *not checked* rather than passed. With it, the agent catches its own drift
+before handing the work over instead of after. Either way a screenshot the agent took never ticks a
+manual item.
 
 The site URL lives on a `**Site URL:**` line in `context/INDEX.md` — asked once, on the first change.

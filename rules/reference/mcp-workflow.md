@@ -1,11 +1,11 @@
 # MCP Workflow
 
-The `xfive-mcp-chisel` MCP server is the **only** supported path for creating or modifying Gutenberg content. Owns the tool list, payload shapes, write procedure, and the block-seeding traps. Does **not** own block file structures or what each `block.json` key does ([blocks.md](.claude/chisel/reference/blocks.md)), spacer and margin seeding rules ([design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)), or the per-screen build order ([screen-build-order.md](.claude/chisel/reference/screen-build-order.md)).
+The `xfive-mcp-chisel` MCP server is the **default** path for creating or modifying Gutenberg content; WP-CLI is a fallback the user must explicitly grant. Owns the tool list, payload shapes, write procedure, the block-seeding traps, and the fallback protocol. Does **not** own block file structures or what each `block.json` key does ([blocks.md](.claude/chisel/reference/blocks.md)), spacer and margin seeding rules ([design-tokens.md](.claude/chisel/reference/design-tokens.md#spacing-between-blocks)), or the per-screen build order ([screen-build-order.md](.claude/chisel/reference/screen-build-order.md)).
 
 ## Hard rules
 
-1. **Every Gutenberg content write goes through MCP** — never PHP seeds, WP-CLI, manual paste, or direct `wp_posts` edits. → [What goes through MCP](#what-goes-through-mcp)
-2. **If the MCP tools aren't in your tool list, STOP and ask** — do not improvise a fallback. → [Prerequisites](#prerequisites)
+1. **Every Gutenberg content write goes through MCP** — never PHP seeds, manual paste, or direct `wp_posts` edits. WP-CLI only under rule 2. → [What goes through MCP](#what-goes-through-mcp)
+2. **If the MCP tools aren't in your tool list, STOP and ask the user to install the plugin.** Only if they decline, ask a second explicit question for WP-CLI permission — never assume it, and never fall back because an MCP call failed. → [Fallback without MCP](#fallback-without-mcp)
 3. **`post-update-content` replaces the entire `post_content` on every call** — always fetch current, concatenate onto the full markup, write the whole thing back. → [Workflow for inserting content](#workflow-for-inserting-content)
 4. **Call `block-schema` before hand-writing any block's markup** — wrong attributes are silently ignored. → [Traps](#traps)
    And its ACF counterpart: **call `acf-field-schema` before writing any non-trivial ACF value** — repeaters, groups, flexible content and select choices all have shapes you cannot guess. `acf-field-get` reads values; `acf-field-schema` reads structure.
@@ -21,7 +21,7 @@ The MCP server is provided by the custom `xfive-mcp` WordPress plugin (Xfive-int
 2. Confirm the `xfive-mcp-chisel` server is registered in your agent client's MCP config and its tools appear in your available tool list. Client-side they are named `mcp__xfive-mcp-chisel__xfive-{category}-{tool}` — e.g. `mcp__xfive-mcp-chisel__xfive-blocks-block-schema`. This doc writes them in the short `xfive-{category}-{tool}` form throughout.
 3. **The server needs authentication.** It is HTTP, and every request requires Basic auth with a WordPress **application password** for a user who can `edit_posts` — unless the site defines `MCP_OPEN`. A `401` means credentials, not a broken plugin.
 
-If any of these is missing: **stop**. Ask the user to install/activate the plugin, configure the MCP server and its credentials, then restart the agent client. Do not improvise a fallback (PHP seeds, WP-CLI, manual paste are all forbidden — see "Do NOT" below).
+If any of these is missing: **stop**. Ask the user to install/activate the plugin, configure the MCP server and its credentials, then restart the agent client. If they decline, go to [Fallback without MCP](#fallback-without-mcp) — do not improvise anything else.
 
 ## What goes through MCP
 
@@ -34,10 +34,22 @@ Any Gutenberg content insertion goes through MCP:
 
 **Do NOT:**
 
-- Write PHP seed scripts or WP-CLI commands
+- Write PHP seed scripts, or WP-CLI commands without the permission in [Fallback without MCP](#fallback-without-mcp)
 - Ask user to paste markup into the editor
 - Edit `wp_posts.post_content` directly in the database
 - Use these tools to modify `patterns/*.php` files (those are source templates, not posts)
+
+## Fallback without MCP
+
+Only reachable through two explicit user answers: **no** to installing the plugin, then **yes** to "May I use WP-CLI for WordPress writes this session?" Ask once per session. A failed or fiddly MCP call is never a reason to be here.
+
+WP-CLI has no `block-schema`, no `block-tree`, and no un-escaping, so every safety net moves to you:
+
+- **Attributes**: read the block's `block.json` and `save.js` from theme source before writing markup. Prefer paired tags with rendered inner HTML for everything — the [Traps](#traps) still apply.
+- **Content**: `wp post create` / `wp post update {id} --post_content=…` with the **full** serialized markup — same get → concat-onto-full → write discipline. Pass `--post_status=publish`.
+- **Verify**: `wp post get {id} --field=post_content` and count all top-level `<!-- wp:` sections.
+- **Everything else**: `wp media import`, `wp eval 'update_field(...)'` for ACF, `wp option update`, `wp theme mod set`, `wp menu`. Direct DB queries stay forbidden.
+- **Report it**: say in the summary that content was seeded via WP-CLI fallback, so the reviewer knows no schema check ran.
 
 ## Available tools
 
@@ -142,6 +154,7 @@ Run after every content write, before calling a section done.
 10. Images uploaded during the section build with attachment IDs captured; SVG `<img>` tags carry `width` and `height`.
 11. A new ACF block was compiled (`npm run build-scripts`) before any seeding attempt.
 12. `nav-menu-list` checked before `nav-menu-create` so no duplicate menu was appended.
+13. If WP-CLI was used: the user declined the plugin and then explicitly granted WP-CLI, and the summary says so.
 
 ## Related
 

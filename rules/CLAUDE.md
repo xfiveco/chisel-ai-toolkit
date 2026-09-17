@@ -97,9 +97,9 @@ Load-bearing rules that cut across skills — breaking them causes silent failur
 
 **Before creating any new component, block, nav, slider, pagination, or helper — skim existing layers for a match:** `views/components/`, `core/Timber/Components.php`, `src/blocks/` + `src/blocks-acf/`, `core/Helpers/`. If one exists, reuse it; if it needs a variation, add a variant (block style, modifier class, ACF field, pattern flag) — see [section-mapping-decisions.md "Shared components rule"](.claude/chisel/reference/section-mapping-decisions.md#shared-components-rule). Create new only when nothing can be adapted.
 
-### MCP (xfive-mcp-chisel) — required for all WP state writes
+### MCP (xfive-mcp-chisel) — default for all WP state writes
 
-For any content insert/edit, image upload, ACF field, theme mod, option, nav menu, or post creation — use the `xfive-mcp-chisel` MCP tools. Never PHP seeds, WP-CLI, manual paste, or direct DB edits. If the tools aren't in your tool list, **stop** and ask the user to install the plugin + register the MCP server — don't improvise. Tool list, payloads, defaults, and the **block-seeding silent-failure traps** (read before hand-writing block markup) → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md).
+For any content insert/edit, image upload, ACF field, theme mod, option, nav menu, or post creation — use the `xfive-mcp-chisel` MCP tools. Never PHP seeds, manual paste, or direct DB edits. If the tools aren't in your tool list, **stop** and ask the user to install the plugin + register the MCP server. Only if they decline, ask explicitly for WP-CLI permission and follow the fallback protocol — never fall back because an MCP call failed. Tool list, payloads, defaults, the fallback protocol, and the **block-seeding silent-failure traps** (read before hand-writing block markup) → [mcp-workflow.md](.claude/chisel/reference/mcp-workflow.md).
 
 ### MCP (Playwright) — optional, for looking at the rendered page
 
