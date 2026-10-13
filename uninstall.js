@@ -7,16 +7,21 @@ const path = require("node:path");
 const pkg = require("./package.json");
 const { resolveRoots } = require("./lib/roots");
 const manifest = require("./lib/manifest");
-const { BEGIN, END } = require("./lib/emit");
+const { BEGIN, END, IGNORE_BEGIN, IGNORE_END } = require("./lib/emit");
 const settings = require("./lib/settings");
 
-const MANAGED_MEMORY_FILES = new Set(["CLAUDE.md", "AGENTS.md"]);
+// Shared with the user — only our block between the markers is removed.
+const MANAGED_FILES = {
+  "CLAUDE.md": [BEGIN, END],
+  "AGENTS.md": [BEGIN, END],
+  ".prettierignore": [IGNORE_BEGIN, IGNORE_END],
+};
 
-function stripManagedBlock(content) {
-  const start = content.indexOf(BEGIN);
-  const end = content.indexOf(END);
-  if (start === -1 || end === -1 || end < start) return content;
-  return (content.slice(0, start) + content.slice(end + END.length)).replace(/\n{3,}/g, "\n\n").trimStart();
+function stripManagedBlock(content, [begin, end]) {
+  const start = content.indexOf(begin);
+  const stop = content.indexOf(end);
+  if (start === -1 || stop === -1 || stop < start) return content;
+  return (content.slice(0, start) + content.slice(stop + end.length)).replace(/\n{3,}/g, "\n\n").trimStart();
 }
 
 function pruneEmptyDirs(dir, stopAt) {
@@ -43,8 +48,8 @@ function main() {
     const abs = path.join(roots.projectRoot, rel);
     if (!fs.existsSync(abs)) continue;
 
-    if (MANAGED_MEMORY_FILES.has(rel)) {
-      const remaining = stripManagedBlock(fs.readFileSync(abs, "utf8"));
+    if (MANAGED_FILES[rel]) {
+      const remaining = stripManagedBlock(fs.readFileSync(abs, "utf8"), MANAGED_FILES[rel]);
       if (remaining.trim()) fs.writeFileSync(abs, remaining);
       else fs.rmSync(abs);
       continue;

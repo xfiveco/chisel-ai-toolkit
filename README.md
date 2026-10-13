@@ -23,6 +23,7 @@ A `postinstall` step runs the installer. Re-run it any time with `npx chisel-ai-
 | `rules/CLAUDE.md` | spliced into the project's `CLAUDE.md` between managed markers |
 | `rules/AGENTS.md` | spliced into the project's `AGENTS.md` |
 | `hooks/` | `.claude/chisel/hooks/` + one entry in `.claude/settings.json` |
+| (Prettier ignore) | a managed block in the project's `.prettierignore` for `.claude/`, `context/`, `CLAUDE.md` and `AGENTS.md`, so format-on-save and the commit hook don't re-pad their tables |
 | (manifest) | `.claude/.chisel-ai-toolkit.json` |
 
 ## Using it
@@ -171,8 +172,8 @@ Don't edit the installed files. `.claude/skills/` and `.claude/chisel/` are dele
 every install — including the `postinstall` that fires on any unrelated `npm install` — so local
 changes disappear without warning. Make the change in this repo instead.
 
-`CLAUDE.md` and `AGENTS.md` are the exception: only the text between the managed markers is
-replaced, so anything you write outside them is safe.
+`CLAUDE.md`, `AGENTS.md` and `.prettierignore` are the exception: only the text between the managed
+markers is replaced, so anything you write outside them is safe.
 
 ## Uninstall
 
@@ -180,8 +181,8 @@ replaced, so anything you write outside them is safe.
 node node_modules/@xfive/chisel-ai-toolkit/uninstall.js
 ```
 
-Uses the manifest to remove exactly what it installed, strips the managed blocks from `CLAUDE.md`
-and `AGENTS.md`, and leaves your own content untouched.
+Uses the manifest to remove exactly what it installed, strips the managed blocks from `CLAUDE.md`,
+`AGENTS.md` and `.prettierignore`, and leaves your own content untouched.
 
 ## Adding a skill
 

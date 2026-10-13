@@ -6,7 +6,7 @@ const path = require("node:path");
 const pkg = require("./package.json");
 const { resolveRoots } = require("./lib/roots");
 const manifest = require("./lib/manifest");
-const { EMITTERS } = require("./lib/emit");
+const { EMITTERS, emitPrettierIgnore } = require("./lib/emit");
 
 const DEFAULT_AGENTS = ["claude", "agents"];
 
@@ -49,6 +49,7 @@ function main() {
   for (const agent of agents) {
     EMITTERS[agent]({ packageDir: __dirname, projectRoot: roots.projectRoot, vars, record });
   }
+  emitPrettierIgnore({ projectRoot: roots.projectRoot, record });
 
   manifest.write(roots.projectRoot, {
     package: pkg.name,

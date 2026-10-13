@@ -250,6 +250,9 @@ line under `## Active`.
 - {YYYY-MM-DD} — scoped and planned, {N} phases. Phase 1 next.
 ```
 
+Table cells are padded with a single space; don't align the pipes into columns, or every later
+decision has to re-pad the whole table.
+
 **The one-line outcome on a `[x]` row is mandatory.** It's what lets a later session understand a
 finished phase without opening its file. A `[x]` row still reading "not started" defeats the whole
 layout.
