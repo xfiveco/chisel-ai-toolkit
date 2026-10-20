@@ -137,8 +137,10 @@ phase with a known defect and buys a line nobody scheduled.
    [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
 2. **Code review.** [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks the user
    first (run · skip · always for this change), unless `PLAN.md` already says
-   `**Code review:** always`. A separate agent reads the touched-file set; fix what it flags, then
-   re-run `npx chisel-verify`. Skipped → the summary says so.
+   `**Code review:** always`. A separate agent reads the touched-file set and its findings go into
+   the phase's CR file (`cr-{NN}-{slug}.md`, next to the phase file); fix what it flags, then
+   re-run `npx chisel-verify`. No `must fix` row may be open when the commit is offered. Skipped →
+   the summary says so.
 3. **Ask the user to run `npm run build-scripts`** to confirm the SCSS compiles. Never invoke it
    yourself. Tick that done-when item once they report it passed.
 4. **Open the page.** Playwright MCP, at the URL this phase actually touched — console messages

@@ -17,7 +17,7 @@ skill doing the work.
 | `/chisel-change-resume <NN-slug>` | Picking an unfinished change up in a fresh session. |
 | `/chisel-quick-fix <feedback>` | Small fixes to work that already exists. No plan, no phases. |
 | `/chisel-verify` | Optional. Runs the mechanical checks by hand — implement already runs them for you. |
-| `/chisel-code-review` | Optional. Reviews the changed code the way a developer reviews a commit. Implement and quick-fix offer it before each commit and run it only if you say yes. |
+| `/chisel-code-review` | Optional. Reviews the changed code the way a developer reviews a commit. Implement and quick-fix offer it before each commit and run it only if you say yes. Findings land in a CR file for the phase: a table by severity, with a status per row. |
 
 ### Skills picked automatically
 

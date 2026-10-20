@@ -1,9 +1,10 @@
 ---
 name: chisel-code-review
-description: Review the code a phase or a fix batch changed, the way a developer reviews a commit before it goes in. A separate agent reads the diff and checks whether it works, whether it is safe, whether it fits this codebase and stays simple, and which other pages it touches; this session fixes what it finds. Asks the developer before starting. Use after npx chisel-verify passes and before a commit is offered, or when the user asks for a code review. Do NOT use for the mechanical checks (that's /chisel-verify), for checking the rendered page, or for reviewing a remote PR.
+description: Review the code a phase or a fix batch changed, the way a developer reviews a commit before it goes in. A separate agent reads the diff and checks whether it works, whether it is safe, whether it fits this codebase and stays simple, and which other pages it touches; the findings go into a CR file for the phase, and this session fixes what it can. Asks the developer before starting. Use after npx chisel-verify passes and before a commit is offered, or when the user asks for a code review. Do NOT use for the mechanical checks (that's /chisel-verify), for checking the rendered page, or for reviewing a remote PR.
 argument-hint: "[files or a commit range, or nothing for the uncommitted changes]"
 allowed-tools:
   - Read
+  - Write
   - Edit
   - Glob
   - Grep
@@ -17,7 +18,8 @@ allowed-tools:
 Theme root: `{{THEME_ROOT}}`. All paths below are relative to it.
 
 A developer reading the commit before it goes in. It reads the changed files, checks them against
-one short list, and reports what has to be fixed. `chisel-verify` has already settled the mechanical
+one short list, and writes what it found to a CR file, so the findings can be worked through and
+discussed without getting lost in the chat. `chisel-verify` has already settled the mechanical
 checks and the browser pass looks at the page; this is the reading in between. It also names the
 other places the change shows up, so the browser pass knows which extra pages to open.
 
@@ -60,9 +62,10 @@ same reasoning that wrote it. Give it:
 - the goal in one line: the phase's `Goal`, or the list of fixes
 - this instruction: read `CLAUDE.md` and sections 4 and 5 of
   `.claude/skills/chisel-code-review/SKILL.md`, review **read-only**, confirm every finding in the
-  code before reporting it, and answer in the section 5 format
+  code before reporting it, and answer with every finding as a table row plus its block, and
+  **Also shows**, in the section 5 format
 
-The reviewer reports. It never edits.
+The reviewer reports. It never edits, and it doesn't write the CR file; this session does.
 
 ## 4. The checklist
 
@@ -118,45 +121,122 @@ those places. Also flag:
 - **Changed attributes or saved markup on a native block.** Existing content shows a block
   validation error in the editor.
 
-**Not findings:** formatting the linters catch, anything `chisel-verify` checks, taste with no rule
-behind it, and problems in code this change didn't touch (those go to `context/FINDINGS.md`).
+**Not findings:** formatting the linters catch, anything `chisel-verify` checks, and taste with no
+rule behind it.
 
-## 5. What comes back
+**Already there before this change:** report what you notice while reading, but don't go looking.
+The review is of the diff. Section 6 sends these to `context/FINDINGS.md`.
 
-```text
-Must fix
-1. src/blocks-acf/team/team.twig:14 · empty photo field prints a broken <img> · wrap it in {% if member.photo %}
+## 5. The CR file
 
-Should fix
-1. custom/app/WP/Assets.php:42 · debug error_log() left in · remove it
+Each phase gets one CR file, and every review of that phase writes into it. That file is where the
+findings live; the chat only points at it.
 
-Also shows
-- button mixin (src/design/tools/_buttons.scss): header CTA, footer form, post cards
-- pattern p-hero changed: the home page already has it and keeps the old markup
+| Reviewed for | File |
+| --- | --- |
+| A phase | `context/changes/{NN}-{slug}/cr-{NN}-{phase-slug}.md`, next to its phase file: the phase file's name with `phase-` swapped for `cr-` |
+| A single-phase change | `context/changes/{NN}-{slug}/cr.md` |
+| A quick fix, or a by-hand review outside a change | `context/reviews/{YYYY-MM-DD}-{slug}.md` |
 
-Verdict: fix first
+A short table to track status, then one block per finding to read and discuss:
+
+```markdown
+# Code review · Phase 03 · hero section
+
+**Reviewed:** 2026-10-20 · **Files:** 6
+
+| # | Severity | Finding | Status |
+| --- | --- | --- | --- |
+| 1 | must fix | Empty photo prints a broken image | fixed |
+| 2 | must fix | Member link printed unescaped | open |
+| 3 | should fix | Debug `error_log()` left in | skipped |
+| 4 | should fix | Footer link printed with `\|raw` | skipped |
+| 5 | nit | Modifier class doesn't follow the BEM naming | open |
+
+## Findings
+
+### 1 · must fix · Empty photo prints a broken image
+
+- **Where:** `src/blocks-acf/team/team.twig:14`
+- **Problem:** an empty photo field still prints `<img src="">`, which shows as a broken image.
+- **Fix:** wrap the image in `{% if member.photo %}`.
+
+### 2 · must fix · Member link printed unescaped
+
+- **Where:** `src/blocks-acf/team/team.twig:31`
+- **Problem:** the link is printed with `|raw`, so a pasted `javascript:` URL runs on click.
+- **Fix:** print it with `|e('esc_url')`.
+
+### 3 · should fix · Debug `error_log()` left in
+
+- **Where:** `custom/app/WP/Assets.php:42`
+- **Problem:** writes to the server log on every page load.
+- **Fix:** remove it.
+
+**Why skipped:** the user wants it kept until the API is stable.
+
+### 4 · should fix · Footer link printed with `|raw`
+
+- **Where:** `views/components/footer.twig:22`
+- **Problem:** same escaping gap as 2, in code this phase didn't touch.
+- **Fix:** print it with `|e('esc_url')`.
+
+**Why skipped:** sent to FINDINGS.md.
+
+### 5 · nit · Modifier class doesn't follow the BEM naming
+
+- **Where:** `src/styles/blocks/_team.scss:20`
+- **Problem:** `.b-team--Large` breaks the lowercase modifier naming used everywhere else.
+- **Fix:** rename it `.b-team--large`.
+
+## Also shows
+
+- button mixin (`src/design/tools/_buttons.scss`): header CTA, footer form, post cards
+- pattern `p-hero` changed: the home page already has it and keeps the old markup
 ```
 
-- **Must fix:** it breaks something, it's unsafe, or it breaks a `(HARD RULE)`.
-- **Should fix:** everything else on the list.
-- Each line is `file:line · what's wrong and what happens · the fix`. An empty section says `None`.
-- **Verdict:** `ready to commit` or `fix first`.
+- **Order:** `must fix` first, then `should fix`, then `nit`; by number inside each. The blocks
+  below the table follow the same order and numbers.
+- **Numbers never change.** "Finding 3" means the same thing all through the discussion.
+- **Severity:** `must fix` breaks something, is unsafe, or breaks a `(HARD RULE)`. `should fix` is
+  anything else on the checklist. `nit` is small and changes nothing for users or editors.
+- **Status:** `open` (not done yet), `fixed` or `skipped`. The table is the only place the status
+  is kept; a block never repeats it. The reason for a skip is written under that finding's block,
+  as `**Why skipped:**`.
+- A `|` inside a table cell is written `\|`, or the table breaks.
 
 ## 6. Fix, then report
 
-- **Must fix** → fix it. Fix the clear ones directly; ask when the fix could go either way, same as
-  `chisel-verify`.
-- **Should fix** → fix the obvious ones; list the rest in the summary for the user to decide.
-- **Contradicts a recorded decision** in `PLAN.md`'s `## Decisions` → drop it. The decision stands;
-  say so in one line.
-- After fixing, re-run `npx chisel-verify`. A fix can break a mechanical check.
-- Hand **Also shows** to the browser pass. Those are the extra pages it opens.
-  → [browser-verification.md](.claude/chisel/reference/browser-verification.md#other-pages-the-change-shows-up-on)
+1. **Write the CR file first**: every finding in the table as `open`, with its block below, before
+   fixing anything.
+2. **Must fix** → fix it and set `fixed`. Fix the clear ones directly; ask when the fix could go
+   either way, same as `chisel-verify`.
+3. **Should fix** → fix the obvious ones and set `fixed`. Leave the rest `open` for the user.
+4. **Nit** → leave it `open` for the user, unless the fix is trivial and touches nothing else.
+5. **Already there before this change** → don't fix it here. Add one line to
+   `context/FINDINGS.md`, set `skipped`, and write `**Why skipped:** sent to FINDINGS.md` under its
+   block.
+6. **Contradicts a recorded decision** in `PLAN.md`'s `## Decisions` → don't fix it. Set `skipped`
+   and name the decision under its block.
+7. **Every other skip is the user's call**, with their reason under the block.
+8. Re-run `npx chisel-verify` after fixing. A fix can break a mechanical check.
+9. Hand **Also shows** to the browser pass. Those are the extra pages it opens.
+   → [browser-verification.md](.claude/chisel/reference/browser-verification.md#other-pages-the-change-shows-up-on)
+
+**An open `must fix` blocks the commit.** Don't offer it until every `must fix` is `fixed` or
+`skipped`. Open `should fix` and `nit` findings can stay; the summary counts them.
+
+**Going through it later**, with the user or in a new session: change the status in the table, and
+write the reasons and anything agreed under the finding's block.
+
+**A second review in the same phase** writes into the same file. Its findings join the same table
+in severity order, numbering carries on from the last finding, their blocks go in at the matching
+place, and its date is added to the `**Reviewed:**` line. Never delete or renumber a finding.
 
 One line in the summary:
 
 ```text
-Code review: 2 must fix (fixed) · 1 should fix (left for you) · also shows header, footer, post cards
+Code review: must fix 2 (1 fixed, 1 open) · should fix 2 (2 skipped) · nit 1 (open) → context/changes/03-about-page/cr-03-hero.md
 ```
 
 ## What this does not cover
@@ -175,7 +255,13 @@ Code review: 2 must fix (fixed) · 1 should fix (left for you) · also shows hea
 - ❌ Reviewing the whole theme instead of the diff.
 - ❌ A finding with no file, no consequence, or no fix.
 - ❌ Re-reporting what `chisel-verify` or the linters already catch.
-- ❌ Fixing old problems in untouched code under this change. (One line in `FINDINGS.md`.)
+- ❌ Fixing problems that were already there under this change. (Skip them: sent to `FINDINGS.md`.)
+- ❌ Findings that live only in the chat. (They go in the CR file.)
+- ❌ A status written anywhere but the table.
+- ❌ Marking a finding `skipped` on your own, except for a recorded decision or a problem that was
+  already there.
+- ❌ Deleting or renumbering a finding.
+- ❌ Offering the commit with a `must fix` still open.
 
 ## Related
 

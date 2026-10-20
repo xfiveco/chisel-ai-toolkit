@@ -54,7 +54,7 @@ Content problems go through MCP tools, never CSS hiding.
 
 ### 4. Verify
 
-Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then the **code review**: [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks before it starts, reviews the batch's files, and lists the other pages they show up on. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
+Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then the **code review**: [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks before it starts, reviews the batch's files, writes its findings to a CR file in `context/reviews/`, and lists the other pages they show up on. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
 
 **It can't see seeded content.** SCSS, patterns, Twig and ACF groups are all read — but content pushed into a page through MCP lives in the database, and a fix batch is often exactly that. A clean run says nothing about it.
 
@@ -78,13 +78,13 @@ Skipping the plan doesn't mean skipping the record. **Every batch gets one line*
 3. **If an item was already tracked** in `context/FINDINGS.md` — flip its box and append the outcome.
 4. **Anything you notice while fixing** goes to `context/FINDINGS.md` as usual — one line, keep going.
 
-Still no change folder, no phase file, no `INDEX.md` row. One line in `FIXES.md` is the whole ceremony.
+Still no change folder, no phase file, no `INDEX.md` row. One line in `FIXES.md`, plus the CR file when the review ran, is the whole ceremony.
 
 ### 6. Commit
 
 Same rules as [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md), and for the same reason — a fix nobody can find later isn't finished.
 
-1. Stage the files you touched, **explicitly by path**, plus `context/FIXES.md`. Never `git add -A`.
+1. Stage the files you touched, **explicitly by path**, plus `context/FIXES.md` and the CR file if the review ran. Never `git add -A`.
 2. Look for a ticket key — a `**Ticket:**` line in the related `PLAN.md`, the branch name, the conversation. If none turns up, ask once. Never invent one.
 3. Propose **one line**: `ABC-123: fix header contrast and hero spacing` with a ticket, `fix: header contrast and hero spacing` without. No body. **No `Co-Authored-By:`, no "Generated with…", no trailers of any kind.**
 4. Ask: **commit as proposed** · **edit the message** · **skip for now**.
