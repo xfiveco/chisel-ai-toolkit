@@ -31,6 +31,7 @@ hand-grep what it already covers, and don't let one layer stand in for another.
 
 - [ ] **`npx chisel-verify` is clean.** It owns the whole mechanical half: token slugs, undefined helpers, preset classes in patterns *and* Twig, hand-written markup colors (`customOverlayColor`, literal `color:#…`), the `"disableBottomMargin":true` + `u-no-margin-bottom` pair, pattern four-way slug sync, the `patterns` layer import in both `main.scss` and `editor.scss`, ACF group key = filename, and untouched `core/`. An exit of `2` means it never ran. What each failure means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
 - [ ] `npm run build-scripts` passes (no Sass errors) — ask the user; never invoke it yourself
+- [ ] **Code review** run and its must-fix items fixed, or skipped by the developer and reported as skipped → [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md)
 
 ### Rendered
 
@@ -40,6 +41,7 @@ checked*. Full procedure → [browser-verification.md](.claude/chisel/reference/
 - [ ] **Page opened at the change's own URL** — not the homepage by reflex
 - [ ] **Console clean.** A `view.js` that throws on load leaves a section half-initialized and reads as a CSS bug until you check
 - [ ] **Screenshot vs the spec crop** at the primary viewport, then at mobile — spacing steps, colors, font sizes, alignment. Breakpoint values live in `src/design/tools/_breakpoints.scss`
+- [ ] **Pages on the review's Also shows list opened** and compared with their before shots
 - [ ] **Accessibility snapshot** — image alt text, an accessible name on the nav toggle, no skipped heading level, no link labelled only "read more"
 - [ ] **Seeded page content audited.** Content pushed into a page lives in the database, so the script never sees it — check the render *and* the markup for `customOverlayColor`, literal hex, preset classes that don't exist, and images that didn't survive the seed
 - [ ] Page is published (not draft)
@@ -67,4 +69,4 @@ A screenshot you took is evidence for you; it does not tick any of these.
 - Opening the rendered page → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 - Field-group naming check → [acf-naming.md](.claude/chisel/reference/acf-naming.md#mechanical-check-run-before-finishing-any-field-group)
 - Phase files for multi-screen work → [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md)
-- Skills: [figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md) (orchestrator) · [verify](.claude/skills/chisel-verify/SKILL.md) (what each automated check means)
+- Skills: [figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md) (orchestrator) · [verify](.claude/skills/chisel-verify/SKILL.md) (what each automated check means) · [code review](.claude/skills/chisel-code-review/SKILL.md) (the reading half)

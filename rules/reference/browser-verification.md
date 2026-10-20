@@ -57,6 +57,31 @@ Run it after the build compiles and before you summarize the phase.
 
 Close the browser when you're done with it.
 
+## Other pages the change shows up on
+
+The pass above opens the page the change was made on. A change to something shared (a token value,
+a base style, a component, the header) also lands on pages nobody opened, and that's where a
+regression hides. [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) lists those places
+under **Also shows**; this is where they get opened.
+
+**Before.** Ahead of the first edit (right after the go-ahead in a phase, after triage in a quick
+fix), check what the work will touch. Anything shared → screenshot one real page for each place
+that shows it, at the primary viewport, while it's still unchanged. Name the files `before-{page}`
+and keep them outside the theme, so they can never be staged.
+
+**After.** Once the review is back, open every page on its **Also shows** list, plus every page you
+took a before shot of. For each one: console first, then a screenshot at the primary viewport,
+compared with its before shot. Add mobile only where the change affects layout.
+
+- **Unexpected difference** → you caused it. Fix it in this phase; it's not a finding.
+- **Intended difference** (the new button style, now everywhere) → fine, but name the page in the
+  summary so the user looks.
+- **No before shot** → check the console and obvious breakage only, and say there was nothing to
+  compare against.
+
+**Review skipped** → there's no **Also shows** list. Open the changed page and any page with a
+before shot, and report the rest of the site as *not checked*.
+
 ## What this catches that `chisel-verify` cannot
 
 - **Seeded page content.** Content pushed through MCP lives in the database, so the script never
@@ -66,6 +91,7 @@ Close the browser when you're done with it.
   box, not an error.
 - **JS that throws.** Nothing in the SCSS/markup checks touches runtime.
 - **Drift.** Spacing that reads fine in the markup and wrong on screen.
+- **Breakage on other pages.** A shared style or component changed for one page and shifted another.
 
 Conversely, a clean browser pass proves nothing about token slugs, helper definitions, pattern
 four-way sync, or `core/` staying untouched. **Run both.**
@@ -85,6 +111,7 @@ uses:
 ```text
 Automated:  chisel-verify clean · build-scripts passed (user-run)
 Rendered:   /about at 1440 + 390 — no console errors, hero gap 8px tight vs the crop (fixed)
+Also shows: /contact, /blog (button style): /contact matches its before shot, /blog card buttons wrapped (fixed)
 Manual:     editor behaviour of the slider block · the copy in section 3
 ```
 
@@ -96,6 +123,8 @@ When the tools weren't available: `Rendered: not checked — Playwright MCP unav
 - ❌ Reporting "verified" when only `chisel-verify` ran and the page was never opened.
 - ❌ Reporting "verified" when only the page was opened and `chisel-verify` never ran.
 - ❌ Screenshotting the homepage when the change landed on another page.
+- ❌ Opening only the changed page when the code review listed others.
+- ❌ Taking the before shots after building. (Then there's nothing to compare against.)
 - ❌ Skipping the console read because the screenshot looked right.
 - ❌ Stopping the phase because Playwright MCP isn't installed. (It's optional. Say so and move on.)
 - ❌ Asking for the site URL again after it's in `INDEX.md`.
@@ -104,6 +133,7 @@ When the tools weren't available: `Rendered: not checked — Playwright MCP unav
 ## Related
 
 - The static half, and what each check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
+- Where the list of other pages comes from → [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md)
 - Where this sits in a screen's done gate → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md#verification-checklist)
 - Where this sits in a phase → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
 - The Figma section-by-section visual diff → [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md)

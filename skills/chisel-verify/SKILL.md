@@ -104,6 +104,7 @@ been reused, a mapping that's technically valid but wrong for the design. Those 
 ## Related
 
 - The rendered half of the gate → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
+- The judgement checks this leaves out → [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md)
 - Where these checks sit in a phase → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
 - Running them after a fix batch → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - The per-screen done gate they feed → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)

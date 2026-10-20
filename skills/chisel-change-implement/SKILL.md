@@ -74,6 +74,10 @@ fact. Build only on explicit go-ahead.
 
 Build that phase. Nothing from the next one.
 
+**Touching anything shared?** Before the first edit, screenshot the pages that show it, so the
+browser pass can compare before and after.
+→ [browser-verification.md](.claude/chisel/reference/browser-verification.md#other-pages-the-change-shows-up-on)
+
 Track a **touched-file set** as you go: every path you `Edit` or `Write`. It always includes
 `PLAN.md` and the phase file. This set — not `git status` — decides what gets staged later.
 
@@ -131,18 +135,23 @@ phase with a known defect and buys a line nobody scheduled.
    never "probably fine". Two things it won't tell you: exit code `2` means it never ran, and it
    can't read page content you seeded through MCP — that lives in the database. Full detail:
    [chisel-verify](.claude/skills/chisel-verify/SKILL.md).
-2. **Ask the user to run `npm run build-scripts`** to confirm the SCSS compiles. Never invoke it
+2. **Code review.** [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks the user
+   first (run · skip · always for this change), unless `PLAN.md` already says
+   `**Code review:** always`. A separate agent reads the touched-file set; fix what it flags, then
+   re-run `npx chisel-verify`. Skipped → the summary says so.
+3. **Ask the user to run `npm run build-scripts`** to confirm the SCSS compiles. Never invoke it
    yourself. Tick that done-when item once they report it passed.
-3. **Open the page.** Playwright MCP, at the URL this phase actually touched — console messages
+4. **Open the page.** Playwright MCP, at the URL this phase actually touched — console messages
    first, then a screenshot at the spec's viewport and at mobile against the spec crop, then the
    accessibility snapshot. It's the only pass that sees seeded content, dead asset URLs and JS that
-   throws. **Optional:** if the tools aren't in your list, say so once, ask the user for a
+   throws. Then the pages the review listed under **Also shows**, compared with their before shots.
+   **Optional:** if the tools aren't in your list, say so once, ask the user for a
    screenshot, and report the render as *not checked* — never stop the phase over it. Procedure and
    the site-URL lookup → [browser-verification.md](.claude/chisel/reference/browser-verification.md).
-4. Tick the phase file's **Done when · Automated** items that now pass.
-5. Summarize: what changed, which files, what drifted from the plan, the render result on its own
-   line, and — separately — **what the user needs to check with their own eyes**, taken from
-   **Done when · Manual**.
+5. Tick the phase file's **Done when · Automated** items that now pass.
+6. Summarize: what changed, which files, what drifted from the plan, the code review and render
+   results each on their own line, and — separately — **what the user needs to check with their
+   own eyes**, taken from **Done when · Manual**.
 
 **Do not tick manual items yourself.** They stay `[ ]` until the user confirms. **A screenshot you
 took is not a confirmation** — it's what lets you catch drift before the handoff, not a substitute
@@ -261,6 +270,8 @@ Then print how to pick it up:
 7. **Stage by path.** The touched-file set decides, not `git status`.
 8. **Insert, never renumber.** New work mid-flight becomes `Phase 2a`, filed as `phase-02a-{slug}.md`.
 9. **Absolute dates.** `2026-07-21`, never "today".
+10. **Ask before the code review.** Run it only on a yes, a typed `/chisel-code-review`, or a
+    `**Code review:** always` line in `PLAN.md`. A skipped review is reported as skipped.
 
 ## Anti-patterns
 
@@ -277,6 +288,7 @@ Then print how to pick it up:
 - ❌ Summarizing a phase without opening the page when the browser tools were available.
 - ❌ Stopping a phase because Playwright MCP isn't installed. (It's optional — say "not checked".)
 - ❌ Reporting the render as passed when it was never opened.
+- ❌ Starting the code review without asking, or leaving a skipped one out of the summary.
 - ❌ Seeding content with a PHP script or WP-CLI because the MCP call was fiddly. (WP-CLI needs the
   user's explicit no on the plugin, then an explicit yes — a failed call is neither.)
 - ❌ Hiding unwanted content with `display: none` instead of removing it at the source.
@@ -298,6 +310,7 @@ Then print how to pick it up:
 - Picking up an active change cold → [chisel-change-resume](.claude/skills/chisel-change-resume/SKILL.md)
 - Feedback on built work, no plan needed → [chisel-quick-fix](.claude/skills/chisel-quick-fix/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
+- Reviewing the phase's code → [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md)
 - Opening the rendered page → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
 - Building a Figma-mode phase → [chisel-figma-to-chisel](.claude/skills/chisel-figma-to-chisel/SKILL.md)
 - Per-screen build order and the done gate → [screen-build-order.md](.claude/chisel/reference/screen-build-order.md)

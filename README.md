@@ -28,7 +28,7 @@ A `postinstall` step runs the installer. Re-run it any time with `npx chisel-ai-
 
 ## Using it
 
-Seventeen skills ship. You type five of them; the other twelve are opened automatically by the
+Eighteen skills ship. You type six of them; the other twelve are opened automatically by the
 skill doing the work.
 
 ### Skills you run yourself
@@ -40,6 +40,7 @@ skill doing the work.
 | `/chisel-change-resume <NN-slug>` | Picking an unfinished change up in a fresh session. |
 | `/chisel-quick-fix <feedback>` | Small fixes to work that already exists. No plan, no phases. |
 | `/chisel-verify` | Optional. Runs the mechanical checks by hand — implement already runs them for you. |
+| `/chisel-code-review` | Optional. Reviews the changed code the way a developer reviews a commit. Implement and quick-fix offer it before each commit and run it only if you say yes. |
 
 ### Skills picked automatically
 
@@ -53,7 +54,7 @@ building calls for. Don't invoke them; if you want one of those things built, st
 ```text
 /chisel-change-new  ────►  /chisel-change-implement
 scope, then plan            builds one phase at a time, three stops per phase:
-in phases                   plan review → build + npx chisel-verify → summary, wait for "next"
+in phases                   plan review → build + npx chisel-verify + code review → summary, wait for "next"
                                      ▲
                                      │  a fresh session picks the change
                                      │  up cold with /chisel-change-resume
@@ -63,7 +64,7 @@ The plan lands in `context/changes/{NN}-{slug}/` — a `PLAN.md` plus one file p
 committed, so the work survives `/compact`, a closed laptop, or a handoff to someone else. Every
 phase stops three times: plan review before building, summary after, then wait for "next". The
 mechanical checks run automatically before each summary; `/chisel-verify` is only for running them
-by hand.
+by hand. The code review is offered at the same point and runs only if you say yes.
 
 ### What implement picks, and when
 
@@ -108,11 +109,12 @@ real scope gets handed back to `/chisel-change-new`.
 
 No test framework ships and none is added — Chisel has no Jest, PHPUnit or spec files, and the
 toolkit doesn't scaffold any. What the theme produces is markup and SCSS driven by a design spec,
-and "the hero renders a heading" passes while the section looks wrong. Verification is three layers
+and "the hero renders a heading" passes while the section looks wrong. Verification is four layers
 instead:
 
 ```text
 automated ... npx chisel-verify + npm run build-scripts   reads files, never renders
+review ...... /chisel-code-review, asks first             reads the diff, lists other pages it touches
 rendered .... Playwright MCP: console, screenshots, a11y  the only pass that sees seeded
                                                           content, dead images, JS that throws
 manual ...... the user's eyes                             editor behaviour, copy, sign-off

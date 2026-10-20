@@ -45,6 +45,8 @@ Never quietly demote an escalation back into the batch because it turned out to 
 ### 3. Fix
 
 Read before you edit — especially anything shared. A change to a Twig component, a global partial, a base mixin, or a token value ripples into places you weren't asked to touch; check who else uses it first, then write a diff-only override rather than restating the block.
+Before the first edit to anything shared, screenshot the pages that show it, so the browser pass can
+compare before and after. → [browser-verification.md](.claude/chisel/reference/browser-verification.md#other-pages-the-change-shows-up-on)
 
 Content problems go through MCP tools, never CSS hiding.
 
@@ -52,11 +54,13 @@ Content problems go through MCP tools, never CSS hiding.
 
 ### 4. Verify
 
-Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
+Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then the **code review**: [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks before it starts, reviews the batch's files, and lists the other pages they show up on. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
 
 **It can't see seeded content.** SCSS, patterns, Twig and ACF groups are all read — but content pushed into a page through MCP lives in the database, and a fix batch is often exactly that. A clean run says nothing about it.
 
 So **open the page** — Playwright MCP at the URL the batch touched (site URL from `context/INDEX.md`): console messages, a screenshot against the spec, the accessibility snapshot. Quick-fix mode is where this matters most, because most of these items *came from* someone looking at the rendered page, and the render is the only place the fix is visible. If the tools aren't available, say the render is unchecked and ask the user to look. → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
+
+Then open the pages the review listed, and compare them with their before shots.
 
 Then list what still needs a human eye. Your own screenshot isn't that.
 
@@ -90,7 +94,7 @@ One commit per batch, not per item — unless the items are genuinely unrelated,
 
 ### 7. Close out
 
-Summarize: items fixed, items escalated (with why), files touched, and anything the user should check by eye.
+Summarize: items fixed, items escalated (with why), files touched, the code review result (or `skipped`), and anything the user should check by eye.
 
 ## Anti-patterns
 
@@ -101,6 +105,7 @@ Summarize: items fixed, items escalated (with why), files touched, and anything 
 - ❌ Hiding a reviewed-out element with `display: none`. (Content vs CSS hard rule still applies.)
 - ❌ Editing a shared partial, component, or token without checking who else depends on it.
 - ❌ Skipping `npx chisel-verify` because the fixes were small.
+- ❌ Starting the code review without asking, or leaving a skipped one out of the summary.
 - ❌ Reporting a clean `chisel-verify` as proof a content fix landed. (It can't read the database — open the page.)
 - ❌ Closing a batch of visual fixes without ever looking at the rendered page.
 - ❌ Running `npm run build-scripts` yourself instead of asking the user.
@@ -112,4 +117,5 @@ Summarize: items fixed, items escalated (with why), files touched, and anything 
 - Escalating an item into a planned change → [chisel-change-new](.claude/skills/chisel-change-new/SKILL.md)
 - Building an approved plan → [chisel-change-implement](.claude/skills/chisel-change-implement/SKILL.md)
 - What each automated check means → [chisel-verify](.claude/skills/chisel-verify/SKILL.md)
+- Reviewing the batch's code → [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md)
 - Opening the rendered page → [browser-verification.md](.claude/chisel/reference/browser-verification.md)
