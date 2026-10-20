@@ -54,7 +54,7 @@ Content problems go through MCP tools, never CSS hiding.
 
 ### 4. Verify
 
-Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then the **code review**: [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks before it starts, reviews the batch's files, writes its findings to a CR file in `context/reviews/`, and lists the other pages they show up on. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
+Run `npx chisel-verify` and fix what it flags. A batch of small fixes is the easiest way to break something unrelated. Then the **code review**: [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks before it starts, reviews the batch's files, writes its findings to a CR file in `context/reviews/`, and lists the other pages they show up on. Then it stops: the user decides which findings get fixed, and only those are. Then **ask the user to run `npm run build-scripts`** — never invoke it yourself.
 
 **It can't see seeded content.** SCSS, patterns, Twig and ACF groups are all read — but content pushed into a page through MCP lives in the database, and a fix batch is often exactly that. A clean run says nothing about it.
 

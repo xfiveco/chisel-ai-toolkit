@@ -138,9 +138,10 @@ phase with a known defect and buys a line nobody scheduled.
 2. **Code review.** [chisel-code-review](.claude/skills/chisel-code-review/SKILL.md) asks the user
    first (run · skip · always for this change), unless `PLAN.md` already says
    `**Code review:** always`. A separate agent reads the touched-file set and its findings go into
-   the phase's CR file (`cr-{NN}-{slug}.md`, next to the phase file); fix what it flags, then
-   re-run `npx chisel-verify`. No `must fix` row may be open when the commit is offered. Skipped →
-   the summary says so.
+   the phase's CR file (`cr-{NN}-{slug}.md`, next to the phase file). Then **stop**: the user goes
+   through the findings and decides what gets fixed. Fix only what they approve, then re-run
+   `npx chisel-verify`. No `must fix` row may be open when the commit is offered. Skipped → the
+   summary says so.
 3. **Ask the user to run `npm run build-scripts`** to confirm the SCSS compiles. Never invoke it
    yourself. Tick that done-when item once they report it passed.
 4. **Open the page.** Playwright MCP, at the URL this phase actually touched — console messages
@@ -273,7 +274,8 @@ Then print how to pick it up:
 8. **Insert, never renumber.** New work mid-flight becomes `Phase 2a`, filed as `phase-02a-{slug}.md`.
 9. **Absolute dates.** `2026-07-21`, never "today".
 10. **Ask before the code review.** Run it only on a yes, a typed `/chisel-code-review`, or a
-    `**Code review:** always` line in `PLAN.md`. A skipped review is reported as skipped.
+    `**Code review:** always` line in `PLAN.md`. Fix only the findings the user approves. A skipped
+    review is reported as skipped.
 
 ## Anti-patterns
 

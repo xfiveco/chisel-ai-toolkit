@@ -1,6 +1,6 @@
 ---
 name: chisel-code-review
-description: Review the code a phase or a fix batch changed, the way a developer reviews a commit before it goes in. A separate agent reads the diff and checks whether it works, whether it is safe, whether it fits this codebase and stays simple, and which other pages it touches; the findings go into a CR file for the phase, and this session fixes what it can. Asks the developer before starting. Use after npx chisel-verify passes and before a commit is offered, or when the user asks for a code review. Do NOT use for the mechanical checks (that's /chisel-verify), for checking the rendered page, or for reviewing a remote PR.
+description: Review the code a phase or a fix batch changed, the way a developer reviews a commit before it goes in. A separate agent reads the diff and checks whether it works, whether it is safe, whether it fits this codebase and stays simple, and which other pages it touches; the findings go into a CR file for the phase, and the developer decides which ones get fixed. Asks the developer before starting. Use after npx chisel-verify passes and before a commit is offered, or when the user asks for a code review. Do NOT use for the mechanical checks (that's /chisel-verify), for checking the rendered page, or for reviewing a remote PR.
 argument-hint: "[files or a commit range, or nothing for the uncommitted changes]"
 allowed-tools:
   - Read
@@ -205,26 +205,27 @@ A short table to track status, then one block per finding to read and discuss:
   as `**Why skipped:**`.
 - A `|` inside a table cell is written `\|`, or the table breaks.
 
-## 6. Fix, then report
+## 6. Stop, then fix what the developer approves
 
-1. **Write the CR file first**: every finding in the table as `open`, with its block below, before
-   fixing anything.
-2. **Must fix** → fix it and set `fixed`. Fix the clear ones directly; ask when the fix could go
-   either way, same as `chisel-verify`.
-3. **Should fix** → fix the obvious ones and set `fixed`. Leave the rest `open` for the user.
-4. **Nit** → leave it `open` for the user, unless the fix is trivial and touches nothing else.
-5. **Already there before this change** → don't fix it here. Add one line to
-   `context/FINDINGS.md`, set `skipped`, and write `**Why skipped:** sent to FINDINGS.md` under its
-   block.
-6. **Contradicts a recorded decision** in `PLAN.md`'s `## Decisions` → don't fix it. Set `skipped`
-   and name the decision under its block.
-7. **Every other skip is the user's call**, with their reason under the block.
-8. Re-run `npx chisel-verify` after fixing. A fix can break a mechanical check.
-9. Hand **Also shows** to the browser pass. Those are the extra pages it opens.
+The developer decides what gets fixed. Not you, and not the reviewer.
+
+1. **Write the CR file**: every finding `open`, with its block below.
+2. **Already there before this change** → add one line to `context/FINDINGS.md`, set `skipped`,
+   and write `**Why skipped:** sent to FINDINGS.md` under its block.
+3. **Conflicts with a recorded decision** in `PLAN.md`'s `## Decisions` → leave it `open`, and name
+   the decision under its block so the developer sees the conflict.
+4. **Stop.** Give the summary line and the path to the file. Fix nothing yet.
+5. **The developer goes through the findings** and decides, one by one or in bulk ("fix 1, 2 and
+   5", "fix every must fix"): fix it, skip it (their reason goes under the block), or leave it open.
+6. **Fix exactly what was approved**, nothing else, and set each one `fixed`. When a fix ends up
+   different from the block's suggestion, write what was done under the block. Unsure how to fix
+   it → ask.
+7. Re-run `npx chisel-verify` after fixing. A fix can break a mechanical check.
+8. Hand **Also shows** to the browser pass. Those are the extra pages it opens.
    → [browser-verification.md](.claude/chisel/reference/browser-verification.md#other-pages-the-change-shows-up-on)
 
-**An open `must fix` blocks the commit.** Don't offer it until every `must fix` is `fixed` or
-`skipped`. Open `should fix` and `nit` findings can stay; the summary counts them.
+**An open `must fix` blocks the commit.** The developer has each one fixed or skips it before the
+commit is offered. Open `should fix` and `nit` findings can stay; the summary counts them.
 
 **Going through it later**, with the user or in a new session: change the status in the table, and
 write the reasons and anything agreed under the finding's block.
@@ -258,8 +259,8 @@ Code review: must fix 2 (1 fixed, 1 open) · should fix 2 (2 skipped) · nit 1 (
 - ❌ Fixing problems that were already there under this change. (Skip them: sent to `FINDINGS.md`.)
 - ❌ Findings that live only in the chat. (They go in the CR file.)
 - ❌ A status written anywhere but the table.
-- ❌ Marking a finding `skipped` on your own, except for a recorded decision or a problem that was
-  already there.
+- ❌ Fixing a finding the developer hasn't approved, however obvious it looks.
+- ❌ Marking a finding `skipped` on your own, except a problem that was already there.
 - ❌ Deleting or renumbering a finding.
 - ❌ Offering the commit with a `must fix` still open.
 
