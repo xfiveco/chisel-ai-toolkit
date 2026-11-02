@@ -55,17 +55,34 @@ Nothing left → say "nothing to review" and stop. That is not a pass.
 
 ## 3. Hand it to a reviewer that didn't write it
 
-Spawn **one** subagent with `Task`. Reviewing in this session means the code gets checked by the
-same reasoning that wrote it. Give it:
+Spawn a subagent with `Task`. Reviewing in this session means the code gets checked by the same
+reasoning that wrote it.
 
-- the file list and the git command that shows the diff
+**One reviewer, however long the diff is.** Three only when the change touches something that hurts
+somebody if it is wrong: a form that takes personal data, anything printed unescaped, a redirect or
+a capability check, a number an editor or a visitor acts on. Then split the checklist: **A** does it
+work (1) and what else it touches (5) · **B** is it safe (2) · **C** does it fit, and is it simple
+(3 and 4). Write the diff to a file first and give all three that path, or they each re-read it.
+
+Give each one:
+
+- the path of the diff file, and the file list
 - the goal in one line: the phase's `Goal`, or the list of fixes
 - this instruction: read `CLAUDE.md` and sections 4 and 5 of
-  `.claude/skills/chisel-code-review/SKILL.md`, review **read-only**, confirm every finding in the
-  code before reporting it, and answer with every finding as a table row plus its block, and
-  **Also shows**, in the section 5 format
+  `.claude/skills/chisel-code-review/SKILL.md`, review **read-only**, name a real case for every
+  finding, and answer with every finding as a table row plus its block, and **Also shows**, in the
+  section 5 format
+- **where to stop**: the diff, the files it changes, and whatever else prints those files. Not the
+  rest of the theme, and not the checks `chisel-verify` already ran.
 
-The reviewer reports. It never edits, and it doesn't write the CR file; this session does.
+**Then one more subagent tries to prove the findings wrong.** It gets the same diff file and every
+`must fix` and `should fix`, reads the code each one rests on, and answers `confirmed` or `dropped`
+in one line - plus a correction where the case is real but the consequence is not. Dropped findings
+are gone and never reach the CR file. Nits skip it; no findings, no pass. This is what lets a
+reviewer go looking without the CR file filling up with things that cannot happen, and a reviewer
+checking its own work is not the same thing.
+
+Reviewers report. They never edit, and they don't write the CR file; this session does.
 
 ## 4. The checklist
 
