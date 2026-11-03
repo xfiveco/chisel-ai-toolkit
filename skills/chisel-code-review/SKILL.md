@@ -26,7 +26,8 @@ other places the change shows up, so the browser pass knows which extra pages to
 ## 1. Ask first
 
 Ask with `AskUserQuestion` before reading anything: **Run it** · **Skip this time** · **Always run
-for this change**.
+for this change**. From `/chisel-quick-fix`, or by hand outside a change, offer only the first two:
+there is no `PLAN.md` to remember the choice.
 
 Don't ask when:
 
@@ -53,36 +54,25 @@ output.
 
 Nothing left → say "nothing to review" and stop. That is not a pass.
 
-## 3. Hand it to a reviewer that didn't write it
+## 3. Hand it to one reviewer that didn't write it
 
-Spawn a subagent with `Task`. Reviewing in this session means the code gets checked by the same
-reasoning that wrote it.
+Spawn **one** subagent with `Task`, however long the diff is. Reviewing in this session means the
+code gets checked by the same reasoning that wrote it. It reads the change once, the way a colleague
+reads a merge request, and flags what is clearly wrong.
 
-**One reviewer, however long the diff is.** Three only when the change touches something that hurts
-somebody if it is wrong: a form that takes personal data, anything printed unescaped, a redirect or
-a capability check, a number an editor or a visitor acts on. Then split the checklist: **A** does it
-work (1) and what else it touches (5) · **B** is it safe (2) · **C** does it fit, and is it simple
-(3 and 4). Write the diff to a file first and give all three that path, or they each re-read it.
+Give it:
 
-Give each one:
-
-- the path of the diff file, and the file list
+- the file list and the git command that shows the diff
 - the goal in one line: the phase's `Goal`, or the list of fixes
 - this instruction: read `CLAUDE.md` and sections 4 and 5 of
-  `.claude/skills/chisel-code-review/SKILL.md`, review **read-only**, name a real case for every
-  finding, and answer with every finding as a table row plus its block, and **Also shows**, in the
-  section 5 format
-- **where to stop**: the diff, the files it changes, and whatever else prints those files. Not the
-  rest of the theme, and not the checks `chisel-verify` already ran.
+  `.claude/skills/chisel-code-review/SKILL.md`, review **read-only**, confirm every finding in the
+  code before reporting it, and answer with every finding as a table row plus its block, and
+  **Also shows**, in the section 5 format
+- **where to stop**: the diff, and as much of the files it changes as it takes to understand it. Not
+  the rest of the theme, and not the checks `chisel-verify` already ran.
 
-**Then one more subagent tries to prove the findings wrong.** It gets the same diff file and every
-`must fix` and `should fix`, reads the code each one rests on, and answers `confirmed` or `dropped`
-in one line - plus a correction where the case is real but the consequence is not. Dropped findings
-are gone and never reach the CR file. Nits skip it; no findings, no pass. This is what lets a
-reviewer go looking without the CR file filling up with things that cannot happen, and a reviewer
-checking its own work is not the same thing.
-
-Reviewers report. They never edit, and they don't write the CR file; this session does.
+The reviewer reports. It never edits, and it doesn't write the CR file; this session does. The
+developer is the second check: they decide which findings are real and get fixed (section 6).
 
 ## 4. The checklist
 
@@ -130,7 +120,7 @@ In this order. A finding has to break one of these, not a preference.
 
 For each shared thing the diff changed (a `theme.json` value, a base style or mixin, a block style,
 a component or partial, shared JS, the header or footer), grep for where else it's used and list
-those places. Also flag:
+those places. List them; don't open and review them. Also flag:
 
 - **A changed pattern file.** Pages it was already inserted into keep the old markup; only new
   inserts get the change.
@@ -269,6 +259,7 @@ Code review: must fix 2 (1 fixed, 1 open) · should fix 2 (2 skipped) · nit 1 (
 - ❌ Starting without asking, when it wasn't typed by hand and there's no `**Code review:** always` line.
 - ❌ Leaving a skipped review out of the summary, or calling it clean.
 - ❌ Reviewing in this session instead of handing it to a separate agent.
+- ❌ More than one reviewer, or a second agent re-checking the first one's findings.
 - ❌ A reviewer that edits files. It reports; this session fixes.
 - ❌ Reviewing the whole theme instead of the diff.
 - ❌ A finding with no file, no consequence, or no fix.
